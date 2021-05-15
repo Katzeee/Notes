@@ -52,7 +52,9 @@ $ git push -u origin master #提交
 
 ### spy++消息查看
 
-![201708221503403013143025](E:\github codes\LearningNotes\images\201708221503403013143025.jpg)
+<p align="left">
+  <img src="images/201708221503403013143025.jpg">
+</p>
 
 - 第一条：<00001> 00130042 S WM_SETCURSOR hwnd:00130042 nHittest:HTCLIENT wMouseMsg:WM_MOUSEMOVE
 
