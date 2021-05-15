@@ -177,7 +177,8 @@ https://github.com/microsoft/vcpkg
 ```bash
 $ git init
 $ git add .
-$ git remote add <url>
-
+$ git remote add origin <url>
+$ git pull
+$ git push -u origin master -f #强制覆盖
 ```
 
