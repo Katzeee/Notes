@@ -333,3 +333,29 @@ DATE %y%/%m%/%d%&&
 <p align="left">
   <img src="images/2020040109441427.png">
 </p>
+
+# 2021.9.13
+
+### Config github SSH-Key on Linux OS
+
+```bash
+$ ssh-add -D # delete all key-pair
+$ ssh-keygen -t rsa # generate new key
+$ chmod 0700 ~/.ssh
+$ chmod 0600 ~/.ssh/id_rsa*
+```
+
+add ssh on github setting page
+
+### sscanf
+
+using sscanf for format convertion
+
+```c
+char a[] = "123456";
+int i;
+sscanf(a, "%d", &i);//convert string "123456" to int 123456
+char b[] = "0x8000";
+int j;
+sscanf(b, "0x%x", &j);//convert string "0x8000" to int 0x8000 i.e. 32768
+```
