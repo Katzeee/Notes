@@ -372,3 +372,13 @@ s = strtok(a, " ");//" " is the seperator of the string
 s = strtok(NULL, " ");//we call strtok with the first arg being NULL except the first calling as we use it for the same string to get the next part
 //now s points i
 ```
+
+# 2020.10.31
+
+### 记录有关swift入门相关问题
+
+### 多用try catch去寻找问题
+
+### @StateObject, @EnvironmentObject, @ObseverableObject
+
+
