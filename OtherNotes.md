@@ -381,4 +381,50 @@ s = strtok(NULL, " ");//we call strtok with the first arg being NULL except the 
 
 ### @StateObject, @EnvironmentObject, @ObseverableObject
 
+# 2022.1.17
+
+### vim 跨文件复制
+```
+:sp或:vsp分割出两个窗口
+:e .打开另一个文件
+^W w切换两个窗口
+yy可以复制一行
+```
+现在就可以复制了
+
+### git分支改名字
+```bash
+$ git branch -m oldname newname
+```
+###ctags使用方法
+
+### vim tab页
+
+```
+:tabnew 创建新tab
+:tabp前一个
+:tabn后一个
+:tabc关闭当前的tab
+:tabo关闭所有其他的tab
+:tabs查看所有打开的tab
+gt和gT可以直接在tab件切换
+```
+### vim中执行shell命令
+
+```
+:! command
+```
+### git删除分支
+先切换到别的分支
+```bash
+$ git branch -d name #删除本地分支
+$ git push origin --delete name #删除远程分支
+```
+# 2022.1.18
+### strncpy
+```c
+char buf[11];//定义buf
+strncpy(buf, src, 10); //进行拷贝
+```
+
 
