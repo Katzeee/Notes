@@ -397,7 +397,9 @@ yy可以复制一行
 $ git branch -m oldname newname
 ```
 ###ctags使用方法
-
+```bash
+ctags -R
+```
 ### vim tab页
 
 ```
@@ -426,5 +428,4 @@ $ git push origin --delete name #删除远程分支
 char buf[11];//定义buf
 strncpy(buf, src, 10); //进行拷贝
 ```
-
 
