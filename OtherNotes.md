@@ -333,18 +333,101 @@ DATE %y%/%m%/%d%&&
 <p align="left">
   <img src="images/2020040109441427.png">
 </p>
-# 2021.12.28
 
-### Linux运行文件时报错：bash: $'\r': command not found
+
+# 2021.9.13
+
+### Config github SSH-Key on Linux OS
+
+```bash
+$ ssh-add -D # delete all key-pair
+$ ssh-keygen -t rsa # generate new key
+$ chmod 0700 ~/.ssh
+$ chmod 0600 ~/.ssh/id_rsa*
+```
+
+add ssh on github setting page
+
+### sscanf
+
+using sscanf for format convertion
+
+```c
+char a[] = "123456";
+int i;
+sscanf(a, "%d", &i);//convert string "123456" to int 123456
+char b[] = "0x8000";
+int j;
+sscanf(b, "0x%x", &j);//convert string "0x8000" to int 0x8000 i.e. 32768
+```
+
+### strtok
+
+it can break a string into a sequence of zero or more nonempty tokens, we can use it to split strings
+
+```c
+char a[] = "Th is A";
+char* s;
+s = strtok(a, " ");//" " is the seperator of the string
+//now s points T
+s = strtok(NULL, " ");//we call strtok with the first arg being NULL except the first calling as we use it for the same string to get the next part
+//now s points i
+```
+
+# 2020.10.31
+
+### 记录有关swift入门相关问题
+
+### 多用try catch去寻找问题
+
+### @StateObject, @EnvironmentObject, @ObseverableObject
+
+# 2022.1.17
+
+### vim 跨文件复制
+```
+:sp或:vsp分割出两个窗口
+:e .打开另一个文件
+^W w切换两个窗口
+yy可以复制一行
+```
+现在就可以复制了
+
+### git分支改名字
+```bash
+$ git branch -m oldname newname
+```
+###ctags使用方法
+```bash
+ctags -R
+```
+### vim tab页
 
 ```
-# 使用vim打开文件
-vim aaa.sh
-# 转换格式
-:set ff=unix
-# 保存文件
-:wq
+:tabnew 创建新tab
+:tabp前一个
+:tabn后一个
+:tabc关闭当前的tab
+:tabo关闭所有其他的tab
+:tabs查看所有打开的tab
+gt和gT可以直接在tab件切换
 ```
+### vim中执行shell命令
 
-
+```
+:! command
+```
+### git删除分支
+先切换到别的分支
+```bash
+$ git branch -d name #删除本地分支
+$ git push origin --delete name #删除远程分支
+```
+# 2022.1.18
+### strncpy
+```c
+char buf[11];//定义buf
+strncpy(buf, src, 10); //进行拷贝
+```
+>>>>>>> e2054c308947395bda1eafcc6868f5b314d551d0
 
