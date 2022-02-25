@@ -333,3 +333,18 @@ DATE %y%/%m%/%d%&&
 <p align="left">
   <img src="images/2020040109441427.png">
 </p>
+# 2021.12.28
+
+### Linux运行文件时报错：bash: $'\r': command not found
+
+```
+# 使用vim打开文件
+vim aaa.sh
+# 转换格式
+:set ff=unix
+# 保存文件
+:wq
+```
+
+
+
