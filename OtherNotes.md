@@ -382,6 +382,21 @@ s = strtok(NULL, " ");//we call strtok with the first arg being NULL except the 
 
 ### @StateObject, @EnvironmentObject, @ObseverableObject
 
+
+
+# 2021.12.28
+
+### Linux运行文件时报错：bash: $'\r': command not found
+
+```
+# 使用vim打开文件
+vim aaa.sh
+# 转换格式
+:set ff=unix
+# 保存文件
+:wq
+```
+
 # 2022.1.17
 
 ### vim 跨文件复制
@@ -429,5 +444,4 @@ $ git push origin --delete name #删除远程分支
 char buf[11];//定义buf
 strncpy(buf, src, 10); //进行拷贝
 ```
->>>>>>> e2054c308947395bda1eafcc6868f5b314d551d0
 
