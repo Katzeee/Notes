@@ -339,6 +339,8 @@ DATE %y%/%m%/%d%&&
 
 ### Config github SSH-Key on Linux OS
 
+见Linux-env-config
+
 ```bash
 $ ssh-add -D # delete all key-pair
 $ ssh-keygen -t rsa # generate new key

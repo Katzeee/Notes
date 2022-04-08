@@ -25,7 +25,7 @@ $ sudo apt-get install make -y
 
 # 配置git
 ```bash
-$ git config --global user.name "Xac"      
+$ git config --global user.name "xac"      
 $ git config --global user.email "jiangfengxi.c@gmail.com"
 $ rm -rf ~/.ssh
 $ ssh-keygen -t rsa # 按三个回车确保没有密码
