@@ -35,7 +35,7 @@ add_library(<name> <type> IMPORTED [GLOBAL])
 ```
 
 - 用来导入已经存在的库，CMake也不会添加任何编译规则给它。
-- 此类库的标志就是有IMPORT属性，导入的库的作用域为创建它的目录及更下级目录。但是如果有GLOBE属性，则作用域被拓展到全工程。
+- 此类库的标志就是有IMPORT属性，导入的库的作用域为创建它的目录及更下级目录。但是如果有GLOBAL属性，则作用域被拓展到全工程。
 - 导入的库的类型必须是STATIC, SHARED, MODULE, UNKNOWN中的一种
 对于UNKNOW类型，不需要知道类型就可使用的
 从工程外部引入一个库，使用IMPORTED_LOCATION属性确定库文件的在磁盘上的完整路径。
