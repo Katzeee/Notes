@@ -1,37 +1,4 @@
 # 2021.3.29
-
-### git命令
-
-```bash
-git status #查看文件状态
-git add . #添加所有文件到暂存区
-git commit -m "message" #提交暂存区内容到本地仓库
-git log #查看当前版本之前提交记录
-git reflog #查看所有提交记录
-git reset --hard 版本号 #回退到某个版本
-git branch -v #查看分支
-git branch 分支名 #创建分支
-git checkout 分支名 #切换分支
-git branch -a #查看所有分支
-git merge 分支名 #将该分支合并到当前工作分支
-git mv 原文件名 现文件名/文件夹名 #重命名文件，或移动文件位置
-```
-
-### vim命令
-
-```bash
-进入编辑模式，按i进行编辑
-编辑结束，按ESC键 跳到命令模式，然后输入退出命令：
-:w保存文件但不退出vi 编辑
-:w! 强制保存，不退出vi 编辑
-:w file将修改另存到file中，不退出vi 编辑 
-:wq保存文件并退出vi 编辑
-:wq!强制保存文件并退出vi 编辑
-q:不保存文件并退出vi 编辑
-:q!不保存文件并强制退出vi 编辑
-:e!放弃所有修改，从上次保存文件开始在编辑
-```
-
 ### linux命令
 
 ```bash
@@ -40,13 +7,7 @@ touch <文件名> #创建文件
 mkdir <文件夹名> #创建文件夹
 ```
 
-### git一个新项目
 
-```shell
-# 需要先创建bare文件夹
-$ git remote add origin xjf@106.15.43.98:/data/gitrepos/notes/notes.git
-$ git push -u origin master #提交
-```
 
 # 2021.5.13
 

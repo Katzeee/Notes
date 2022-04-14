@@ -1,6 +1,6 @@
 # 2021.3.29
 
-### git命令
+### 基本命令
 
 ```bash
 $ git status #查看文件状态
@@ -14,10 +14,7 @@ $ git branch 分支名 #创建分支
 $ git checkout 分支名 #切换分支
 $ git branch -a #查看所有分支
 $ git merge 分支名 #将该分支合并到当前工作分支
-$ git mv 原文件名 现文件名/文件夹名 #重命名文件，或移动文件位置
 ```
-
-
 
 # 2021.5.16
 
@@ -33,8 +30,10 @@ $ git push -u origin master -f #强制覆盖
 
 
 
-## 2022.1.17
-## git删除分支
+# 2022.1.17
+
+### git删除分支
+
 先切换到别的分支
 ```bash
 $ git branch -d name #删除本地分支
@@ -55,15 +54,9 @@ $ git pull
 $ git push origin <本地指定分支名>:<远程指定分支名>
 # 将本地指定分支 推送到 与本地指定分支同名的远程分支上（注意：pull是远程在前本地在后，push相反）：
 $ git push origin <本地指定分支名>
-# 将本地当前分支 推送到 与本地当前分支同名的远程分支上(需先关联远程分支，方法见文章末尾)
+# 将本地当前分支 推送到 与本地当前分支同名的远程分支上
 $ git push
 # 将本地分支与远程同名分支相关联
 $ git push -u origin <本地分支名>
 ```
 
-# 2022.4.14
-### 查找依赖so在哪个包里
-apt-file
-```bash
-$ apt-file search libXmu.so.6
-```
