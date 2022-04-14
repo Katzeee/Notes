@@ -1,0 +1,66 @@
+# 2022.4.12
+
+租的房子没有接网线，只有弱电箱的位置能放路由器，但由于手上有设备只能接有线，想在房间里接有线就得组mesh
+
+### 主路由
+
+主路由在接口选项处lan口ip先设置成和光猫不同，能正常上网，DHCP池留出一点给副路由
+
+记录主路由wan口取得的DNS服务
+
+
+在配置wifi时选择WPA2-PSK加密，算法AES
+<p align="left">
+  <img src="../images/MESH1.png">
+</p>
+
+打开kvr，生成本地生成PMK
+
+<p align="left">
+  <img src="../images/MESH2.png">
+</p>
+
+<p align="left">
+  <img src="../images/MESH3.png">
+</p>
+
+
+选择简单MESH，注意选择5g频段进行mesh
+<p align="left">
+  <img src="../images/MESH4.png">
+</p>
+
+### 副路由
+
+先不要打开简单MESH，先设置从路由
+
+将从路由2.4GHz的无线网设置成和主路由不同的，5g可以相同，先不进行mesh
+
+从路由设置lan口设置ip192.168.6.2同一网段，子网掩码255.255.255.0，网关是主路由ip地址，DNS写上面获得的DNS，DHCP池不和主路由重合
+
+连接上面设置的从路由2.4G，如果连不上就手动设置ip地址和子网掩码
+
+无线部分设置和主路由相同，mesh部分设置也和主路由相同
+
+先打开副路由的mesh，等待配置完成，多等一会，慢的很，设置完不行就重启一下。进入主路由管理页面打开mesh，进不去就把副路由关了进（因为2.4g和副路由不同，所以可以连2.4g进）
+
+都打开以后就好了，测试连接副路由的mesh wifi能不能上网
+
+这时可以注意到mesh连接上了
+<p align="left">
+  <img src="../images/MESH5.png">
+</p>
+<p align="left">
+  <img src="../images/MESH6.png">
+</p>
+
+
+### 有线部分
+
+但是此时连接有线是上不了网的，因为easymesh没有把你的真实lan口添加到他的虚拟lan口里面，打开主副路由的接口，把所有没有打上勾的lan口都添加到br-lan里面去就可以了
+<p align="left">
+  <img src="../images/MESH7.png">
+</p>
+
+
+我还将副路由的两个WAN口禁用了
