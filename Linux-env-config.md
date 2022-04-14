@@ -32,3 +32,4 @@ $ ssh-keygen -t rsa # 按三个回车确保没有密码
 $ cat ~/.ssh/id_rsa.pub
 ```
 
+add ssh on github setting page

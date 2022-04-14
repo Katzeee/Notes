@@ -1,13 +1,3 @@
-# 2021.3.29
-### linux命令
-
-```bash
-cd .. #返回上级目录，注意有空格
-touch <文件名> #创建文件
-mkdir <文件夹名> #创建文件夹
-```
-
-
 
 # 2021.5.13
 
@@ -103,46 +93,7 @@ https://blog.csdn.net/cjmqas/article/details/79282847
 
 https://github.com/microsoft/vcpkg
 
-# 2021.5.15
 
-## 如何在ubuntu中获取管理员权限
-
->1.Ubuntu中如何切换到超级用户（root）
->
->我们知道在其他linux操作系统中（如红帽操作系统）普通权限的用户想切换到root下，只需输入su命令，系统会提示输入root用户的密码，只要我们正确输入即可。
->
->然而在Ubuntu中我们并不清楚root的密码是多少（还曾以为自己安装时没记住）。其实在默认的情况下，Ubuntu是没有超级用户(superuser, root)的。
->
->但有些系统操作必须有超级用户的权限才能进行，那么该如何做呢？
->
->在Ubuntu 下切换到超级用户需要使用其他方法，主要有两种：
->
->1.    利用sudo -i命令  输入sudo -i ,提示输入当前用户密码，输入后即可获得root权限，这并不需要root的密码。但是它也有很多限制，在默认的情况下，只能在 5 分钟之内使用 root 权限。
->
->2.    如果想一直使用 root 权限，可使用sudo passwd root 命令重新设置一下root的密码。之后就可以自由使用su命令自由的切换了。
->
->2. 在VMware虚拟机中Linux在虚拟终端之间切换的方法
->
->在linux操作系统中当我们想在虚拟终端之间切换时，经常的做法是ctrl+Alt+F1~F6，然而当我们在VMware中安装安装Linux后，想在X Windows与虚拟终端之间切换时，却发现Ctrl+Alt+Fx不起作用，那么我们如何解决这个问题呢？
->
->总结起来有两种方法：
->
->方法1：我们只需要将VMware或者其他虚拟机软件的控制鼠标切换的热键修改一下，不再使用Ctrl+Alt即可，如改为Ctrl+Alt+Shift，VMware具体方法如下：中文版——选择编辑——参数——热键，选择 Ctrl+Alt+Shift即可。英文版选择edit-preferences-hotkeys选择 Ctrl+Alt+Shift即可。
->
->方法二
->
->也可以不修改热键，只要在切换时使用Ctrl+shift+Alt+Fx即可，如在x windows下打开的终端窗口中按住ctrl+shift+alt+F1即可打开tty1虚拟终端窗口。而后在个虚拟终端之间的切换只要使用Alt+FX即可。如按Alt+F7即可在从刚才的虚拟终端tty1中切换到刚才的x windows下。
-
-# 2021.5.16
-
-### 本地上传至github
-
-```bash
-$ git init
-$ git add .
-$ git remote add origin <url>
-$ git pull
-$ git push -u origin master -f #强制覆盖
 ```
 
 # 2021.6.3
@@ -222,33 +173,6 @@ $ git push -u origin master -f #强制覆盖
 })();
 ```
 
-# 2021.6.11
-
-### cpp关键字using作为别名
-
-```c++
-typedef std::unique_ptr<std::unordered_map<std::string, std::string>> UPtrMapSS;
-using UPtrMapSS = std::unique_ptr<std::unordered_map<std::string, std::string>>;
-```
-
-```c++
-typedef void (*FP) (int, const std::string&);
-using FP = void (*) (int, const std::string&);
-```
-
-```c++
-typedef std::string (Foo::* fooMemFnPtr) (const std::string&);
-using fooMemFnPtr = std::string (Foo::*) (const std::string&);
-```
-
-```c++
-template <typename T>
-using Vec = MyVector<T, MyAlloc<T>>;
-// usage
-Vec<int> vec;
-
-//typedef做不到
-```
 
 # 2021.7.13
 
@@ -296,46 +220,7 @@ DATE %y%/%m%/%d%&&
 </p>
 
 
-# 2021.9.13
 
-### Config github SSH-Key on Linux OS
-
-见Linux-env-config
-
-```bash
-$ ssh-add -D # delete all key-pair
-$ ssh-keygen -t rsa # generate new key
-$ chmod 0700 ~/.ssh
-$ chmod 0600 ~/.ssh/id_rsa*
-```
-
-add ssh on github setting page
-
-### sscanf
-
-using sscanf for format convertion
-
-```c
-char a[] = "123456";
-int i;
-sscanf(a, "%d", &i);//convert string "123456" to int 123456
-char b[] = "0x8000";
-int j;
-sscanf(b, "0x%x", &j);//convert string "0x8000" to int 0x8000 i.e. 32768
-```
-
-### strtok
-
-it can break a string into a sequence of zero or more nonempty tokens, we can use it to split strings
-
-```c
-char a[] = "Th is A";
-char* s;
-s = strtok(a, " ");//" " is the seperator of the string
-//now s points T
-s = strtok(NULL, " ");//we call strtok with the first arg being NULL except the first calling as we use it for the same string to get the next part
-//now s points i
-```
 
 # 2020.10.31
 
@@ -346,61 +231,6 @@ s = strtok(NULL, " ");//we call strtok with the first arg being NULL except the 
 ### @StateObject, @EnvironmentObject, @ObseverableObject
 
 
-
-# 2021.12.28
-
-### Linux运行文件时报错：bash: $'\r': command not found
-
-```
-# 使用vim打开文件
-vim aaa.sh
-# 转换格式
-:set ff=unix
-# 保存文件
-:wq
-```
-
-# 2022.1.17
-
-### vim 跨文件复制
-```
-:sp或:vsp分割出两个窗口
-:e .打开另一个文件
-^W w切换两个窗口
-yy可以复制一行
-```
-现在就可以复制了
-
-### git分支改名字
-```bash
-$ git branch -m oldname newname
-```
-###ctags使用方法
-```bash
-ctags -R
-```
-### vim tab页
-
-```
-:tabnew 创建新tab
-:tabp前一个
-:tabn后一个
-:tabc关闭当前的tab
-:tabo关闭所有其他的tab
-:tabs查看所有打开的tab
-gt和gT可以直接在tab件切换
-```
-### vim中执行shell命令
-
-```
-:! command
-```
-### git删除分支
-先切换到别的分支
-```bash
-$ git branch -d name #删除本地分支
-$ git push origin --delete name #删除远程分支
-```
 # 2022.1.18
 ### strncpy
 ```c
@@ -408,21 +238,4 @@ char buf[11];//定义buf
 strncpy(buf, src, 10); //进行拷贝
 ```
 
-# 2020.4.8
-### git远程分支交互
-```bash
-# 将远程指定分支 拉取到 本地指定分支上
-$ git pull origin <远程分支名>:<本地分支名>
-# 将远程指定分支 拉取到 本地当前分支上：
-$ git pull origin <远程分支名>
-# 将与本地当前分支同名的远程分支拉取到本地当前分支上
-$ git pull
-# 将本地指定分支 推送到 远程指定分支上（注意：pull是远程在前本地在后，push相反）：
-$ git push origin <本地指定分支名>:<远程指定分支名>
-# 将本地指定分支 推送到 与本地指定分支同名的远程分支上（注意：pull是远程在前本地在后，push相反）：
-$ git push origin <本地指定分支名>
-# 将本地当前分支 推送到 与本地当前分支同名的远程分支上(需先关联远程分支，方法见文章末尾)
-$ git push
-# 将本地分支与远程同名分支相关联
-$ git push -u origin <本地分支名>
-```
+

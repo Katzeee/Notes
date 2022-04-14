@@ -39,7 +39,23 @@ $ git push -u origin master -f #强制覆盖
 $ git branch -d name #删除本地分支
 $ git push origin --delete name #删除远程分支
 ```
+# 2022.1.17
 
+### git分支改名字
+```bash
+$ git branch -m <oldname> <newname>
+```
+### ctags使用方法
+```bash
+ctags -R
+```
+
+### git删除分支
+先切换到别的分支
+```bash
+$ git branch -d name #删除本地分支
+$ git push origin --delete name #删除远程分支
+```
 
 # 2022.4.8
 ### git远程分支交互
