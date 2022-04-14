@@ -44,5 +44,6 @@ vim aaa.sh
 
 ```bash
 $ sudo apt-get install apt-file
+$ sudo apt-file update
 $ apt-file search libXmu.so.6
 ```
