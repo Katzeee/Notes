@@ -1,12 +1,12 @@
 # 2022.4.14
 
-
+ffmpeg在linux环境下开发的安装配置过程
 
 ## 依赖包安装
 ```bash
 $ sudo apt-get install -y nasm yasm cmake mercurial
 $ sudo apt-get install -y libxcb-xfixes0-dev pkg-config texinfo wget zlib1g-dev
-$ sudo apt-get install -y libtool libva-dev libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev$ 
+$ sudo apt-get install -y libtool libva-dev libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev 
 $ sudo apt-get install -y libfreetype6-dev libsdl2-dev libtheora-dev
 $ sudo apt-get install -y autoconf automake build-essential git libass-dev
 $ sudo apt-get install libx264-dev # H.264视频编码器
@@ -55,7 +55,7 @@ $ ./configure --prefix="/usr/local/ffmpeg" \
   --enable-libfdk-aac \
   --enable-libmp3lame \
   --enable-libopus \
-  --enbale-libfreetype \
+  --enable-libfreetype \
   --enable-libtheora \
   --enable-libvorbis \
   --enable-libvpx \
