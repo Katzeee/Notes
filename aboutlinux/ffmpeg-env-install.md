@@ -83,10 +83,16 @@ $ soruce /etc/profile
 ### 查看ffmpeg版本
 ```bash
 $ ffmpeg -version
-# 如果报错libavdevice.so.58，执行下面的操作
+```
+如果报错libavdevice.so.58，执行下面的操作
+```bash
 $ sudo vi /etc/ld.so.conf.d/ffmpeg.conf
-# 在最后一行加入
-/usr/local/ffmpeg/lib
-# 执行下面的语句
-$ ldconfig
+```
+在最后一行加入
+```
+# /usr/local/ffmpeg/lib
+```
+执行下面的语句
+```bash
+$ sudo ldconfig
 ```
