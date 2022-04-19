@@ -25,7 +25,8 @@ $ unzip opencv-3.4.16
 $ cd opencv-3.4.16
 $ mkdir build && cd build
 $ export PKG_CONFIG_PATH=/usr/local/ffmpeg/lib/pkgconfig:$PKG_CONFIG_PATH # ffmpeg安装路径
-$ sudo cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local .. 
+$ sudo cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local -D OPENCV_GENERATE_PKGCONFIG=ON .. 
+# OPENCV_GENERATE_PKGCONFIG=ON为了生成pkgconfig的配置文件，便于多版本opencv切换
 ```
 
 做完这一步之后要确保在输出信息里ffmpeg为YES
@@ -58,13 +59,13 @@ $ sudo make install
 ## 环境变量配置
 
 ```bash
-$ sudo vi /etc/ld.so.conf
-# 在文件中最后加入include /usr/loacal/lib
+$ sudo vi /etc/ld.so.conf.d/opencv.conf
+# 在文件中最后加入include /usr/local/lib
 $ sudo ldconfig
 $ sudo vi /etc/profile
 # 在文件中最后加入
-# PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
-# export PKG_CONFIG_PATH
+# export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 $ source /etc/profile
 ```
 
@@ -72,4 +73,37 @@ $ source /etc/profile
 
 ```bash
 $ pkg-config opencv --modversion
+```
+
+## 同时安装opencv4
+
+更改安装路径
+```bash
+$ sudo cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local/opencv-4.5.5 -D OPENCV_GENERATE_PKGCONFIG=ON .. 
+```
+
+## 配置环境变量
+
+```bash
+$ sudo vi /etc/ld.so.conf.d/opencv.conf
+# 在文件中最后加入include /usr/local/opencv-4.5.5/lib
+$ sudo ldconfig
+$ sudo vi /etc/profile
+# 在文件中最后加入
+# export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/opencv-4.5.5/lib/pkgconfig
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/opencv-4.5.5/lib
+$ source /etc/profile
+```
+
+## 检验是否安装成
+
+```bash
+$ pkg-config opencv4 --modversion
+``` 
+
+## 使用时的CMakeLists
+
+```cmake
+find_package(OpenCV 3.4.16 REQUIRED) # 使用opencv3
+find_package(OpenCV 4.5.5 REQUIRED) # 使用opencv4
 ```
