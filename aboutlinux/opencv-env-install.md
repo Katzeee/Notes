@@ -106,4 +106,6 @@ $ pkg-config opencv4 --modversion
 ```cmake
 find_package(OpenCV 3.4.16 REQUIRED) # 使用opencv3
 find_package(OpenCV 4.5.5 REQUIRED) # 使用opencv4
+# set(${OpenCV_INCLUDE_DIRS} "/usr/local/opencv-4.5.5/include/opencv4/opencv2/") # 或许要加这两行
+# set(${OpenCV_LIBS}  "/usr/local/opencv-4.5.5/lib/")
 ```
