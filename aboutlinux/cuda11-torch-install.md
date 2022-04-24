@@ -2,7 +2,7 @@
 
 运行pytorch程序提示3050显卡当前cuda版本不支持，因此需要更新cuda与torch
 
-## 重新安装nvcc
+## 安装cuda
 
 在官网查看安装命令，选择deb(local)
 runfile
@@ -21,25 +21,42 @@ $ sudo apt-get -y install cuda
 打开`~/.bashrc`
 
 ```bash
-$ export LD_LABRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.6/lib64
-$ export PATH=$PATH:/usr/local/cuda-11.6/bin
-$ export CUDA_HOME=$CUDA_HOME:/usr/local/cuda-11.6
+$ export LD_LABRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64
+$ export PATH=$PATH:/usr/local/cuda/bin
+$ export CUDA_HOME=$CUDA_HOME:/usr/local/cuda
 ```
 
 通过`nvcc -V`命令查看当前cuda版本
 
+`/usr/local/cuda`是链接文件，当需要更换cuda版本时，只需要把`/usr/local/cuda`删除，再用`ln`建立新的链接文件
+
 若不成功还需要用dpkg卸载原有cuda
 
-## 重新安装torch
+## 安装cudnn
+
+> https://developer.nvidia.com/cudnn
+
+在官网下载对应cuda版本的cudnn(tar)，采用`tar -zvf`解压缩
+
+- 可选（如不这么做可以在cmake文件里进行目录指定）
+
+将cuda/include/cudnn.h文件复制到usr/local/cuda/include文件夹，将cuda/lib64/下所有文件复制到/usr/local/cuda/lib64文件夹中，并添加读取权限
+
+```bash
+$ sudo chmod a+r /usr/local/cuda/include/cudnn.h /usr/local/cuda/lib64/libcudnn*
+```
+## 安装libtorch
 
 在官网查看安装命令
 
 > https://pytorch.org/get-started/locally/
 
-```bash
-$ pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
-```
-
-在安装过程中出现最后一秒`killed`的情况，带上安装选项`--no-cache-dir`
+下载对应版本的zip包，采用`unzip`解压缩
 
 
+
+## python安装libtorch
+
+> https://pytorch.org/get-started/locally/
+
+同样是这个官网，选择与上面同版本的安装包的pip安装命令，进行安装，如出现最后一秒`killed`的情况，可以加让`--no-cache-dir`
