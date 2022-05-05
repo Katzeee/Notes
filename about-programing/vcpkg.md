@@ -1,9 +1,51 @@
-
 # 2021.5.14
 
-vcpkg
+- tutorial
 
-https://blog.csdn.net/cjmqas/article/details/79282847
+> https://blog.csdn.net/cjmqas/article/details/79282847
 
-https://github.com/microsoft/vcpkg
+- official github repo
 
+> https://github.com/microsoft/vcpkg
+
+# 2022.5.5
+
+## using vcpkg on ubuntu
+
+- cd to the folder where you want to install vcpkg
+
+```bash
+$ cd /usr/local
+```
+
+- download the src
+
+```bash
+$ git clone https://github.com/microsoft/vcpkg.git
+```
+
+- install
+
+```bash
+$ ./vcpkg/bootstrap-vcpkg.sh
+```
+
+- use vcpkg with vscode
+
+adding the following to the workspace `setting.json`
+
+```json
+{
+  "cmake.configureSettings": {
+    "CMAKE_TOOLCHAIN_FILE": "[vcpkg root]/scripts/buildsystems/vcpkg.cmake"
+  }
+}
+```
+
+adding the following to the `c_cpp_properties.json`
+
+```json
+"includePath":["${vcpkgRoot}/x64-linux/include/**"]
+```
+
+- **delete the cmakecache and rebuild again!!**
