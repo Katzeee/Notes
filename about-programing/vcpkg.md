@@ -30,6 +30,12 @@ $ git clone https://github.com/microsoft/vcpkg.git
 $ ./vcpkg/bootstrap-vcpkg.sh
 ```
 
+- change the file owner and group(I don't know whether it is necessary.)
+
+```bash
+$ sudo chown -R xac:xac /usr/local/vcpkg
+```
+
 - use vcpkg with vscode
 
 adding the following to the workspace `setting.json`
