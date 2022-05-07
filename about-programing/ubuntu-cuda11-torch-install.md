@@ -2,6 +2,8 @@
 
 运行pytorch程序提示3050显卡当前cuda版本不支持，因此需要更新cuda与torch
 
+see [install via vcpkg](./ubuntu-cuda-install-vcpkg.md), easier than this.
+
 ## 安装cuda
 
 在官网查看安装命令，选择deb(local)
