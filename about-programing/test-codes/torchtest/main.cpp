@@ -14,7 +14,7 @@ int main()
 
     std::cout << device_type << std::endl;
 
-    torch::Tensor tensor = torch::rand({5, 3}).cuda();
+    torch::Tensor tensor = torch::rand({5, 3}).to(device_type);
 
     std::cout << tensor << std::endl;
 

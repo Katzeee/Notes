@@ -1,14 +1,40 @@
 # 2022.5.7
 
-Install libtorch in ubuntu, and provided a small project for it.
+Install libtorch in ubuntu with a small project for testing it.
+
+Make sure you have installed cuda and cudnn already, or the test code may do not work for you.
+
+You can install cuda/cudnn by the instruction here [via vcpkg](./ubuntu-cuda-install-vcpkg.md) or [without vcpkg](./ubuntu-cuda11-torch-install.md)
 
 ## Download and install libtorch
+
+Check which version is suitable for your graphic card.
 
 Get the zip file on official website, choose the version that satisfy your demand. I chose the libtorch with cuda-11.3 though my cuda version is 11.6
 
 > https://pytorch.org/get-started/locally/
 
-then unzip the file
+```bash
+$ cd ~/Downloads/compressed
+$ wget https://download.pytorch.org/libtorch/cu113/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcu113.zip
+```
+
+then unzip the file and put wherever you want, I choose to put it at `/home/xac/local/libtorch`
+
+```bash
+$ cd /home/xac/local
+$ unzip ~/Downloads/compressed/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcu113.zip
+```
+
+## Install pytorch
+
+Also, on the above website can you see how to install pytorch.
+
+Choose the SAME VERSION as the libtorch(I don't know whether it will affect the following steps, but I recommend choosing the same version of cuda and torch.)
+
+```bash
+$ pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+```
 
 ## Using libtorch and opencv in cpp with cmake
 

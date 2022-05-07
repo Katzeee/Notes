@@ -6,6 +6,8 @@ I looked up many websites trying to config cuda and libtorch via vcpkg.
 
 ## Remove old-version cuda
 
+If you don't have an old-version cuda, no need to do this.
+
 To remove cuda toolkit:
 
 ```bash
@@ -34,6 +36,8 @@ $ sudo /usr/bin/nvidia-uninstall
 ```
 
 ## Download and install cuda
+
+Check which version is suitable for your graphic card.
 
 Download the sh file from following website, choose `runfile(local)`
 
