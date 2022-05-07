@@ -159,7 +159,6 @@ Or the following CMake target:
     target_link_libraries(main PRIVATE CuDNN::CuDNN)
 ```
 
-## integrate to 
 
 ## Test code
 
