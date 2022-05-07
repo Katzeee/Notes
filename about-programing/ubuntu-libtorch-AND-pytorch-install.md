@@ -8,7 +8,6 @@ You can install cuda/cudnn by the instruction here [via vcpkg](./ubuntu-cuda-ins
 
 ## Download and install libtorch
 
-Check which version is suitable for your graphic card.
 
 Get the zip file on official website, choose the version that satisfy your demand. I chose the libtorch with cuda-11.3 though my cuda version is 11.6
 
@@ -19,7 +18,7 @@ $ cd ~/Downloads/compressed
 $ wget https://download.pytorch.org/libtorch/cu113/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcu113.zip
 ```
 
-then unzip the file and put wherever you want, I choose to put it at `/home/xac/local/libtorch`
+Then unzip the file and put wherever you want, I choose to put it at `/home/xac/local/libtorch`
 
 ```bash
 $ cd /home/xac/local
@@ -36,6 +35,11 @@ Choose the SAME VERSION as the libtorch(I don't know whether it will affect the 
 $ pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
 ```
 
+If the program got "KILLED" when you almost finish installation, you can try 
+
+```bash
+$ pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113 --no-cache-dir
+```
 ## Using libtorch and opencv in cpp with cmake
 
 ```cpp
