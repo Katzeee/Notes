@@ -82,6 +82,17 @@ export PATH=$PATH:/usr/local/cuda/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64
 ```
 
+You can see your cuda version by ruuning `nvcc -V`, and you will get the outputs like this:
+
+```bash
+$ nvcc -V
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2022 NVIDIA Corporation
+Built on Tue_Mar__8_18:18:20_PST_2022
+Cuda compilation tools, release 11.6, V11.6.124
+Build cuda_11.6.r11.6/compiler.31057947_0
+```
+
 Then run `vcpkg install cuda`, you can see following
 
 ```
@@ -100,7 +111,6 @@ Installing package cuda[core]:x64-linux...
 Elapsed time for package cuda:x64-linux: 30.28 ms
 
 Total elapsed time: 459.6 ms
-
 ```
 
 if you failed, you can try to config the environment variables, but the author said it is fixed.
@@ -165,6 +175,8 @@ Or the following CMake target:
 
 
 ## Test code
+
+The whole project is at [cudatest](./test-codes/cudatest/)
 
 ```cpp
 // main.cpp
