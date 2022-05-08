@@ -109,3 +109,7 @@ find_package(OpenCV 4.5.5 REQUIRED) # 使用opencv4
 # set(${OpenCV_INCLUDE_DIRS} "/usr/local/opencv-4.5.5/include/opencv4/opencv2/") # 或许要加这两行
 # set(${OpenCV_LIBS}  "/usr/local/opencv-4.5.5/lib/")
 ```
+
+# 2022.5.8
+
+You can install opencv4 just by `vcpkg install opencv4`, and install opencv3 by `vcpkg install opencv3`.
