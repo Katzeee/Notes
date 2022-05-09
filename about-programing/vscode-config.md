@@ -30,3 +30,7 @@
 代码补全快捷键原本时<kbd>ctrl+space</kbd>，搜索trigger suggestion将其改为<kbd>alt+x</kbd>即可
 
 不想用<kbd>enter</kbd>补全代码，在acceptsuggestion有一个绑定了enter，将其删除
+
+# 2022.5.9
+
+Changed a lot in settings.json and keybindings.json
