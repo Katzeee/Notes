@@ -1,5 +1,5 @@
 # 2021.3.29
-### linux命令
+## linux命令
 
 ```bash
 cd .. #返回上级目录，注意有空格
@@ -26,7 +26,7 @@ mkdir <文件夹名> #创建文件夹
 
 # 2021.12.28
 
-### Linux运行文件时报错：bash: $'\r': command not found
+## Linux运行文件时报错：bash: $'\r': command not found
 
 ```
 # 使用vim打开文件
@@ -38,7 +38,7 @@ vim aaa.sh
 ```
 # 2022.4.14
 
-### 查找依赖so在哪个包里
+## 查找依赖so在哪个包里
 
 在使用apt install安装库的时候，经常会出现找不到依赖包的情况，这时候就可以使用apt-file去查找所需要的依赖包在哪个lib里，再进行下载安装
 
@@ -47,3 +47,17 @@ $ sudo apt-get install apt-file
 $ sudo apt-file update
 $ apt-file search libXmu.so.6
 ```
+
+# 2022.5.8
+
+## `LIBRARY_PATH` and `LD_LIBRARY_PATH`
+
+开发时，设置LIBRARY_PATH，以便gcc能够找到编译时需要的动态链接库。
+
+发布时，设置LD_LIBRARY_PATH，以便程序加载运行时能够自动找到需要的动态链接库。
+
+When building a project, `LIBRARY_PATH` for `gcc` finding the dynamic link library or you will get a build error.
+
+When running a program, `LD_LIBRARY_PATH` for loading the dynamic link library.
+
+Another way to solve runtime error `fatal: libgcc_s.so.1: open failed: No such file or directory` is to set `-R<path>` when you are building the project to set runtime path.
