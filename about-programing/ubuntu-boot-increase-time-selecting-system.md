@@ -1,8 +1,8 @@
 # 2022.5.9
 
-To increase the selection time, run commands as following:
-
 > https://askubuntu.com/questions/711062/how-to-modify-waiting-time-of-the-dual-boot-menu
+
+To increase the selection time, run commands as following:
 
 ```bash
 $ sudo vi /etc/default/grub
