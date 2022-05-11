@@ -6,8 +6,7 @@ To increase the selection time, run commands as following:
 
 ```bash
 $ sudo vi /etc/default/grub
+$ sudo update-grub
 ```
 
 Change the `GRUB_TIMEOUT` to whatever you want
-
-then run `sudo update-grub`
