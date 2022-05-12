@@ -128,7 +128,7 @@ We can set `CMAKE_BUILD_TYPE` as `Release` by this way:
 if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE Release)
 endif()
-# false
+# wrong
 set (CMAKE_BUILD_TYPE Release)
 ```
 
@@ -184,6 +184,13 @@ They represent the current project name and the top-level project name, respecti
 **TIPS: USING `CMAKE_CXX_STANDARD` BEFORE `project()`**
 
 **WARNING: DO NOT SET `CMAKE_CXX_FLAGS` TO CHANGE CPP STANDARD**
+
+```cmake
+set_property(TARGET main PROPERTIY CXX_STANDARD 17) # correct
+target_compile_options(main PUBLIC "-std=c++17") # wrong
+set_property(TARGET main PROPERTIY CUDA_ARCHITECTURES 75) # correct
+target_compile_options(main PUBLIC "-arch=sm_75") # wrong
+```
 
 ### `cmake_minimum_required()`
 
@@ -264,4 +271,16 @@ set_target_properties(main PROPERTY
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
     )
+```
+
+Use `set()` to set global variables to make all target built after have the properties:
+
+```cmake
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(WIN32_EXECUTUABLE ON)
+set(LINK_WHAT_YOU_USE ON)
+set(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set(ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 ```
