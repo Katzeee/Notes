@@ -6,13 +6,14 @@
 
 ## `add_library`
 
-### Normal Libraries
-
 ```cmake
 add_library(<name> [STATIC | SHARED | MODULE]
             [EXCLUDE_FROM_ALL]
             [<source>...])
 ```
+
+### Normal Libraries
+
 - 添加一个从`<source>`列表列出文件构建而来的库，名为`<name>`全局唯一
 - `<source>`可以直接指定，也可以后续再用`target_sources()`
 - STATIC（静态库）（`<lib>name.a`），SHARED（动态库），MODULE（模块库）
@@ -65,3 +66,15 @@ add_library(<name> ALIAS <target>)
 - ALIAS的library不能修改属性，不能调用`set_property()`, `set_target_properties()`和`target_link_libraries()`等方法
 
 - 不能用于`install()`
+
+# 2022.5.17
+
+## Modern Cmake
+
+### `aux_source_directory()`
+
+```cmake
+aux_source_directory(<dir> <variable>)
+```
+
+collect all source files in `<dir>`
