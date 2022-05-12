@@ -69,7 +69,7 @@ add_library(<name> ALIAS <target>)
 
 # 2022.5.17
 
-## Modern Cmake
+## Adding source files
 
 ### `aux_source_directory()`
 
@@ -106,4 +106,162 @@ to find recursively in the directory, use `file(GLOB_RECURSE)`
 # example, recursively collect the files
 file(GLOB_RECURSE SOURCE *.h *.cpp)
 # NOTICE: if your CMakeLists.txt is in the project directory, this command will add some cache files in `build/` directory, the solution is to put all source files in `src/` directory
+```
+
+## Config variables
+
+### `CMAKE_BUILD_TYPE`
+
+Typically, values include:
+
+- `Debug`: `-O0 -g`(default)
+- `Release`: `-O3 -DNDEBUG`
+- `MinSizeRel`: `-Os -DNDEBUG`
+- `RelWithDebInfo`: `-O2 -g -DNDEBUG`
+
+TIPS: `-DNDEBUG` set `assert()` as NULL MARCO
+
+We can set `CMAKE_BUILD_TYPE` as `Release` by this way:
+
+```cmake
+# correct
+if (NOT CMAKE_BUILD_TYPE)
+  set (CMAKE_BUILD_TYPE Release)
+endif()
+# false
+set (CMAKE_BUILD_TYPE Release)
+```
+
+Writing by the first way is normal, as if user set `Debug` manually, we will not cover his settings.
+
+### `project()`
+
+```cmake
+project(<PROJECT-NAME> [<language-name>...])
+project(<PROJECT-NAME>
+        [VERSION <major>[.<minor>[.<patch>[.<tweak>]]]]
+        [DESCRIPTION <project-description-string>]
+        [HOMEPAGE_URL <url-string>]
+        [LANGUAGES <language-name>...])
+```
+
+`project()` will set some variables:
+
+- `PROJECT_SOURCE_DIR`, `<PROJECT-NAME>_SOURCE_DIR`
+
+  Absolute path to the source directory for the project.
+
+
+- `PROJECT_BINARY_DIR`, `<PROJECT-NAME>_BINARY_DIR`
+
+  Absolute path to the binary directory for the project.
+
+### `PROJECT_<X>_DIR` vs `CMAKE_CURRENT_<X>_DIR` in sub-direcetories
+
+`PROJECT_SOURCE_DIR` means the absolute path to the directory which is closest to the current directory with `project()` called by `CMakeLists.txt` in it. So `PROJECT_SOURCE_DIR` can be used to get the root directory i.e. the top-level directory of your own project.
+
+`CMAKE_CURRENT_SOURCE_DIR` means the absolute path to the source directory where the current `CMakeLists.txt` is located.
+
+**USING `CMAKE_SOURCE_DIR` IS NOT RECOMMENDED, WHICH MAKES YOUR PROJECT CANNOT BE USED AS SUB-MODULE OF OTHER PROJECT**
+
+```cmake
+PROJETC_SOURCE_DIR: ~/cmakelearning
+PROJECT_BINARY_DIR: ~/cmakelearning/build
+CMAKE_CURRENT_SOURCE_DIR: ~/cmakelearning/src
+CMAKE_CURRENT_BINARY_DIR: ~/cmakelearning/build/src
+```
+
+### `PROJECT_NAME` vs `CMAKE_PROJECT_NAME`
+
+They represent the current project name and the top-level project name, respectively.
+
+### `CMAKE_<LANG>_STANDARD`, `CMAKE_<LANG>_STANDARD_REQUIRED`, `CMAKE_CXX_EXTENSIONS`
+
+- `CMAKE_CXX_STANDARD` represents the cpp standard.
+- `CMAKE_CXX_STANDARD_REQUIRED` can be set to `ON` or `OFF`. `ON` means if your compiler doesn't support the above standard you set, the cmake will raise an error and shut down the current work. But if it is set to `OFF`, the compiler will continue work.
+- `CMAKE_CXX_EXTENSIONS` specifies whether compiler specific extensions should be used. Such as the `GCC` vs `MSVC`
+
+**TIPS: USING `CMAKE_CXX_STANDARD` BEFORE `project()`**
+
+**WARNING: DO NOT SET `CMAKE_CXX_FLAGS` TO CHANGE CPP STANDARD**
+
+### `cmake_minimum_required()`
+
+```cmake
+cmake_minimum_required(VERSION <min>[...<policy_max>] [FATAL_ERROR])
+```
+
+set the minimum version of cmake
+
+```cmake
+# example
+cmake_minimum_required(VERSION 3.16)
+```
+
+## Link libraries
+
+### `add_library()`
+
+- object libraries
+
+```cmake
+add_library(<name> OBJECT [<source>...])
+```
+
+Create an object library. An object library compiles source files but does not archive or link their object files into a library.
+
+Using object Library can avoid the cross-platform error, so it's nice to always use object libraries in your project instead of static libraries.
+
+For static libraries, the compiler will auto-remove the symbols that do not be use, which causes some problem.
+
+And using shared libraries on Windows is a disagreeable thing, because on Windows we cannot set `-rpath`.
+
+In default, cmake build libraries as static libraries. The variable `BUILD_SHARED_LIBS` can be set to `ON`, for always building shared libraries.
+
+**TIPS: SHARED LIBRARIES CANNOT LINK TO STATIC LIBRARIES DIRECTLY**
+
+SOLUTION FOR TIPS: for global
+```cmake
+set (CMAKE_POSITION_INDEPENDENT_CODE ON)
+```
+
+Or just set it for one library:
+
+```cmake
+add_library(mylib STATIC mylib.cpp)
+set_property(TARGET mylib PROPERTY POSITION_INDEPENDENT_CODE ON)
+```
+
+### `set_property()`, `set_target_properties()`
+
+Use `set_property()` to set target properties one by one:
+```cmake
+# c++17 standard(default 11 in cmake 3.16)
+set_property(TARGET main PROPERTY CMAKE_CXX_STANDARD 17)
+# rasie an error when compiler doesn't support c++17(default OFF)
+set_property(TARGET main PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
+# when running on Windows, no console, only GUI(default OFF)
+set_property(TARGET main PROPERTY WIN32_EXECUTUABLE ON)
+# don't delete symbols which are not refered(default OFF)
+set_property(TARGET main PROPERTY LINK_WHAT_YOU_USE ON)
+# set shared libraries output path(default ${CMAKE_SOURCE_DIR})
+set_property(TARGET main PROPERTY LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+# set static libraries output path(default ${CMAKE_SOURCE_DIR})
+set_property(TARGET main PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+# set binary output path(default ${CMAKE_SOURCE_DIR})
+set_property(TARGET main PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+```
+
+Use `set_target_properties()` to set target properties all in one:
+
+```cmake
+set_target_properties(main PROPERTY 
+    CMAKE_CXX_STANDARD 17
+    CMAKE_CXX_STANDARD_REQUIRED ON
+    WIN32_EXECUTUABLE ON
+    LINK_WHAT_YOU_USE ON
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
+    )
 ```
