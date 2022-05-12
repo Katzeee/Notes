@@ -221,7 +221,24 @@ Using object Library can avoid the cross-platform error, so it's nice to always 
 
 For static libraries, the compiler will auto-remove the symbols that do not be use, which causes some problem.
 
-And using shared libraries on Windows is a disagreeable thing, because on Windows we cannot set `-rpath`.
+And using shared libraries on Windows is a disagreeable thing, because on Windows we cannot set `-rpath`. Windows search for `.dll` file only in `PATH` or current directory. So we should ensure that the output path of shared libraries is the same as the executable program.
+
+If you MUST use shared libraries on Windows:
+
+```cpp
+// mylib.cpp
+#include <cstdio>
+#ifdef _MSC_VER
+__declspec(dllexport)
+#endif
+
+// mlib.h
+#pragma once
+#ifdef _MSC_VER
+__declspec(dllimport)
+#endif
+```
+
 
 In default, cmake build libraries as static libraries. The variable `BUILD_SHARED_LIBS` can be set to `ON`, for always building shared libraries.
 
