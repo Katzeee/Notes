@@ -35,6 +35,13 @@ $ sudo /usr/local/cuda/bin/cuda-uninstaller
 $ sudo /usr/bin/nvidia-uninstall
 ```
 
+## Install driver
+
+```bash
+$ nvidia-detector
+$ sudo apt install nvidia-driver-<num>
+```
+
 ## Download and install cuda
 
 Check which version is suitable for your graphic card.
