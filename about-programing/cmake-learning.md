@@ -77,4 +77,33 @@ add_library(<name> ALIAS <target>)
 aux_source_directory(<dir> <variable>)
 ```
 
-collect all source files in `<dir>`
+Collect all source files in `<dir>`, excluding `.h`
+
+```cmake
+# example, collect all source files store the list in ${SOURCE}
+aux_source_directory(. SOURCES)
+```
+
+
+### `file(GLOB)`
+
+```cmake
+file({GLOB | GLOB_RECURSE} <out-var> [...] [<globbing-expr>...])
+```
+
+using `file(GLOB)` to collect the files in the current cmake directory with the file name extension you set
+
+```cmake
+# example, collect all ".h", ".cpp" files and store in ${SOURCES}
+file(GLOB SOURCE *.h *.cpp)
+# NOTICE: when you add new files in directiory, this command will not add them in the ${SOURCE} variable, so using `CONFIGURE_DEPENDS` to update ${SOURCE} in every time rebuilding the project
+file(GLOB SOURCE CONFIGURE_DEPENDS *.h *.cpp)
+```
+
+to find recursively in the directory, use `file(GLOB_RECURSE)`
+
+```cmake
+# example, recursively collect the files
+file(GLOB_RECURSE SOURCE *.h *.cpp)
+# NOTICE: if your CMakeLists.txt is in the project directory, this command will add some cache files in `build/` directory, the solution is to put all source files in `src/` directory
+```
