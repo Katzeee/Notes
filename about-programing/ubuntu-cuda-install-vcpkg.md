@@ -120,7 +120,7 @@ Elapsed time for package cuda:x64-linux: 30.28 ms
 Total elapsed time: 459.6 ms
 ```
 
-if you failed, you can try to config the environment variables, but the author said it is fixed.
+If you failed, you can try to config the environment variables, but the author said it is fixed.
 
 > https://github.com/microsoft/vcpkg/issues/8247
 

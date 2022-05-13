@@ -1,6 +1,8 @@
 # 2022.4.14
 
-ffmpeg在linux环境下开发的安装配置过程
+## **[ubuntu]**
+
+ffmpeg在ubuntu环境下开发的安装配置过程
 
 ## 依赖包安装
 ```bash

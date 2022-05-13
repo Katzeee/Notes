@@ -54,4 +54,7 @@ adding the following to the `c_cpp_properties.json`
 "includePath":["${vcpkgRoot}/x64-linux/include/**"]
 ```
 
-- **delete the cmakecache and rebuild again!!**
+## ways to solve 99% problem
+
+- **DELETE THE CMAKECHACHE AND BUILD AGAIN!!**
+- **REOPEN VSCODE AND BUILD AGAIN!!**
