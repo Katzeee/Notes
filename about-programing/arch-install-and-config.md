@@ -110,7 +110,7 @@ Install the system
   $ ls /mnt/etc/fstab # check
   ```
 
-## Config new system
+## Install the new system
 
 - Enter the new system by running `arch-chroot /mnt /bin/bash`.
 - Set root password by running `passwd`.
@@ -153,4 +153,31 @@ Install the system
   zh_TW
   ```
   Then run `locale-gen` to refresh, `echo LANG=en_US.UTF-8 > /etc/locale.conf` to set system language to English, `ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime` to change timezone.
+- Set up network
+  ```bash
+  $ pacman -S networkmanager
+  $ systemctl enable NetworkManager # auto-startup when boot
+  ```
+- Localize
+  ```bash
+  $ pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji adobe-source-han-sans-otc-fonts wqy-microhei wqy-zenhei # install fonts
+  ```
+- Add archlinuxcn source and install yay
+  ```bash
+  $ vim /etc/pacman.conf
+  # add
+  [archlinuxcn]
+  Server = https://mirrors.tuna.tsinghua.edu.cn/archlinuxcn/$arch
+  $ pacman -Syy # refresh
+  $ pacman -S archlinuxcn-keyring # install keyring
+  $ pacman -S yay
+  ```
+- Solve the Windows-encryption
+  ```bash
+  $ yay -S dislocker
+  $ sudo frub-mkconfig -o /boot/grub/grub.cfg
+  ```
 
+## Other configuration
+
+- Nvidia driver

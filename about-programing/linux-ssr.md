@@ -31,3 +31,7 @@
 This is caused by high version of python, `arch` is installed with python3.10, in which the definition of `collections.MutableMapping` has been changed 
 
 change the 44th line in `"/home/xac/.config/electron-ssr/shadowsocksr/shadowsocks/../shadowsocks/lru_cache.py" ` from `collections.MutableMapping` to `collections.abc.MutableMapping`
+
+# 2022.5.16
+
+**Double-click** the node!!!
