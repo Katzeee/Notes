@@ -180,16 +180,52 @@ Install the system
 
 ## Other configuration
 
+- Xorg
+
+  [Xorg](https://wiki.archlinux.org/title/Xorg)
+
+  [Xrandr](https://wiki.archlinux.org/title/Multihead)
+  
+  Display server, for GUI applications. `xrandr` is to custom your display like changing resolution, setting up dual monitor etc.
+  
+  ```bash
+  $ yay -S xorg-server xorg-init xorg-xrandr
+  ```
+  
 - Nvidia driver
+
+  [Nvidia](https://wiki.archlinux.org/title/NVIDIA)
+
+  [Nvidia prime](https://wiki.archlinux.org/title/PRIME)
+
+  `nvidia` is Nvidia driver for Nvidia graphic cards, `nvidia-prime` which can run a specific application rendering by nvidia card is only needed by hybird graphic cards like intel+nvidia, amd+nvidia.
+  
+  ```bash
+  $ yay -S nvidia nvidia-prime 
+  ```
+
+  Here are my [xorg.conf](https://github.com/Katzeee/dot-files/tree/master/xorg) files.
+  
+- Sound
+
+  [Alsa](https://wiki.archlinux.org/title/Advanced_Linux_Sound_Architecture)
+  
+  In order to drive the sound card
+
+  ```bash
+  yay -S alsa-utils
+  ```
 
 - VSCode sync
 
-```bash
-yay -S
-```
+  ```bash
+  yay -S visual-studio-code-bin  
+  ```
+  
+  For sync to your github account, you need to install following packages:
 
-For sync to your github account, you need to install following packages:
-
-```bash
-sudo pacman -S xdg-utils gnome-keyring libsecret
-```
+  > [settings sync not working on arch linux #113157](https://github.com/microsoft/vscode/issues/113157)
+  
+  ```bash
+  yay -S xdg-utils gnome-keyring libsecret
+  ```
