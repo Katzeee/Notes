@@ -181,3 +181,15 @@ Install the system
 ## Other configuration
 
 - Nvidia driver
+
+- VSCode sync
+
+```bash
+yay -S
+```
+
+For sync to your github account, you need to install following packages:
+
+```bash
+sudo pacman -S xdg-utils gnome-keyring libsecret
+```
