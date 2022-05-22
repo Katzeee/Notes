@@ -180,6 +180,12 @@ Install the system
 
 ## Other configuration
 
+- Grub theme
+
+  [Grub theme](https://www.gnome-look.org/browse?cat=109)
+
+  [My theme](https://github.com/vandalsoul/darkmatter-grub2-theme/)
+
 - Xorg
 
   [Xorg](https://wiki.archlinux.org/title/Xorg)
