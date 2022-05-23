@@ -197,6 +197,24 @@ Install the system
   ```bash
   $ yay -S xorg-server xorg-init xorg-xrandr
   ```
+
+- Dwm
+
+  awesomebar: to hide and showe clients
+
+  cfacts: to resize the clients' window vertically
+
+  hide_vacant_tags: to hide vacant tags
+
+  layoutscroll: to scroll over all layouts
+
+  pertag: to set different layouts in per tag
+
+  viewontag: show all clients' title on bar
+
+  cool-autostart: autostart scripts and close it when quit dwm
+
+  sendmon_keepfocus: send client to other monitors and keep focusing on it
   
 - Nvidia driver
 
