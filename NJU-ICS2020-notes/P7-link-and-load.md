@@ -1,6 +1,3 @@
----
-
-
 > GNU Binutils
 
 - addr2line
