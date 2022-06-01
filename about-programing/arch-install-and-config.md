@@ -192,10 +192,11 @@ Install the system
 
   [Xrandr](https://wiki.archlinux.org/title/Multihead)
   
-  Display server, for GUI applications. `xrandr` is to custom your display like changing resolution, setting up dual monitor etc.
+  Display server, for GUI applications. `xrandr` is a tool to custom your display do things like changing resolution, setting up dual monitor etc.
+  `xbacklight` is a tool to change the backlight of your screen.
   
   ```bash
-  $ yay -S xorg-server xorg-init xorg-xrandr
+  $ yay -S xorg-server xorg-init xorg-xrandr xbacklight
   ```
 
 - Dwm
@@ -238,6 +239,14 @@ Install the system
 
   ```bash
   yay -S alsa-utils
+  ```
+
+- Razer driver
+
+  Driver and GUI for razer mice and keyboards.
+  
+  ```bash
+  $ yay -S linux-headers openrazer-meta-git polychromatic
   ```
 
 - VSCode sync
