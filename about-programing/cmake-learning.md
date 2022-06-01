@@ -91,7 +91,7 @@ aux_source_directory(. SOURCES)
 file({GLOB | GLOB_RECURSE} <out-var> [...] [<globbing-expr>...])
 ```
 
-using `file(GLOB)` to collect the files in the current cmake directory with the file name extension you set
+using `file(GLOB)` to collect the files in the current cmake directory with the specified file name extension
 
 ```cmake
 # example, collect all ".h", ".cpp" files and store in ${SOURCES}
