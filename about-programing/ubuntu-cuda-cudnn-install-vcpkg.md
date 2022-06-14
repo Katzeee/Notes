@@ -183,7 +183,7 @@ Or the following CMake target:
 
 ## Test code
 
-The whole project is at [cudatest](./test-codes/cudatest/)
+The whole project is at [cudatest](https://github.com/Katzeee/Notes/tree/master/about-programing/test-codes/cuda-test)
 
 ```cpp
 // main.cpp
