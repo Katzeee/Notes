@@ -82,7 +82,7 @@ To install the driver using this installer, run the following command, replacing
     sudo <CudaInstaller>.run --silent --driver
 ```
 
-Do as instructions say, adding following lines to `.bahsrc` or whatever shell you are using:
+Do as instructions say, adding following lines to `.bashrc` or whatever shell you are using:
 
 ```bash
 export PATH=$PATH:/usr/local/cuda/bin
