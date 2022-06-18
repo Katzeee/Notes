@@ -47,18 +47,3 @@ $ export CUDA_HOME=$CUDA_HOME:/usr/local/cuda
 ```bash
 $ sudo chmod a+r /usr/local/cuda/include/cudnn.h /usr/local/cuda/lib64/libcudnn*
 ```
-## 安装libtorch
-
-在官网查看安装命令
-
-> https://pytorch.org/get-started/locally/
-
-下载对应版本的zip包，采用`unzip`解压缩
-
-
-
-## python安装libtorch
-
-> https://pytorch.org/get-started/locally/
-
-同样是这个官网，选择与上面同版本的安装包的pip安装命令，进行安装，如出现最后一秒`killed`的情况，可以加让`--no-cache-dir`
