@@ -12,7 +12,7 @@ I got a circular dependency between these two classes.
 
 ## Undefined reference
 
-Then I defined the function in the source file including the header. I got an undefined reference error when linking.
+Then I defined the function in the source file and declared it in the header. Then I got an undefined reference error when linking.
 
 > https://blog.csdn.net/Cold_Sun_/article//details/100584418
 
