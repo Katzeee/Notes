@@ -5,7 +5,7 @@
 
 ## 安装
 
-先安装，将`C:\msys64\mingw64\bin`添加到PATH
+先安装，将`D:\msys64\mingw64\bin`添加到PATH
 
 执行下列命令
 ```bash

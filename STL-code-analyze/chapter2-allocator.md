@@ -183,7 +183,7 @@ For `c++17`
 
 After preprocessing:
 
-Befor `c++11`
+Before `c++11`
 
 ```c++
   template<typename _ForwardIterator>
@@ -231,3 +231,98 @@ For `c++20`
         __destroy(__first, __last);
     }
 ```
+
+`_Destroy_aux` is a template struct of a bool parameter.
+
+`.../bits/stl_construct.h[175]`
+
+```c++
+  // primary template dealing with false
+  // which means trivial type
+  template<bool>
+    struct _Destroy_aux
+    {
+      template<typename _ForwardIterator>
+	static _GLIBCXX20_CONSTEXPR void
+	__destroy(_ForwardIterator __first, _ForwardIterator __last)
+	{
+	  for (; __first != __last; ++__first)
+        // call the function _Destroy with one pointer parameter
+	    std::_Destroy(std::__addressof(*__first));
+	}
+    };
+
+  // special template dealing with true
+  template<>
+    struct _Destroy_aux<true>
+    {
+      template<typename _ForwardIterator>
+        static void
+        // do nothing for trivial type
+        __destroy(_ForwardIterator, _ForwardIterator) { }
+    };
+```
+
+## p56
+
+Now, we don't use `malloc_alloc` and `default_alloc`, and they are moved to `.../ext/malloc_allocator.h` and `.../ext/pool_allocator.h`, respectively.
+
+The using allocator is defined in `.../bits/allocator.h`
+
+`.../bits/allocator.h[124]`
+
+```c++
+  template<typename _Tp>
+    class allocator : public __allocator_base<_Tp>
+    {
+      ...
+```
+
+Class `allocator` is inherited from `__allocator_base<_Tp>` which is defined in <c++allocator.h> and is an alias of an allocator base class. 
+
+Which allocator is chosen is decided by the compiler defining the alias in header file `c++allocator.h`.
+
+Such as:
+
+The chosen allocator in mingw64 on windows is `__new_allocator`.
+
+`.../x86_64-w64-mingw32/bits/c++allocator.h[39]`
+
+```c++
+  template<typename _Tp>
+    using __allocator_base = __new_allocator<_Tp>;
+```
+
+Allocator is supposed to have following definitions.
+
+```c++
+allocator::value_type
+allocator::pointer
+allocator::const_pointer
+allocator::reference
+allocator::const_reference
+allocator::size_type
+allocator::difference
+
+allocator::rebind
+
+allocator::allocator() 
+allocator::allocator(const allocator&) 
+template <class U>allocator::allocator(const allocator<U>&)
+allocator::~allocator() 
+
+pointer allocator::address(reference x) const
+const_pointer allocator::address(const_reference x) const
+
+pointer allocator::allocate(size_type n, const void* = 0)
+void allocator::deallocate(pointer p, size_type n)
+
+size_type allocator:maxsize() const
+
+void allocator::construct(pointer p, const T& x)
+void allocator::destroy(pointer p)
+```
+
+# p60
+
+
