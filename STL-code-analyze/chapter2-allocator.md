@@ -323,6 +323,70 @@ void allocator::construct(pointer p, const T& x)
 void allocator::destroy(pointer p)
 ```
 
-# p60
+# p72
 
+The functions `uninitialized_fill_n`, `uninitialized_copy` etc. have been rewritten to template functions, take `uninitialized_fill_n` as an example.
 
+`.../bits/stl_uninitialized.h[258]`
+```c++
+  template<typename _ForwardIterator, typename _Size, typename _Tp>
+    _GLIBCXX20_CONSTEXPR
+    _ForwardIterator
+    __do_uninit_fill_n(_ForwardIterator __first, _Size __n, const _Tp& __x)
+    {
+      _ForwardIterator __cur = __first;
+      __try
+	{
+	  for (; __n > 0; --__n, (void) ++__cur)
+	    std::_Construct(std::__addressof(*__cur), __x);
+	  return __cur;
+	}
+      __catch(...)
+	{
+	  std::_Destroy(__first, __cur);
+	  __throw_exception_again;
+	}
+    }
+
+  // if not trivial type, this function will be instantiated
+  template<bool _TrivialValueType>
+    struct __uninitialized_fill_n
+    {
+      template<typename _ForwardIterator, typename _Size, typename _Tp>
+	static _ForwardIterator
+        __uninit_fill_n(_ForwardIterator __first, _Size __n,
+			const _Tp& __x)
+	{ return std::__do_uninit_fill_n(__first, __n, __x); }
+    };
+
+  // if trivial type, this function will be instantiated
+  template<>
+    struct __uninitialized_fill_n<true>
+    {
+      template<typename _ForwardIterator, typename _Size, typename _Tp>
+	static _ForwardIterator
+        __uninit_fill_n(_ForwardIterator __first, _Size __n,
+			const _Tp& __x)
+        { return std::fill_n(__first, __n, __x); }
+    };
+```
+
+The trivial type evaluation will be done in function `uninitialized_fill_n`
+
+`.../bits/stl_uninitialized.h[310]`
+```c++
+  template<typename _ForwardIterator, typename _Size, typename _Tp>
+    inline _ForwardIterator
+    uninitialized_fill_n(_ForwardIterator __first, _Size __n, const _Tp& __x)
+    {
+      typedef typename iterator_traits<_ForwardIterator>::value_type
+	_ValueType;
+
+      const bool __can_fill
+	= _GLIBCXX_USE_ASSIGN_FOR_INIT(_ValueType, const _Tp&)
+	&& __is_integer<_Size>::__value;
+
+      return __uninitialized_fill_n<__can_fill>::
+	__uninit_fill_n(__first, __n, __x);
+    }
+```
