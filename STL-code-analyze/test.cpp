@@ -4,6 +4,7 @@
 #include <ext/malloc_allocator.h>
 #include <deque>
 #include <memory>
+#include <type_traits>
 #include <iterator>
 
 struct x {
@@ -48,5 +49,6 @@ int main() {
     std::vector<int> vec{1};
     //std::iterator_traits<std::iterator<std::random_access_iterator_tag, std::vector<int>>>::value_type X;
     req<int> cc;
+    std::vector<int, __gnu_cxx::malloc_allocator<double>> testvec{1};
     return 0;
 }

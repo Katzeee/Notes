@@ -521,3 +521,135 @@ where `__iter_with_nested_types` is defined as follows:
 	typename _Iter::reference;
       };
 ```
+
+## p92
+
+There are now six `iterator_category`s in `c++17`.
+
+The added category is `contiguous_iterator_tag` which inherits from `random_access_iterator_tag `
+
+`.../bits/stl_iterator_base_types.h[109]`
+```c++
+#if __cplusplus > 201703L
+  /// Contiguous iterators point to objects stored contiguously in memory.
+  struct contiguous_iterator_tag : public random_access_iterator_tag { };
+#endif
+```
+
+## p100
+
+The `iterator` structure is not recommended being used now.
+
+`.../bits/stl_iterator_base_types.h[125]`
+```c++
+  template<typename _Category, typename _Tp, typename _Distance = ptrdiff_t,
+           typename _Pointer = _Tp*, typename _Reference = _Tp&>
+    struct _GLIBCXX17_DEPRECATED iterator
+    {
+      /// One of the @link iterator_tags tag types@endlink.
+      typedef _Category  iterator_category;
+      /// The type "pointed to" by the iterator.
+      typedef _Tp        value_type;
+      /// Distance between iterators is represented as this type.
+      typedef _Distance  difference_type;
+      /// This type represents a pointer-to-value_type.
+      typedef _Pointer   pointer;
+      /// This type represents a reference-to-value_type.
+      typedef _Reference reference;
+    };
+```
+where
+
+```c++
+# define _GLIBCXX17_DEPRECATED [[__deprecated__]]
+```
+
+## p103
+
+The standard `type_traits` is now defined in header file `.../bits/type_traits`, and the old one is located in `.../ext/type_traits.h`
+
+## p116
+
+Vector is implemented as a base class `_Vector_base` and `vector` itself. As the book said, both of them are in `stl_vector.h`.
+
+`.../bits/stl_vector.h[422]`
+```c++
+  template<typename _Tp, typename _Alloc = std::allocator<_Tp> >
+    class vector : protected _Vector_base<_Tp, _Alloc>
+    {
+        ...
+```
+
+`.../bits/stl_vector.h[84]`
+```c++
+  template<typename _Tp, typename _Alloc>
+    struct _Vector_base
+    {
+        ...
+```
+
+The definition of the allocator has changed.
+
+`.../bits/stl_vector.h[87]`
+```c++
+      typedef typename __gnu_cxx::__alloc_traits<_Alloc>::template
+	rebind<_Tp>::other _Tp_alloc_type; // template<typename _Tp, typename _Alloc> struct _Vector_base
+      typedef typename __gnu_cxx::__alloc_traits<_Tp_alloc_type>::pointer
+       	pointer;
+```
+
+It uses `rebind` to change the type parameter of the allocator to the template parameter which the vector received. Such as if we define `std::vector<int, __gnu_cxx::malloc_allocator<double>>`, then the vector will rebind the inner allocator to parameter of `int`.
+
+Besides, this `rebind` is not just the `rebind` structure which defined in allocators, because some allocators don't implement the `rebind` method.
+
+`.../ext/alloc_traits.h[118]`
+```c++
+    template<typename _Tp>
+      struct rebind // __alloc_traits::rebind
+      { typedef typename _Base_type::template rebind_alloc<_Tp> other; };
+```
+
+`.../ext/alloc_traits.h[55]`
+```c++
+    typedef std::allocator_traits<_Alloc>           _Base_type; // __alloc_traits::_Base_type
+```
+
+`.../bits/alloc_traits.h[212]`
+```c++
+      template<typename _Tp>
+	using rebind_alloc = __alloc_rebind<_Alloc, _Tp>; // allocator_traits::rebind_alloc
+```
+
+`.../bits/alloc_traits.h[78]`
+```c++
+  template<typename _Alloc, typename _Up>
+    using __alloc_rebind // __allocator_traits_base::__alloc_rebind
+      = typename __allocator_traits_base::template __rebind<_Alloc, _Up>::type;
+```
+
+`.../bits/alloc_traits.h[51]`
+```c++
+    template<typename _Tp, typename _Up, typename = void>
+      struct __rebind : __replace_first_arg<_Tp, _Up> { };
+
+    template<typename _Tp, typename _Up>
+      struct __rebind<_Tp, _Up,
+		      __void_t<typename _Tp::template rebind<_Up>::other>>
+      { using type = typename _Tp::template rebind<_Up>::other; };
+```
+
+As a result, if the allocator has implemented the `rebind` structure, we will use it, otherwise, we use `__replace_first_arg` to construct a new allocator by replacing the argument in `allocator<_Tp>`.
+
+`.../bits/ptr_traits.h[65]`
+```c++
+  template<typename _Tp, typename _Up>
+    struct __replace_first_arg
+    { };
+
+  template<template<typename, typename...> class _SomeTemplate, typename _Up,
+           typename _Tp, typename... _Types>
+    struct __replace_first_arg<_SomeTemplate<_Tp, _Types...>, _Up>
+    { using type = _SomeTemplate<_Up, _Types...>; };
+```
+
+For `std::vector<int, __gnu_cxx::malloc_allocator<double>>`, we will finally call `__replace_first_arg<__gnu_cxx::malloc_allocator<double>, int>`, then get the `type` `__gnu_cxx::malloc_allocator<int>` as `_Tp_alloc_type`.
