@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 //#include <allocator.h>
+#include<utility>
 #include <ext/malloc_allocator.h>
 #include <deque>
 #include <memory>
@@ -40,15 +41,19 @@ public:
     req() { std::cout << "1"; }
 };
 
+template<typename Func, typename Arg>
+void somefunc(Func f, Arg&& somearg) {
+    f(std::forward<Arg>(somearg));
+}
+
+void something(int&& arg) {
+    arg++;
+}
+
 
 int main() {
-    //std::deque<int, __gnu_cxx::malloc_allocator<int>> de;
-    //__gnu_cxx::malloc_allocator<int>::rebind<double>::other;
-    int y = 1;
-    tem<x, void>()();
-    std::vector<int> vec{1};
-    //std::iterator_traits<std::iterator<std::random_access_iterator_tag, std::vector<int>>>::value_type X;
-    req<int> cc;
-    std::vector<int, __gnu_cxx::malloc_allocator<double>> testvec{1};
+    int x = 1;
+    somefunc(something, 1);
+    std::cout << x << "\n";
     return 0;
 }

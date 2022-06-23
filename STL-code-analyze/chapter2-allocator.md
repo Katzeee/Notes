@@ -653,3 +653,60 @@ As a result, if the allocator has implemented the `rebind` structure, we will us
 ```
 
 For `std::vector<int, __gnu_cxx::malloc_allocator<double>>`, we will finally call `__replace_first_arg<__gnu_cxx::malloc_allocator<double>, int>`, then get the `type` `__gnu_cxx::malloc_allocator<int>` as `_Tp_alloc_type`.
+
+## p116
+
+The implementation of `vector` is much more complicated than old version. The three attribute `iterator` have been moved to `struct _Vector_base::_Vector_impl_data`.
+
+`.../bits/stl_vector.h[92]`
+
+```c++
+      struct _Vector_impl_data
+      {
+	pointer _M_start;
+	pointer _M_finish;
+	pointer _M_end_of_storage;
+```
+
+And in `class vector`, we are using the `struct _Vector_impl` which inheriting from it.
+
+`.../bits/stl_vector.h[133]`
+
+```c++
+      struct _Vector_impl
+	: public _Tp_alloc_type, public _Vector_impl_data
+```
+
+Meanwhile, some methods in vector are defined in `vector.tcc`.
+
+`.../bits/vector.tcc[102]`
+
+```c++
+#if __cplusplus >= 201103L
+  template<typename _Tp, typename _Alloc>
+    template<typename... _Args>
+#if __cplusplus > 201402L
+      _GLIBCXX20_CONSTEXPR
+      typename vector<_Tp, _Alloc>::reference
+#else
+      void
+#endif
+      vector<_Tp, _Alloc>::
+      emplace_back(_Args&&... __args)
+      {
+	if (this->_M_impl._M_finish != this->_M_impl._M_end_of_storage)
+	  {
+	    _GLIBCXX_ASAN_ANNOTATE_GROW(1);
+	    _Alloc_traits::construct(this->_M_impl, this->_M_impl._M_finish,
+				     std::forward<_Args>(__args)...);
+	    ++this->_M_impl._M_finish;
+	    _GLIBCXX_ASAN_ANNOTATE_GREW(1);
+	  }
+	else
+	  _M_realloc_insert(end(), std::forward<_Args>(__args)...);
+#if __cplusplus > 201402L
+	return back();
+#endif
+      }
+#endif
+```
