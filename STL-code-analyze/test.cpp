@@ -55,5 +55,6 @@ int main() {
     int x = 1;
     somefunc(something, 1);
     std::cout << x << "\n";
+    vector<int>::iterator it;
     return 0;
 }
