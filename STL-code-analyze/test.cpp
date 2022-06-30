@@ -56,5 +56,6 @@ int main() {
     somefunc(something, 1);
     std::cout << x << "\n";
     std::vector<int>::iterator it;
+    std::__new_allocator<int> al;
     return 0;
 }

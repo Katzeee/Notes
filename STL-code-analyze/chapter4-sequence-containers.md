@@ -195,9 +195,10 @@ Meanwhile, we notice that `gcc` is now using `pointer` as the type of `iterator`
     typedef typename _Base_type::pointer            pointer; // __gnu_cxx::__alloc_traits<_Alloc>::pointer
 ```
 
-`.../ext/alloc_traits.h[102]`
+`.../ext/alloc_traits.h[95]`
 
 ```c++
+      typedef typename _Alloc::value_type value_type;
       using pointer = __detected_or_t<value_type*, __pointer, _Alloc>; // std::allocator_traits<_Alloc>::pointer
 ```
 
@@ -209,3 +210,21 @@ Meanwhile, we notice that `gcc` is now using `pointer` as the type of `iterator`
 ```
 
 So the `pointer` in `vector` is `Alloc::pointer` if that type exists, otherwise `value_type*`.
+
+We take `__new_allocator` as an example because it is the default `Alloc` in `gcc12.1`. Before `c++17`, there still existed `Alloc::pointer` which is `_Tp*`, however, after `c++17`, there only exist `value_type`. No matter how, `pointer` is an alias of `_Tp*`.
+
+`.../bits/new_allocator.h[55]`
+```c++
+  template<typename _Tp>
+    class __new_allocator
+    {
+    public:
+      typedef _Tp        value_type;
+      typedef std::size_t     size_type;
+      typedef std::ptrdiff_t  difference_type;
+#if __cplusplus <= 201703L
+      typedef _Tp*       pointer;
+      typedef const _Tp* const_pointer;
+      typedef _Tp&       reference;
+      typedef const _Tp& const_reference;
+```
