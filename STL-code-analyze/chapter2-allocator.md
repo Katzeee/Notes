@@ -293,7 +293,7 @@ The chosen allocator in mingw64 on Windows is `__new_allocator`.
     using __allocator_base = __new_allocator<_Tp>;
 ```
 
-Allocator is supposed to have the following definitions.
+Allocators are supposed to have the following definitions.
 
 ```c++
 allocator::value_type

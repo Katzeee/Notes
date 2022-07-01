@@ -211,7 +211,7 @@ Meanwhile, we notice that `gcc` is now using `pointer` as the type of `iterator`
 
 So the `pointer` in `vector` is `Alloc::pointer` if that type exists, otherwise `value_type*`.
 
-We take `__new_allocator` as an example because it is the default `Alloc` in `gcc12.1`. Before `c++17`, there still existed `Alloc::pointer` which is `_Tp*`, however, after `c++17`, there only exist `value_type`. No matter how, `pointer` is an alias of `_Tp*`.
+We take `__new_allocator` as an example because it is the default `Alloc` of `vector` in `gcc12.1`. Before `c++17`, there still existed `Alloc::pointer` which is `_Tp*`, however, after `c++17`, there only exist `value_type`. No matter how, `pointer` is an alias of `_Tp*`.
 
 `.../bits/new_allocator.h[55]`
 ```c++
@@ -227,4 +227,71 @@ We take `__new_allocator` as an example because it is the default `Alloc` in `gc
       typedef const _Tp* const_pointer;
       typedef _Tp&       reference;
       typedef const _Tp& const_reference;
+```
+
+## p118
+
+Take `begin` as an example:
+
+`.../bits/stl_vector.h[866]`
+
+```c++
+      _GLIBCXX_NODISCARD _GLIBCXX20_CONSTEXPR
+      iterator
+      begin() _GLIBCXX_NOEXCEPT
+      { return iterator(this->_M_impl._M_start); }
+```
+
+As you can see, `begin` doesn't return a `pointer` directly, but wraps it as an `iterator`.
+
+## p121
+
+About the constructor of `vector`:
+
+`.../bits/stl_vector.h[563]`
+```c++
+      _GLIBCXX20_CONSTEXPR
+      vector(size_type __n, const value_type& __value,
+	     const allocator_type& __a = allocator_type())
+      : _Base(_S_check_init_len(__n, __a), __a)
+      { _M_fill_initialize(__n, __value); }
+```
+
+`.../bits/stl_vector.h[1697]`
+```c++
+      _GLIBCXX20_CONSTEXPR
+      void
+      _M_fill_initialize(size_type __n, const value_type& __value)
+      {
+	this->_M_impl._M_finish =
+	  std::__uninitialized_fill_n_a(this->_M_impl._M_start, __n, __value,
+					_M_get_Tp_allocator());
+      }
+```
+
+`.../bits/stl_vector.h[296]`
+```c++
+      _GLIBCXX20_CONSTEXPR
+      _Tp_alloc_type&
+      _M_get_Tp_allocator() _GLIBCXX_NOEXCEPT
+      { return this->_M_impl; }
+```
+
+`_M_impl` is of class `_Vector_impl`, which inherits from `_Tp_alloc_type`, so it can be seen as an allocator.
+
+`_Tp_alloc_type` is the allocator class allocates the space of vector's type.
+
+```c++
+      struct _Vector_impl
+	: public _Tp_alloc_type, public _Vector_impl_data
+```
+
+Also, the initialization of the allocator is finished by `_Base` using delegate constructor.
+
+`.../bits/stl_vector.h[329]`
+```c++
+      _GLIBCXX20_CONSTEXPR
+      _Vector_base(size_t __n, const allocator_type& __a)
+      : _M_impl(__a)
+      { _M_create_storage(__n); }
 ```
