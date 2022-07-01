@@ -55,9 +55,10 @@ int main() {
     int x = 1;
     somefunc(something, 1);
     std::cout << x << "\n";
-    std::vector<int> vec_int;
+    std::vector<int, __gnu_cxx::malloc_allocator<int>> vec_int;
     std::vector<int>::iterator it;
     std::__new_allocator<int> al;
     auto itbegin = vec_int.begin();
+    vec_int.push_back(1);
     return 0;
 }
