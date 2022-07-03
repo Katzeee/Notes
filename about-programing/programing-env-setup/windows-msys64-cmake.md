@@ -9,10 +9,11 @@
 
 执行下列命令
 ```bash
-$ pacman -Syu
-$ pacman -Syu
-$ pacman -S --needed base-devel mingw-w64-x86_64-toolchain
+$ pacman -Syyu
+$ pacman -S --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-make
 ```
+---
+Ignore!!
 
 ## 下载安装cmake
 
