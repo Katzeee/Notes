@@ -7,6 +7,9 @@
 #include <memory>
 #include <type_traits>
 #include <iterator>
+#include <array>
+#include <tuple>
+#include <list>
 
 struct x {
     typedef int Ttype;
@@ -59,6 +62,9 @@ int main() {
     std::vector<int>::iterator it;
     std::__new_allocator<int> al;
     auto itbegin = vec_int.begin();
+    std::array<int, 10> ar;
+    std::tuple<int, int, char> tup;
+    std::list<int> li;
     vec_int.push_back(1);
     return 0;
 }

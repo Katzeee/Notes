@@ -468,7 +468,7 @@ Take the version after `c++11` as an example:
 				   std::forward<_Args>(__args)...);
 	  __new_finish = pointer();
 
-	  if _GLIBCXX17_CONSTEXPR (_S_use_relocate()) // check whether there is a `relocate` function in the `allocator`
+	  if _GLIBCXX17_CONSTEXPR (_S_use_relocate()) // check whether the `_Alloc::value_type` is move-insertable
 	    {
 	      __new_finish = _S_relocate(__old_start, __position.base(),
 					 __new_start, _M_get_Tp_allocator());
@@ -499,7 +499,7 @@ Take the version after `c++11` as an example:
 	    _Alloc_traits::destroy(this->_M_impl,
 				   __new_start + __elems_before);
 	  else
-	    std::_Destroy(__new_start, __new_finish, _M_get_Tp_allocator());
+	    std::_Destroy(__new_start, __new_finish, _M_get_Tp_allocator()); // commit or rollback
 	  _M_deallocate(__new_start, __len);
 	  __throw_exception_again;
 	}
@@ -527,3 +527,251 @@ Take the version after `c++11` as an example:
 	return (__len < size() || __len > max_size()) ? max_size() : __len;
       }
 ```
+
+After `c++11`, we call `emplace_back` in `push_back`:
+
+`.../bits/vector.tcc[102]`
+
+```c++
+#if __cplusplus >= 201103L
+  template<typename _Tp, typename _Alloc>
+    template<typename... _Args>
+#if __cplusplus > 201402L
+      _GLIBCXX20_CONSTEXPR
+      typename vector<_Tp, _Alloc>::reference
+#else
+      void
+#endif
+      vector<_Tp, _Alloc>::
+      emplace_back(_Args&&... __args)
+      {
+	if (this->_M_impl._M_finish != this->_M_impl._M_end_of_storage)
+	  {
+	    _GLIBCXX_ASAN_ANNOTATE_GROW(1);
+	    _Alloc_traits::construct(this->_M_impl, this->_M_impl._M_finish,
+				     std::forward<_Args>(__args)...);
+	    ++this->_M_impl._M_finish;
+	    _GLIBCXX_ASAN_ANNOTATE_GREW(1);
+	  }
+	else
+	  _M_realloc_insert(end(), std::forward<_Args>(__args)...);
+#if __cplusplus > 201402L
+	return back();
+#endif
+      }
+#endif
+```
+
+`emplace_back` receives a universal reference but `push_back` receives a const lvalue reference.
+
+## p129
+
+About `__list_node`, two pointers are defined in `_List_node_base`, and the data is defined in `_List_node`:
+
+`.../bits/stl_list.h[233]`
+```c++
+  template<typename _Tp>
+    struct _List_node : public __detail::_List_node_base
+    {
+#if __cplusplus >= 201103L
+      __gnu_cxx::__aligned_membuf<_Tp> _M_storage;
+      _Tp*       _M_valptr()       { return _M_storage._M_ptr(); }
+      _Tp const* _M_valptr() const { return _M_storage._M_ptr(); }
+#else
+      _Tp _M_data;
+      _Tp*       _M_valptr()       { return std::__addressof(_M_data); }
+      _Tp const* _M_valptr() const { return std::__addressof(_M_data); }
+#endif
+    };
+```
+
+`.../bits/stl_list.h[233]`
+```c++
+    struct _List_node_base
+    {
+      _List_node_base* _M_next;
+      _List_node_base* _M_prev;
+
+      static void
+      swap(_List_node_base& __x, _List_node_base& __y) _GLIBCXX_USE_NOEXCEPT;
+
+      void
+      _M_transfer(_List_node_base* const __first,
+		  _List_node_base* const __last) _GLIBCXX_USE_NOEXCEPT;
+
+      void
+      _M_reverse() _GLIBCXX_USE_NOEXCEPT;
+
+      void
+      _M_hook(_List_node_base* const __position) _GLIBCXX_USE_NOEXCEPT;
+
+      void
+      _M_unhook() _GLIBCXX_USE_NOEXCEPT;
+    };
+```
+
+`.../ext/aligned_buffer.h[46]`
+```c++
+  template<typename _Tp>
+    struct __aligned_membuf
+    {
+      // Target macro ADJUST_FIELD_ALIGN can produce different alignment for
+      // types when used as class members. __aligned_membuf is intended
+      // for use as a class member, so align the buffer as for a class member.
+      // Since GCC 8 we could just use alignof(_Tp) instead, but older
+      // versions of non-GNU compilers might still need this trick.
+      struct _Tp2 { _Tp _M_t; };
+
+      alignas(__alignof__(_Tp2::_M_t)) unsigned char _M_storage[sizeof(_Tp)]; // data is stored here
+
+      __aligned_membuf() = default;
+
+      // Can be used to avoid value-initialization zeroing _M_storage.
+      __aligned_membuf(std::nullptr_t) { }
+
+      void*
+      _M_addr() noexcept
+      { return static_cast<void*>(&_M_storage); }
+
+      const void*
+      _M_addr() const noexcept
+      { return static_cast<const void*>(&_M_storage); }
+
+      _Tp*
+      _M_ptr() noexcept
+      { return static_cast<_Tp*>(_M_addr()); }
+
+      const _Tp*
+      _M_ptr() const noexcept
+      { return static_cast<const _Tp*>(_M_addr()); }
+    };
+```
+
+## p130
+
+`link_type node;` has been changed to `__detail::_List_node_base* _M_node;` which also point to the real node. If we want to get the data in the node, we should use `static_cast`.
+
+`.../bits/stl_list.h[252]`
+```c++
+  template<typename _Tp>
+    struct _List_iterator
+    {
+      typedef _List_iterator<_Tp>		_Self;
+      typedef _List_node<_Tp>			_Node;
+
+      typedef ptrdiff_t				difference_type;
+      typedef std::bidirectional_iterator_tag	iterator_category;
+      typedef _Tp				value_type;
+      typedef _Tp*				pointer;
+      typedef _Tp&				reference;
+
+      _List_iterator() _GLIBCXX_NOEXCEPT
+      : _M_node() { }
+
+      explicit
+      _List_iterator(__detail::_List_node_base* __x) _GLIBCXX_NOEXCEPT
+      : _M_node(__x) { }
+
+      _Self
+      _M_const_cast() const _GLIBCXX_NOEXCEPT
+      { return *this; }
+
+      // Must downcast from _List_node_base to _List_node to get to value.
+      _GLIBCXX_NODISCARD
+      reference
+      operator*() const _GLIBCXX_NOEXCEPT
+      { return *static_cast<_Node*>(_M_node)->_M_valptr(); }
+
+      _GLIBCXX_NODISCARD
+      pointer
+      operator->() const _GLIBCXX_NOEXCEPT
+      { return static_cast<_Node*>(_M_node)->_M_valptr(); }
+
+      _Self&
+      operator++() _GLIBCXX_NOEXCEPT
+      {
+	_M_node = _M_node->_M_next;
+	return *this;
+      }
+
+      _Self
+      operator++(int) _GLIBCXX_NOEXCEPT
+      {
+	_Self __tmp = *this;
+	_M_node = _M_node->_M_next;
+	return __tmp;
+      }
+
+      _Self&
+      operator--() _GLIBCXX_NOEXCEPT
+      {
+	_M_node = _M_node->_M_prev;
+	return *this;
+      }
+
+      _Self
+      operator--(int) _GLIBCXX_NOEXCEPT
+      {
+	_Self __tmp = *this;
+	_M_node = _M_node->_M_prev;
+	return __tmp;
+      }
+
+      _GLIBCXX_NODISCARD
+      friend bool
+      operator==(const _Self& __x, const _Self& __y) _GLIBCXX_NOEXCEPT
+      { return __x._M_node == __y._M_node; }
+
+#if __cpp_impl_three_way_comparison < 201907L
+      _GLIBCXX_NODISCARD
+      friend bool
+      operator!=(const _Self& __x, const _Self& __y) _GLIBCXX_NOEXCEPT
+      { return __x._M_node != __y._M_node; }
+#endif
+
+      // The only member points to the %list element.
+      __detail::_List_node_base* _M_node;
+    };
+```
+
+## p131
+
+As for the data structure of `list`, it is similar to `vector`. `std::list` is inherited from `std::_List_base`, and `std::_List_base` has a struct called `_List_impl` which contains the real implementation of `list`.
+
+`.../bits/stl_list.h[450]`
+```c++
+      struct _List_impl
+      : public _Node_alloc_type
+      {
+	__detail::_List_node_header _M_node;
+
+	_List_impl() _GLIBCXX_NOEXCEPT_IF(
+	    is_nothrow_default_constructible<_Node_alloc_type>::value)
+	: _Node_alloc_type()
+	{ }
+
+	_List_impl(const _Node_alloc_type& __a) _GLIBCXX_NOEXCEPT
+	: _Node_alloc_type(__a)
+	{ }
+
+#if __cplusplus >= 201103L
+	_List_impl(_List_impl&&) = default;
+
+	_List_impl(_Node_alloc_type&& __a, _List_impl&& __x)
+	: _Node_alloc_type(std::move(__a)), _M_node(std::move(__x._M_node))
+	{ }
+
+	_List_impl(_Node_alloc_type&& __a) noexcept
+	: _Node_alloc_type(std::move(__a))
+	{ }
+#endif
+      };
+
+      _List_impl _M_impl;
+```
+
+Notice `_M_node` is of class `_List_node_header` which is inherited from `_List_node_base` but added an attribute `_M_size`, using for recording the length of the list. 
+
+## p135
+
+`push_back`
