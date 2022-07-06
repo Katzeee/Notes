@@ -29,9 +29,9 @@ Right click on the disk in which you want to install arch, select `Compress` and
 
 ## Set timezone shift on Windows
 
-To avoid some wierd problem when you switch system from linux to windows,  run the following command with Admin priority.
+To avoid some weird problem when you switch system from linux to windows,  run the following command with Admin priority.
 ```bash
-reg add "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /d 1 /t REG_DWORD /f
+$ reg add "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /d 1 /t REG_DWORD /f
 ```
 
 ## Start installation
@@ -90,6 +90,7 @@ Format and mount the disks
   $ mkdir /mnt/boot
   $ mount /dev/nvme0n1p2 /mnt/boot # Mount /mnt/boot
   $ fdisk -l # Check the partition again
+  $ lsblk
   ```
 
 Install the system
@@ -175,7 +176,7 @@ Install the system
 - Solve the Windows-encryption
   ```bash
   $ yay -S dislocker
-  $ sudo frub-mkconfig -o /boot/grub/grub.cfg
+  $ sudo grub-mkconfig -o /boot/grub/grub.cfg
   ```
 
 ## Other configuration
