@@ -64,7 +64,8 @@ int main() {
     auto itbegin = vec_int.begin();
     std::array<int, 10> ar;
     std::tuple<int, int, char> tup;
-    std::list<int> li;
+    std::list<int> li{9, 3, 5, 4, 7, 8};
     vec_int.push_back(1);
+    li.sort();
     return 0;
 }

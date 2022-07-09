@@ -770,8 +770,80 @@ As for the data structure of `list`, it is similar to `vector`. `std::list` is i
       _List_impl _M_impl;
 ```
 
-Notice `_M_node` is of class `_List_node_header` which is inherited from `_List_node_base` but added an attribute `_M_size`, using for recording the length of the list. 
+Notice `_M_node` is of class `_List_node_header` which is inherited from `_List_node_base` adding an attribute `_M_size`, using for recording the length of the list. 
 
 ## p135
 
-`push_back`
+`push_back` has its version of lvalue and rvalue after `c++11`.
+
+`.../bits/stl_list.h[1304]`
+```c++
+      void
+      push_back(const value_type& __x)
+      { this->_M_insert(end(), __x); }
+
+#if __cplusplus >= 201103L
+      void
+      push_back(value_type&& __x)
+      { this->_M_insert(end(), std::move(__x)); }
+```
+
+`_M_insert` is using universal reference now:
+
+`.../bits/stl_list.h[1992]`
+```c++
+#if __cplusplus < 201103L
+      void
+      _M_insert(iterator __position, const value_type& __x)
+      {
+	_Node* __tmp = _M_create_node(__x);
+	__tmp->_M_hook(__position._M_node);
+	this->_M_inc_size(1);
+      }
+#else
+     template<typename... _Args>
+       void
+       _M_insert(iterator __position, _Args&&... __args)
+       {
+	 _Node* __tmp = _M_create_node(std::forward<_Args>(__args)...);
+	 __tmp->_M_hook(__position._M_node);
+	 this->_M_inc_size(1);
+       }
+#endif
+```
+
+## p136
+
+About `erase`:
+
+`.../bits/list.tcc[152]`
+```c++
+  template<typename _Tp, typename _Alloc>
+    typename list<_Tp, _Alloc>::iterator
+    list<_Tp, _Alloc>::
+#if __cplusplus >= 201103L
+    erase(const_iterator __position) noexcept
+#else
+    erase(iterator __position)
+#endif
+    {
+      iterator __ret = iterator(__position._M_node->_M_next);
+      _M_erase(__position._M_const_cast());
+      return __ret;
+    }
+```
+
+`.../bits/stl_list.h[2012]`
+```c++
+      void
+      _M_erase(iterator __position) _GLIBCXX_NOEXCEPT
+      {
+	this->_M_dec_size(1);
+	__position._M_node->_M_unhook();
+	_Node* __n = static_cast<_Node*>(__position._M_node);
+#if __cplusplus >= 201103L
+	_Node_alloc_traits::destroy(_M_get_Node_allocator(), __n->_M_valptr());
+#else
+	_Tp_alloc_type(_M_get_Node_allocator()).destroy(__n->_M_valptr());
+#endif
+```
