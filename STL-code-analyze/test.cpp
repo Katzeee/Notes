@@ -67,5 +67,7 @@ int main() {
     std::list<int> li{9, 3, 5, 4, 7, 8};
     vec_int.push_back(1);
     li.sort();
+    std::deque<int> dee;
+    std::__ptr_rebind<double***, char**> x;
     return 0;
 }

@@ -847,3 +847,137 @@ About `erase`:
 	_Tp_alloc_type(_M_get_Node_allocator()).destroy(__n->_M_valptr());
 #endif
 ```
+
+## p142
+
+`list::sort` is merge sort, not quick sort.
+
+
+## 144
+
+There are two asserts in class `deque`.
+`.../bits/stl_deque.h[787]`
+```c++
+  template<typename _Tp, typename _Alloc = std::allocator<_Tp> >
+    class deque : protected _Deque_base<_Tp, _Alloc>
+    {
+#ifdef _GLIBCXX_CONCEPT_CHECKS
+      // concept requirements
+      typedef typename _Alloc::value_type	_Alloc_value_type;
+# if __cplusplus < 201103L
+      __glibcxx_class_requires(_Tp, _SGIAssignableConcept)
+# endif
+      __glibcxx_class_requires2(_Tp, _Alloc_value_type, _SameTypeConcept)
+#endif
+
+#if __cplusplus >= 201103L
+      static_assert(is_same<typename remove_cv<_Tp>::type, _Tp>::value,
+	  "std::deque must have a non-const, non-volatile value_type");
+# if __cplusplus > 201703L || defined __STRICT_ANSI__
+      static_assert(is_same<typename _Alloc::value_type, _Tp>::value,
+	  "std::deque must have the same value_type as its allocator");
+# endif
+#endif
+
+      typedef _Deque_base<_Tp, _Alloc>			_Base;
+      typedef typename _Base::_Tp_alloc_type		_Tp_alloc_type;
+      typedef typename _Base::_Alloc_traits		_Alloc_traits;
+      typedef typename _Base::_Map_pointer		_Map_pointer;
+
+    public:
+      typedef _Tp					value_type;
+      typedef typename _Alloc_traits::pointer		pointer;
+```
+
+In `deuqe::_Base` which is `_Deque_base<_Tp, _Alloc>`, we have following two snippets:
+
+`.../bits/stl_deque.h[507]`
+```c++
+      typedef typename iterator::_Map_pointer _Map_pointer; // _Deque_base::_Map_pointer
+```
+
+`.../bits/stl_deque.h[455]`
+```c++
+      typedef _Deque_iterator<_Tp, _Tp&, _Ptr>	  iterator; // _Deque_base::iterator
+```
+
+`.../bits/stl_deque.h[112]`
+```c++
+  template<typename _Tp, typename _Ref, typename _Ptr>
+    struct _Deque_iterator
+    {
+#if __cplusplus < 201103L
+      typedef _Deque_iterator<_Tp, _Tp&, _Tp*>		   iterator;
+      typedef _Deque_iterator<_Tp, const _Tp&, const _Tp*> const_iterator;
+      typedef _Tp*					   _Elt_pointer;
+      typedef _Tp**					   _Map_pointer;
+#else
+    private:
+      template<typename _CvTp>
+	using __iter = _Deque_iterator<_Tp, _CvTp&, __ptr_rebind<_Ptr, _CvTp>>;
+    public:
+      typedef __iter<_Tp>				   iterator;
+      typedef __iter<const _Tp>				   const_iterator;
+      typedef __ptr_rebind<_Ptr, _Tp>			   _Elt_pointer;
+      typedef __ptr_rebind<_Ptr, _Elt_pointer>		   _Map_pointer;
+#endif
+```
+
+After `c++11`, we have `_Map_pointer` as `__ptr_rebind<_Ptr, _Elt_pointer>`.
+
+`.../bits/ptr_traits.h[209]`
+```c++
+  template<typename _Tp>
+    struct pointer_traits<_Tp*> : __ptr_traits_ptr_to<_Tp*, _Tp>
+    {
+      /// The pointer type
+      typedef _Tp* pointer;
+      /// The type pointed to
+      typedef _Tp  element_type;
+      /// Type used to represent the difference between two pointers
+      typedef ptrdiff_t difference_type;
+      /// A pointer to a different type.
+      template<typename _Up> using rebind = _Up*;
+    };
+
+  /// Convenience alias for rebinding pointers.
+  template<typename _Ptr, typename _Tp>
+    using __ptr_rebind = typename pointer_traits<_Ptr>::template rebind<_Tp>; // return type `_Tp*`
+```
+
+So we get `_Map_pointer` = `_Elt_pointer*` = `_Tp**`, just as `gcc2.9` in the book.
+
+## p146
+
+Here are the attributes of `_Deque_iterator`.
+
+`.../bits/stl_deque.h[142]`
+```c++
+      _Elt_pointer _M_cur;
+      _Elt_pointer _M_first;
+      _Elt_pointer _M_last;
+      _Map_pointer _M_node;
+```
+
+## p146
+
+The calculation of buffer size is basically same as the old version of `gcc`.
+
+`.../bits/stl_deque.h[131]`
+```c++
+      static size_t _S_buffer_size() _GLIBCXX_NOEXCEPT
+      { return __deque_buf_size(sizeof(_Tp)); }
+```
+
+`.../bits/stl_deque.h[91]`
+```c++
+#ifndef _GLIBCXX_DEQUE_BUF_SIZE
+#define _GLIBCXX_DEQUE_BUF_SIZE 512
+#endif
+
+  _GLIBCXX_CONSTEXPR inline size_t
+  __deque_buf_size(size_t __size)
+  { return (__size < _GLIBCXX_DEQUE_BUF_SIZE
+	    ? size_t(_GLIBCXX_DEQUE_BUF_SIZE / __size) : size_t(1)); }
+```
+
