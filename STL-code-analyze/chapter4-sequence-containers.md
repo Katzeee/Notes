@@ -981,3 +981,109 @@ The calculation of buffer size is basically same as the old version of `gcc`.
 	    ? size_t(_GLIBCXX_DEQUE_BUF_SIZE / __size) : size_t(1)); }
 ```
 
+## p151
+
+So as `vector` and `list`, the attributes of `deque` is defined in a struct of `_Deque_base`:
+
+`.../bits/stl_deque.h[509]`
+```c++
+      struct _Deque_impl_data
+      {
+	_Map_pointer _M_map;
+	size_t _M_map_size;
+	iterator _M_start;
+	iterator _M_finish;
+```
+
+## p153
+
+One of the constructor of `deque`:
+
+`.../bits/stl_deque.h[890]`
+```c++
+      deque(size_type __n, const value_type& __value,
+	    const allocator_type& __a = allocator_type())
+      : _Base(__a, _S_check_init_len(__n, __a))
+      { _M_fill_initialize(__value); }
+```
+
+`.../bits/deque.tcc[391]`
+```c++
+  template <typename _Tp, typename _Alloc>
+    void
+    deque<_Tp, _Alloc>::
+    _M_fill_initialize(const value_type& __value)
+    {
+      _Map_pointer __cur;
+      __try
+	{
+	  for (__cur = this->_M_impl._M_start._M_node;
+	       __cur < this->_M_impl._M_finish._M_node;
+	       ++__cur)
+	    std::__uninitialized_fill_a(*__cur, *__cur + _S_buffer_size(),
+					__value, _M_get_Tp_allocator());
+	  std::__uninitialized_fill_a(this->_M_impl._M_finish._M_first,
+				      this->_M_impl._M_finish._M_cur,
+				      __value, _M_get_Tp_allocator());
+	}
+      __catch(...)
+	{
+	  std::_Destroy(this->_M_impl._M_start, iterator(*__cur, __cur),
+			_M_get_Tp_allocator());
+	  __throw_exception_again;
+	}
+    }
+```
+
+`.../bits/stl_deque.h[466]`
+```c++
+      _Deque_base(const allocator_type& __a, size_t __num_elements)
+      : _M_impl(__a)
+      { _M_initialize_map(__num_elements); }
+```
+
+`.../bits/stl_deque.h[636]`
+```c++
+  template<typename _Tp, typename _Alloc>
+    void
+    _Deque_base<_Tp, _Alloc>::
+    _M_initialize_map(size_t __num_elements)
+    {
+      const size_t __num_nodes = (__num_elements / __deque_buf_size(sizeof(_Tp))
+				  + 1);
+
+      this->_M_impl._M_map_size = std::max((size_t) _S_initial_map_size, // enum { _S_initial_map_size = 8 };
+					   size_t(__num_nodes + 2));
+      this->_M_impl._M_map = _M_allocate_map(this->_M_impl._M_map_size);
+
+      // For "small" maps (needing less than _M_map_size nodes), allocation
+      // starts in the middle elements and grows outwards.  So nstart may be
+      // the beginning of _M_map, but for small maps it may be as far in as
+      // _M_map+3.
+
+      _Map_pointer __nstart = (this->_M_impl._M_map
+			       + (this->_M_impl._M_map_size - __num_nodes) / 2);
+      _Map_pointer __nfinish = __nstart + __num_nodes;
+
+      __try
+	{ _M_create_nodes(__nstart, __nfinish); }
+      __catch(...)
+	{
+	  _M_deallocate_map(this->_M_impl._M_map, this->_M_impl._M_map_size);
+	  this->_M_impl._M_map = _Map_pointer();
+	  this->_M_impl._M_map_size = 0;
+	  __throw_exception_again;
+	}
+
+      this->_M_impl._M_start._M_set_node(__nstart);
+      this->_M_impl._M_finish._M_set_node(__nfinish - 1);
+      this->_M_impl._M_start._M_cur = _M_impl._M_start._M_first;
+      this->_M_impl._M_finish._M_cur = (this->_M_impl._M_finish._M_first
+					+ __num_elements
+					% __deque_buf_size(sizeof(_Tp)));
+    }
+```
+
+## p156
+
+`push_back`
