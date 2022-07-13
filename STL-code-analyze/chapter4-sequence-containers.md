@@ -852,10 +852,10 @@ About `erase`:
 
 `list::sort` is merge sort, not quick sort.
 
-
 ## 144
 
-There are two asserts in class `deque`.
+There are two asserts in class `deque`. And the third template argument `BufSiz` has been deleted.
+
 `.../bits/stl_deque.h[787]`
 ```c++
   template<typename _Tp, typename _Alloc = std::allocator<_Tp> >
@@ -1086,4 +1086,65 @@ One of the constructor of `deque`:
 
 ## p156
 
-`push_back`
+`push_back` also has two versions, which are for lvalue and rvalue respectively.
+
+`.../bits/stl_deque.h[1537]`
+```c++
+      void
+      push_back(const value_type& __x)
+      {
+	if (this->_M_impl._M_finish._M_cur
+	    != this->_M_impl._M_finish._M_last - 1)
+	  {
+	    _Alloc_traits::construct(this->_M_impl,
+				     this->_M_impl._M_finish._M_cur, __x);
+	    ++this->_M_impl._M_finish._M_cur;
+	  }
+	else
+	  _M_push_back_aux(__x);
+      }
+
+#if __cplusplus >= 201103L
+      void
+      push_back(value_type&& __x)
+      { emplace_back(std::move(__x)); }
+```
+
+The first version is just like the old version in `gcc2.9` with some function name changed. And notice that the argument of `_M_push_back_aus` is a universal reference now, so that `emplace_back` can also call it.
+
+`emplace_back` is as follows:
+
+`.../bits/deque.tcc[157]`
+```c++
+  template<typename _Tp, typename _Alloc>
+    template<typename... _Args>
+#if __cplusplus > 201402L
+      typename deque<_Tp, _Alloc>::reference
+#else
+      void
+#endif
+      deque<_Tp, _Alloc>::
+      emplace_back(_Args&&... __args)
+      {
+	if (this->_M_impl._M_finish._M_cur
+	    != this->_M_impl._M_finish._M_last - 1)
+	  {
+	    _Alloc_traits::construct(this->_M_impl,
+				     this->_M_impl._M_finish._M_cur,
+				     std::forward<_Args>(__args)...);
+	    ++this->_M_impl._M_finish._M_cur;
+	  }
+	else
+	  _M_push_back_aux(std::forward<_Args>(__args)...);
+#if __cplusplus > 201402L
+	return back();
+#endif
+      }
+#endif
+```
+
+## p157
+
+The change in `push_front` is mostly the same as the change in `push_back`.
+
+## 

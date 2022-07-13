@@ -69,5 +69,7 @@ int main() {
     li.sort();
     std::deque<int> dee;
     std::__ptr_rebind<double***, char**> x;
+    dee.push_back(10);
+    dee.insert(dee.begin(), 10);
     return 0;
 }
