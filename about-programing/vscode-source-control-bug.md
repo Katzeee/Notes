@@ -1,7 +1,7 @@
 2022.07.14
 ---
 
-Vscode cannot recognize the `.git` file in the folder.
+Vscode cannot recognize the `.git` file in the folder. It says "the folder currently open doesn't have a git folder" (but it does have).
 
 We can see the following output:
 
