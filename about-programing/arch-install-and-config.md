@@ -187,6 +187,12 @@ Install the system
 
   [My theme](https://github.com/vandalsoul/darkmatter-grub2-theme/)
 
+- vim-like browser
+
+  ```bash
+  yay -S w3m
+  ```
+
 - Xorg
 
   [Xorg](https://wiki.archlinux.org/title/Xorg)
@@ -197,10 +203,12 @@ Install the system
   `xbacklight` is a tool to change the backlight of your screen.
   
   ```bash
-  $ yay -S xorg-server xorg-init xorg-xrandr xbacklight
+  $ yay -S xorg-server xorg-init xorg-xrandr xorg-xbacklight
   ```
 
 - Dwm
+  
+  dependency-lib: `yay -S libxft libxinerama xclip`(xclip is using for patch pipe)
 
   awesomebar: to hide and showe clients
 
@@ -231,6 +239,22 @@ Install the system
   ```
 
   Here are my [xorg.conf](https://github.com/Katzeee/dot-files/tree/master/xorg) files.
+
+- Browser
+
+  Google Chrome browser
+
+  ```bash
+  $ yay -S google-chrome
+  ```
+
+- Network proxy
+
+  Use ssr proxy for accessing `google` or some else site.
+
+  ```bash
+  $ yay -S v2ray qv2ray qv2ray-plugin-ssr
+  ```
   
 - Sound
 
@@ -239,7 +263,7 @@ Install the system
   In order to drive the sound card
 
   ```bash
-  yay -S alsa-utils
+  $ yay -S alsa-utils
   ```
 
 - Razer driver
@@ -253,7 +277,7 @@ Install the system
 - VSCode sync
 
   ```bash
-  yay -S visual-studio-code-bin  
+  $ yay -S visual-studio-code-bin  
   ```
   
   For sync to your github account, you need to install following packages:
@@ -261,5 +285,5 @@ Install the system
   > [settings sync not working on arch linux #113157](https://github.com/microsoft/vscode/issues/113157)
   
   ```bash
-  yay -S xdg-utils gnome-keyring libsecret
+  $ yay -S xdg-utils gnome-keyring libsecret
   ```
