@@ -135,7 +135,7 @@ Install the system
 - Set the user password by `passwd <username>`.
 - Change the user priority
   ```bash
-  $ vim /etc/sudoers
+  $ sudo vim /etc/sudoers
   # add
   %<username> ALL=(ALL) ALL # your group name is same as your user name because the `-U` option 
   ```
