@@ -105,6 +105,22 @@ Install the system
   $ pacstrap /mnt base base-devel linux linux-firmware vim e2fsprogs ntfs-3g 
   # 在上述命令中，base 是元软件包（基本系统所需依赖，你可以不知道它是啥但是必须安装），base-devel 是基础软件包组，linux 是内核，linux-firmware 是固件包，nano、vim 是常用编辑器，e2fsprogs 是 ext4 文件系统所需工具，如果你是按照上面教程使用 ext4 文件系统则必须安装该软件包。ntfs-3g 是与 Windows 的 NTFS 有关的软件包，如果是单系统可以不安装。
   ```
+  
+  If meet error like this:
+  ```bash
+  error: libcap: signature from "David Runge <dvzrv@archlinux.org>" is marginal trust
+  :: File /mnt/var/cache/pacman/pkg/libcap-2.65-1-x86_64.pkg.tar.zst is corrupted (invalid or corrupted package (PGP signature)).
+  Do you want to delete it? [Y/n] 
+  error: failed to commit transaction (invalid or corrupted package)
+  Errors occurred, no packages were upgraded.
+  ==> ERROR: Failed to install packages to new root
+  ```
+  
+  Try
+  ```bash
+  $ pacman -Sy archlinux-keyring
+  ```
+  
 - Config file system table
   ```bash
   $ genfstab -U -p /mnt >> /mnt/etc/fstab
