@@ -161,6 +161,16 @@ Install the system
   $ grub-mkconfig -o /boot/grub/grub.cfg # generate config file
   # You would see "Found Windows" or something
   ```
+
+  If there is no output "Found Windows", try following commands:
+
+  ```bash
+  $ sudo os-prober # check whether there is a Windows boot file
+  # If there actually has, but didn't be recognized, you could do following steps
+  $ yay -S update-grub
+  $ sudo update-grub
+  ```
+
 - Set up language and timezone
   ```bash
   $ vim /etc/locale.gen
@@ -221,6 +231,10 @@ Install the system
   ```bash
   $ yay -S xorg-server xorg-init xorg-xrandr xorg-xbacklight
   ```
+  
+  Mind that [`xbacklight` currently does not work with the modesetting driver](https://wiki.archlinux.org/title/Backlight#xbacklight).
+
+  Use `sudo vim /sys/class/backlight/intel_backlight/brightness` to edit the brightness of the screen.
 
 - Dwm
   
