@@ -129,17 +129,23 @@ Install the system
 
 ## Install the new system
 
-- Enter the new system by running `arch-chroot /mnt /bin/bash`.
-- Set root password by running `passwd`.
-- Create a user by running `useradd -m -U -s /bin/bash <username>`.
-- Set the user password by `passwd <username>`.
+- Pre-settings
+  ```bash
+  $ arch-chroot /mnt /bin/bash # Enter the new system
+  $ passwd # Set root password
+  $ useradd -m -U -s /bin/bash <username> # Create a user
+  $ passwd <username> # Set the user password
+  ```
 - Change the user priority
   ```bash
   $ sudo vim /etc/sudoers
   # add
   %<username> ALL=(ALL) ALL # your group name is same as your user name because the `-U` option 
   ```
-- Set the name of your computer by `echo <computername> > /etc/hostname`
+- Set the name of your computer
+  ```bash
+  $ echo <computername> > /etc/hostname 
+  ```
 - Set up hosts
   ```bash
   $ vim /etc/hosts
@@ -152,6 +158,20 @@ Install the system
   ```bash
   $ pacman -S intel-ucode # intel
   $ pacman -S amd-ucode # amd
+  ```
+- Add archlinuxcn source and install yay
+  ```bash
+  $ vim /etc/pacman.conf
+  # add
+  [archlinuxcn]
+  Server = https://mirrors.ustc.edu.cn/archlinuxcn/$arch
+  $ pacman -Syy # refresh
+  $ pacman -S archlinuxcn-keyring # install keyring
+  $ pacman -S yay
+  ```
+- Solve the Windows-encryption
+  ```bash
+  $ yay -S dislocker
   ```
 - Set dual-system instruction
   ```bash
@@ -178,8 +198,11 @@ Install the system
   en_US.UTF-8 UTF-8
   zh_CN
   zh_TW
+  # then run
+  $ locale-gen # refresh
+  $ echo LANG=en_US.UTF-8 > /etc/locale.conf # set system language to English
+  $ ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime # change timezone
   ```
-  Then run `locale-gen` to refresh, `echo LANG=en_US.UTF-8 > /etc/locale.conf` to set system language to English, `ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime` to change timezone.
 - Set up network
   ```bash
   $ pacman -S networkmanager
@@ -188,21 +211,6 @@ Install the system
 - Localize
   ```bash
   $ pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji adobe-source-han-sans-otc-fonts wqy-microhei wqy-zenhei # install fonts
-  ```
-- Add archlinuxcn source and install yay
-  ```bash
-  $ vim /etc/pacman.conf
-  # add
-  [archlinuxcn]
-  Server = https://mirrors.tuna.tsinghua.edu.cn/archlinuxcn/$arch
-  $ pacman -Syy # refresh
-  $ pacman -S archlinuxcn-keyring # install keyring
-  $ pacman -S yay
-  ```
-- Solve the Windows-encryption
-  ```bash
-  $ yay -S dislocker
-  $ sudo grub-mkconfig -o /boot/grub/grub.cfg
   ```
 
 ## Other configuration
@@ -229,7 +237,7 @@ Install the system
   `xbacklight` is a tool to change the backlight of your screen.
   
   ```bash
-  $ yay -S xorg-server xorg-init xorg-xrandr xorg-xbacklight
+  $ yay -S xorg xorg-init
   ```
   
   Mind that [`xbacklight` currently does not work with the modesetting driver](https://wiki.archlinux.org/title/Backlight#xbacklight).
@@ -262,7 +270,19 @@ Install the system
 
   [Nvidia prime](https://wiki.archlinux.org/title/PRIME)
 
-  `nvidia` is Nvidia driver for Nvidia graphic cards, `nvidia-prime` which can run a specific application rendering by nvidia card is only needed by hybird graphic cards like intel+nvidia, amd+nvidia.
+  `nvidia` is the proprietary Nvidia driver for Nvidia graphic cards, `nvidia-prime` can run a specific application rendering by nvidia card and is only needed by hybird graphic cards like intel+nvidia, amd+nvidia.
+
+  **Note: The computer with intel 12th gen CPU may crash after installing this driver, and the solution is to add a kernel parameter `ibt=off` as the instructions said by [Nvidia installation](https://wiki.archlinux.org/title/NVIDIA#Installation)**
+
+  To do so, edit the `/etc/default/grub`
+
+  ```bash
+  $ sudo vim /etc/default/grub
+  # add "ibt=off" just at the end of "GRUB_CMDLINE_LINUX_DEFAULT=" line, like:
+  GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet ibt=off"
+  # then run
+  $ sudo update-grub
+  ```
   
   ```bash
   $ yay -S nvidia nvidia-prime 
@@ -280,7 +300,7 @@ Install the system
 
 - Network proxy
 
-  Use ssr proxy for accessing `google` or some else site.
+  Use ssr protocol proxy for accessing `google` or some else site.
 
   ```bash
   $ yay -S v2ray qv2ray qv2ray-plugin-ssr
@@ -317,3 +337,9 @@ Install the system
   ```bash
   $ yay -S xdg-utils gnome-keyring libsecret
   ```
+
+- Linux Reader
+
+  [Linux-reader](https://www.diskinternals.com/linux-reader/)
+
+  A small program on Windows for accessing the files on Linux.
