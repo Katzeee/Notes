@@ -237,12 +237,12 @@ Install the system
   `xbacklight` is a tool to change the backlight of your screen.
   
   ```bash
-  $ yay -S xorg xorg-init
+  $ yay -S xorg xorg-init brightnessctl
   ```
   
   Mind that [`xbacklight` currently does not work with the modesetting driver](https://wiki.archlinux.org/title/Backlight#xbacklight).
 
-  Use `sudo vim /sys/class/backlight/intel_backlight/brightness` to edit the brightness of the screen.
+  Use `brightnessctl` or directly run `sudo vim /sys/class/backlight/intel_backlight/brightness` to edit the brightness of the screen.
 
 - Dwm
   
@@ -263,6 +263,8 @@ Install the system
   cool-autostart: autostart scripts and close it when quit dwm
 
   sendmon_keepfocus: send client to other monitors and keep focusing on it
+
+  **BTW: `xev` can be used to know which signal is emitted by users which helps you to customize dwm**
   
 - Nvidia driver
 
