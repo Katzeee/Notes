@@ -292,6 +292,17 @@ Install the system
 
   Here are my [xorg.conf](https://github.com/Katzeee/dot-files/tree/master/xorg) files.
 
+- Power manage
+
+  [tlp](https://wiki.archlinux.org/title/TLP)
+
+  ```bash
+  $ yay -S tlp tlpui
+  $ sudo systemctl enable tlp.service 
+  $ sudo systemctl mask systemd-rfkill.service 
+  $ sudo systemctl mask systemd-rfkill.socket 
+  ```
+
 - Browser
 
   Google Chrome browser
@@ -340,8 +351,27 @@ Install the system
   $ yay -S xdg-utils gnome-keyring libsecret
   ```
 
-- Linux Reader
+- Linux Reader(Windows)
 
   [Linux-reader](https://www.diskinternals.com/linux-reader/)
 
   A small program on Windows for accessing the files on Linux.
+
+- Input method
+
+  [Fcitx](https://wiki.archlinux.org/title/Fcitx)
+
+  ```bash
+  $ yay -S fcitx-im fcitx-configtool
+  ```
+
+  Put these before `exce dwm` or other window manager in `~/.xinitrc`
+
+  ```
+  GTK_IM_MODULE=fcitx
+  QT_IM_MODULE=fcitx
+  XMODIFIERS=@im=fcitx
+  fcitx &
+  ...
+  exce dwm
+  ```
