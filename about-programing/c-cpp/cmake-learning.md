@@ -1,4 +1,5 @@
-# 2022.4.14
+2022.4.14
+---
 
 ### cmake官方文档
 
@@ -14,13 +15,15 @@ add_library(<name> [STATIC | SHARED | MODULE]
 
 ### Normal Libraries
 
-- 添加一个从`<source>`列表列出文件构建而来的库，名为`<name>`全局唯一
-- `<source>`可以直接指定，也可以后续再用`target_sources()`
+- 添加一个从 `<source>`列表列出文件构建而来的库，名为 `<name>`全局唯一
+- `<source>`可以直接指定，也可以后续再用 `target_sources()`
 - STATIC（静态库）（`<lib>name.a`），SHARED（动态库），MODULE（模块库）
 - MODULE是在函数中进行调用动态库
-  > MODULE libraries are plugins that are not linked into other targets but may be loaded dynamically at runtime using dlopen-like functionality. 
+  > MODULE libraries are plugins that are not linked into other targets but may be loaded dynamically at runtime using dlopen-like functionality.
+  >
 
 示例代码
+
 ```cmake
 ADD_LIBRARY(hellolib STATIC ./src/hello.cpp)
 ```
@@ -38,8 +41,8 @@ add_library(<name> <type> IMPORTED [GLOBAL])
 - 用来导入已经存在的库，CMake也不会添加任何编译规则给它。
 - 此类库的标志就是有IMPORT属性，导入的库的作用域为创建它的目录及更下级目录。但是如果有GLOBAL属性，则作用域被拓展到全工程。
 - 导入的库的类型必须是STATIC, SHARED, MODULE, UNKNOWN中的一种
-对于UNKNOW类型，不需要知道类型就可使用的
-从工程外部引入一个库，使用IMPORTED_LOCATION属性确定库文件的在磁盘上的完整路径。
+  对于UNKNOW类型，不需要知道类型就可使用的
+  从工程外部引入一个库，使用IMPORTED_LOCATION属性确定库文件的在磁盘上的完整路径。
 
 示例代码
 
@@ -51,23 +54,22 @@ SET_TARGET_PROPERTIES(avutil PROPERTIES IMPORTED_LOCATION /usr/local/ffmpeg/lib)
 TARGET_LINK_LIBRARIES(a.out avutil) # 链接第三方库
 ```
 
-
 ### Alias Libraries
 
 ```cmake
 add_library(<name> ALIAS <target>)
 ```
-为给定library添加一个别名，后续可使用`<name>`来替代`<target>`。
+
+为给定library添加一个别名，后续可使用 `<name>`来替代 `<target>`。
 
 - `<target>`不能是ALIAS
+- 可用于判断 `<target>`是否存在、链接。
+- ALIAS的library不能修改属性，不能调用 `set_property()`, `set_target_properties()`和 `target_link_libraries()`等方法
+- 不能用于 `install()`
 
-- 可用于判断`<target>`是否存在、链接。
-
-- ALIAS的library不能修改属性，不能调用`set_property()`, `set_target_properties()`和`target_link_libraries()`等方法
-
-- 不能用于`install()`
-
-# 2022.5.17
+---
+2022.5.17
+---
 
 ## Adding source files
 
@@ -83,7 +85,6 @@ Collect all source files in `<dir>`, excluding `.h`
 # example, collect all source files store the list in ${SOURCE}
 aux_source_directory(. SOURCES)
 ```
-
 
 ### `file(GLOB)`
 
@@ -150,8 +151,6 @@ project(<PROJECT-NAME>
 - `PROJECT_SOURCE_DIR`, `<PROJECT-NAME>_SOURCE_DIR`
 
   Absolute path to the source directory for the project.
-
-
 - `PROJECT_BINARY_DIR`, `<PROJECT-NAME>_BINARY_DIR`
 
   Absolute path to the binary directory for the project.
@@ -239,26 +238,27 @@ __declspec(dllimport)
 #endif
 ```
 
-
-In default, cmake build libraries as static libraries. The variable `BUILD_SHARED_LIBS` can be set to `ON`, for always building shared libraries.
+In default, cmake build libraries as static libraries. `BUILD_SHARED_LIBS` is a global variable to control the default type of building the libraries, and is default set to `OFF`. If it is set to `ON`, cmake will build SHARED libraries as default. 
 
 **TIPS: SHARED LIBRARIES CANNOT LINK TO STATIC LIBRARIES DIRECTLY**
 
-SOLUTION FOR TIPS: for global
-```cmake
-set (CMAKE_POSITION_INDEPENDENT_CODE ON)
-```
+- SOLUTION FOR TIPS: for global
 
-Or just set it for one library:
+    ```cmake
+    set (CMAKE_POSITION_INDEPENDENT_CODE ON)
+    ```
 
-```cmake
-add_library(mylib STATIC mylib.cpp)
-set_property(TARGET mylib PROPERTY POSITION_INDEPENDENT_CODE ON)
-```
+- Or just set it for one library:
+
+    ```cmake
+    add_library(mylib STATIC mylib.cpp)
+    set_property(TARGET mylib PROPERTY POSITION_INDEPENDENT_CODE ON)
+    ```
 
 ### `set_property()`, `set_target_properties()`
 
 Use `set_property()` to set target properties one by one:
+
 ```cmake
 # c++17 standard(default 11 in cmake 3.16)
 set_property(TARGET main PROPERTY CMAKE_CXX_STANDARD 17)
@@ -301,3 +301,202 @@ set(LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 ```
+
+2022.09.17
+---
+
+### Use of CMake
+
+- Past CMake
+    ```bash
+    $ mkdir -p build && cd build
+    $ cmake [-GNinja] -DCMAKE_BUILD_TYPE=Release ..
+    $ make -j4
+    $ make install
+    ```
+
+- Modern CMake
+
+    ```bash
+    $ cmake -B build [-GNinja] -DCMAKE_BUILD_TYPE=Release # construct cmake, create a `build` folder and Makefile 
+    $ cmake --build build --parallel 4 # using make or ninja or whatever compiler to complie the source code
+    $ cmake --build build --target install # install the code
+    ```
+
+### `target_sources()`
+
+```cmake
+target_sources(<target>
+<INTERFACE|PUBLIC|PRIVATE> [items1...]
+[<INTERFACE|PUBLIC|PRIVATE> [items2...] ...])
+```
+
+Use `target_sources()` to append source files to the library or executable.
+
+```cmake
+aux_source_directory(. SRC)
+add_excutable(main)
+target_sources(main PUBLIC ${SRC})
+```
+
+Even you can use `target_sources` to append files to the object in sub-directories.
+
+### `find_packages`
+
+For some libraries, you must specify the components you used or you will get a cmake failure.
+
+```cmake
+find_packages(Qr5 COMPONENTS Widgets Gui REQUIRED)
+target_link_libraries(main PUBLIC Qt5::Widgets Qt5::Gui)
+```
+
+Sometimes you should specify the install path of your libraries, there are some approaches.
+
+- `set` CMAKE_MODULE_PATH
+
+    ```cmake
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} C:/Qt/Qt5.14.2/msvc2019_64/lib/cmake)
+
+    find_packages(Qr5 COMPONENTS Widgets Gui REQUIRED)
+    target_link_libraries(main PUBLIC Qt5::Widgets Qt5::Gui)
+    ```
+
+- `set` Qt5_DIR
+
+    ```cmake
+    set(Qt5_DIR C:/Qt/Qt5.14.2/msvc2019_64/lib/cmake)
+
+    find_packages(Qr5 COMPONENTS Widgets Gui REQUIRED)
+    target_link_libraries(main PUBLIC Qt5::Widgets Qt5::Gui)
+    ```
+
+- specify the path in command line
+
+    ```bash
+        cmake -B build -DQt5_DIR="C:/Qt/Qt5.14.2/msvc2019_64/lib/cmake"
+    ```
+
+- set the environment variable
+
+    ```bash
+    export Qt5_DIR="/opt/Qt5.14.2/lib/cmake"
+    cmake -B build
+    ```
+
+When not use `REQUIRED` in `find_package`, cmake will set `TBB_FOUND` to be `FALSE`.
+
+```cmake
+find_package(TBB)
+if (TBB_FOUND)
+# or
+# if (TARGET TBB::tbb)
+# if (NOT TARGET TBB::tbb AND TARGET Eigen3::eigen)
+    message(STATUS "TBB found at: ${TBB_DIR}")
+    target_link_libraries(main PUBLIC TBB::tbb)
+    target_compile_definitions(main PUBLIC WITH_TBB) # define `WITH_TBB` marco in cpp files
+else()
+    message(WARNING "TBB not found!")
+endif()
+```
+
+```cpp
+#ifdef WITH_TBB // defined in cmake file
+do_something();
+#endif
+```
+
+### `message()`
+
+```cmake
+message(STATUS <str>)
+message(WARNING <str>)
+message(AUTHOR_WARNING <str>)
+message(FATAL_ERROR <str>) # shutdown
+message(SEND_ERROR <str>) # not shutdown
+```
+
+### update cache file
+
+Use -D parameter to update the variables in `CMakeCache.txt`
+
+```bash
+$ cmake -B build -Dmyvar=world
+```
+
+Use `ccmake` on Linux or `cmake-gui` on Windows.
+
+```bash
+$ ccmake -B build
+```
+
+### set cmake cache varibles
+
+```cmake
+set(WITH_TBB OFF CACHE BOOL "set to ON to enable TBB") # define a bool varible WITH_TBB and decribe it then set to OFF
+# equivalent to 
+option(WITH_TBB "set to ON to enable TBB" OFF) 
+```
+
+This setting can be overwritten by user when call cmake in command line:
+
+```bash
+$ cmake -B build -DWITH_TBB:BOOL=ON
+```
+
+### Determine the operating system type
+
+- `CMAKE_SYSTEM_NAME`
+    ```cmake
+    if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+    elesif (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    elseif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    endif()
+    ```
+
+- built-in variables
+
+    ```cmake
+    if (WIN32)
+    elseif (UNIX AND NOT APPLE) # FreeBSD Linux Android MacOS iOS
+    elseif (APPLE) # MacOS iOS
+    endif()
+    ```
+
+- generator
+
+    syntax: $<$<TYPE:VALUE>:WHEN TRUE EXPR>
+
+    ```cmake
+    target_compile_definitions(main PUBLIC
+        $<$<PLATFORM_ID:Windows>:MY_NAME="Bill">
+        $<$<PLATFORM_ID:Linux>:MY_NAME="Linus">
+        $<$<PLATFORM_ID:Darwin>:MY_NAME="Steve">
+    )
+    $<$<CXX_COMPILER_ID:GNU,Clang>:MY_NAME="Open-source"> # multi-VALUE
+    $<$<AND:$<CXX_COMPILER_ID:GNU,Clang>,$<PLATFORM_ID:Linux,FreeBSD>>:MY_NAME="Open"> # complex judgement
+    ```
+
+### `if`
+
+Call cmake variables with `${}` except if
+
+```cmake
+set(Hello world) # ${Hello}=world
+set(MYVAR Hello) # ${MYVAR}=Hello
+if (${MYVAR} MATCHES "Hello") # ${MYVAR} will be expend to Hello then Hello will be expand to world
+    message("MYVAR is Hello")
+else()
+    message("MYVAR is not Hello") # this will be execute
+endif()
+```
+
+### variable inherit
+
+The variable only can be inherited to the sub-directories by default.
+
+Sub-module can modify parent's variable using `PARENT_SCOPE`:
+
+```cmake
+set(MYVAR ON PARENT_SCOPE)
+```
+
