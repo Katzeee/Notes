@@ -61,3 +61,7 @@ s = strtok(NULL, " ");//we call strtok with the first arg being NULL except the 
 char buf[11];//定义buf
 strncpy(buf, src, 10); //进行拷贝
 ```
+
+2022.09.21
+---
+### popen
