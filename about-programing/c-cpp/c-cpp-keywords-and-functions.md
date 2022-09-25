@@ -65,3 +65,9 @@ strncpy(buf, src, 10); //进行拷贝
 2022.09.21
 ---
 ### popen
+
+2022.09.25
+---
+### stringstream
+
+**stringstream.clear() can't clear the cache!!!!!!! USE .str("")**
