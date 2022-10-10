@@ -40,7 +40,7 @@ void something(int&& arg) {
 somefunc(something, 1);
 ```
 
-When we call `f(somearg)` in `somfunc`, as `somearg` is an rvalue-reference which is also an lvalue,  but something receives an rvalue, we will get a compile error: `cannot bind rvalue reference of type 'int&&' to lvalue of type 'int'`.
+When we call `f(somearg)` in `somfunc`, as `somearg` is an rvalue-reference which is also an lvalue, but something receives an rvalue, we will get a compile error: `cannot bind rvalue reference of type 'int&&' to lvalue of type 'int'`.
 
 Using `std::forward` can solve this problem:
 
