@@ -26,7 +26,7 @@ There are two type of `requires`.
   ```
   Only if the `concept` following the `requires` returns true, this template will possibly be instantiated.
 
-## Using of `requires`
+## Use of `requires`
 
 Sometimes we don't define a concept but use `requires` directly like this:
 

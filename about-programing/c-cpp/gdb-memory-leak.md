@@ -25,3 +25,11 @@ data_size = ::recv(socket_fd_, buffer, read_buffer_->GetEmptySize(), 0);
 I allocated 4 bytes to buffer, but `recv` too much data in buffer which caused this error.
 
 **PS: `debuginfod` can be used to step into function in `libc` when debugging via `gdb`**
+
+---
+2022.10.26
+---
+
+## sanitizer
+
+Add a compile option `-fsanitizer=address` may solve this problem easily.
