@@ -107,7 +107,7 @@ Some keywords
 
   - testability: can determine the results 
 
-- twin peaks model
+- twin peaks model: design to realize
 
 # Why documents
 
@@ -230,4 +230,383 @@ Some keywords
   - useful in all circumstance
 
 - 4 views are not fully orthogonal or independent
+
+# typical architectures
+
+## data-flow styles
+
+  - properties
+
+    - flexible
+
+  - batch sequential style
+
+    - sequential
+
+  - pipe and filter
+
+    - concurrent
+
+    - has to parse data
+
+    - not suited for interactive application
+
+    ```python
+    class Filter:
+      def __init__(self):
+          self.input_pipe = None
+          self.output_pipe = None
+  
+      def set_input_pipe(self, pipe):
+          self.input_pipe = pipe
+  
+      def set_output_pipe(self, pipe):
+          self.output_pipe = pipe
+  
+      def process(self, data):
+          pass
+  
+  
+    class Pipe:
+      def __init__(self):
+          self.data = None
+  
+      def put(self, data):
+          self.data = data
+  
+      def get(self):
+          return self.data
+  
+  
+    class PipeAndFilterArchitecture:
+      def __init__(self):
+          self.filters = []
+  
+      def add_filter(self, filter):
+          self.filters.append(filter)
+  
+      def connect_filters(self):
+          for i in range(len(self.filters) - 1):
+              self.filters[i].set_output_pipe(self.filters[i + 1].input_pipe)
+  
+      def process(self, data):
+          self.filters[0].input_pipe.put(data)
+  
+          for filter in self.filters:
+              filter.process(filter.input_pipe.get())
+  
+          return self.filters[-1].output_pipe.get()
+  
+    ```
+    In this example, the `Filter` class represents a filter that processes data and passes it to the next filter in the pipeline. 
+    The `Pipe` class represents a pipe that connects two filters and holds the data that is passed between them. 
+    The `PipeAndFilterArchitecture` class represents the overall pipeline and manages the filters and pipes. 
+    The `add_filter` method adds a filter to the pipeline, the `connect_filters` method connects the filters together, and the `process` method processes the data through the pipeline.
+
+## data-centered
+
+- centralize data store
+
+- three protocol: communication, definition, data manipulation
+
+- ensure data integrity
+
+- repository
+
+  - clients send request to the system(via system interface)
+
+  - A medical diagnosis system that uses a blackboard architecture. In this system, multiple independent knowledge sources, such as a symptom checker, a lab test analysis module, and a medical expert system, operate on the data stored on the blackboard (patient symptoms, lab test results, and medical knowledge) in parallel to generate a diagnosis.
+
+  - code
+
+    ```python
+    class Repository:
+      def __init__(self):
+          self.data = {}
+  
+      def add(self, key, value):
+          self.data[key] = value
+  
+      def get(self, key):
+          return self.data[key]
+
+
+    class Component:
+        def __init__(self, repository):
+            self.repository = repository
+    
+      def process(self, data):
+        # Get the current data from the repository
+        current_data = self.repository.get('data')
+        # Perform some processing on the data
+        processed_data = process_data(data)
+        # Update the repository with the processed data
+        self.repository.add('data', processed_data)
+    
+    
+    class RepositoryArchitecture:
+        def __init__(self):
+            self.repository = Repository()
+            self.components = []
+    
+        def add_component(self, component):
+            self.components.append(component)
+            component.repository = self.repository
+    
+        def process(self, data):
+            for component in self.components:
+                component.process(data)
+    
+    ```
+    In this example, the Repository class represents a central data store that holds the data that is used by the components in the system. The Component class represents a component that accesses and modifies the data in the repository. The RepositoryArchitecture class manages the repository and the components, and the process method processes the data by calling the process method on each component.
+
+- blackboard
+
+  - system sends notification and data to subscriber
+
+  - An online shopping website that uses a repository pattern. In this system, a central data store (the repository) holds all of the product information, and the website's components (the shopping cart, the checkout process, and the order confirmation page) access and modify the data in the repository through well-defined interfaces.
+
+  - code
+
+    ```python
+    class Blackboard:
+      def __init__(self):
+          self.data = {}
+          self.subscribers = set()
+  
+      def add(self, key, value):
+          self.data[key] = value
+  
+          # Notify subscribers that the data has been updated
+          for subscriber in self.subscribers:
+              subscriber.update(key, value)
+  
+      def get(self, key):
+          return self.data[key]
+  
+      def subscribe(self, subscriber):
+        self.subscribers.add(subscriber)
+
+
+    class KnowledgeSource:
+        def __init__(self, blackboard):
+            self.blackboard = blackboard
+            self.blackboard.subscribe(self)
+    
+        def process(self):
+            pass
+    
+        def update(self, key, value):
+            # Handle updates from the blackboard
+            pass
+
+    ```
+    In this example, the Blackboard class now has a subscribers set to hold a list of subscribers, and a subscribe method to add new subscribers. The Knowledge_source class now has an update method to handle updates from the blackboard, and it subscribes to the blackboard when it is initialized. The Blackboard class also calls the update method on each subscriber when the data is updated. This allows knowledge sources to be notified when the data on the blackboard has been changed, so they can take appropriate action.
+
+- database
+
+  - clients use DML to work with data
+
+- web architecture
+
+- REST architecture
+
+## layer architecture
+
+- connectors are protocols of layer interaction
+
+- layers are replaceable
+
+- example: OS, network, VM
+
+- satisfy all design principles
+
+- N-tier
+
+  - conceptually separate architecture into presentation, application and data storage layers
+
+## Event driven architecture(EDA)
+
+- loosely coupled components
+
+- challenges: non-sequential execution, consistency
+
+- connector is network protocol
+
+- notification architecture(publish-subscribe)
+
+  - indirect communication cause delay
+
+- event-based(such as message queue)
+
+  - due to asynchronous nature, might not be deterministic(bad for test)
+
+## network-centered style
+
+- focus on communication
+
+# SOA(service oriented architecture)
+
+- why SOA
+
+  - 2020-2050(properties)
+
+    - distributed functions
+
+    - data centric
+  
+  - respond to business changes(extensibility)
+
+    - more agile to change business needs
+
+- what is SOA
+
+  - service: a repeatable business task
+
+  - service orientation: a way of integrating your business as linked services
+
+- Characteristics of SOA
+
+  - shared services
+
+  - loose coupling
+
+  - location transparency
+
+  - software infrastructure is responsible for managing
+
+  - stateless
+
+  - **service bus**
+
+- SOA supports Business process management(BPM)
+
+  - interpret architecture(IDL in CORBA, WSDL in Web Service)
+
+  - manage workflow
+
+- CORBA is similar to SOA
+
+  - IDL(describes service)
+
+- service communication
+
+  - message(SOAP protocol)
+
+  - services don't know about others
+
+- service use open standards(describe, communicate, exchange data)
+
+- Web service(one way to realize SOA)
+
+# Microservices
+
+- Why microservices
+
+  - faster and simpler deployment and rollbacks
+
+  - right framework/tool/language for each domain
+
+  - greater resiliency(fault isolation)
+
+- what is microservices
+
+  - fine grain SOA
+
+- three aspects of it
+
+  - technical
+
+  - architectural
+
+    - single responsibility
+
+    - bounded context
+
+    - ...
+
+  - organizational
+
+    - teams
+
+    - you build it you run it
+
+# Serverless
+
+- what is serverless
+
+  - abstraction of servers
+
+  - a cloud-native platform
+
+  - short-running, stateless computation
+
+  - event-driven applications
+
+  - scales up and down instantly and automatically(flexible)
+
+  - charges for actual usage at a millisecond granularity
+
+- server-less means worry-less about servers(just code)
+
+  - focus on business logic 
+
+# MVP
+
+```cpp
+// The model represents the data and business logic of the application.
+class User {
+  int id;
+  String name;
+
+  User(this.id, this.name);
+
+  void updateName(String name) {
+    this.name = name;
+  }
+}
+
+// The view represents the user interface of the application.
+// It has no knowledge of the model or the presenter, and it only
+// communicates with the presenter through a well-defined interface.
+abstract class UserView {
+  void showUser(User user);
+  void showError(String message);
+}
+
+// The presenter is responsible for handling the logic of the user
+// interface and interacting with the model. It has a reference to
+// the view and the model, and it updates the view based on the
+// data and events from the model.
+class UserPresenter {
+  UserView view;
+  User model;
+
+  UserPresenter(this.view, this.model);
+
+  void loadUser() {
+    try {
+      // Load the user from the model and update the view.
+      User user = model.load();
+      view.showUser(user);
+    } catch (e) {
+      // Show an error message on the view if there is an exception.
+      view.showError(e.message);
+    }
+  }
+
+  void saveUser(String name) {
+    try {
+      // Update the user in the model and show the updated user on the view.
+      model.updateName(name);
+      User user = model.save();
+      view.showUser(user);
+    } catch (e) {
+      // Show an error message on the view if there is an exception.
+      view.showError(e.message);
+    }
+  }
+}
+
+```
 
