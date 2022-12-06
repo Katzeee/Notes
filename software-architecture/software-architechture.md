@@ -235,85 +235,91 @@ Some keywords
 
 ## data-flow styles
 
-  - properties
+- properties
 
-    - flexible
+  - pros: flexible(reuse, composite), AOP, debug
 
-  - batch sequential style
+  - cons: pipe->high latency(cannot interactive), parse/wrap data
 
-    - sequential
+- `batch sequential style`
 
-  - pipe and filter
+  - sequential
 
-    - concurrent
+  - example: unix command pipe, old compiler
 
-    - has to parse data
+- `pipe and filter`
 
-    - not suited for interactive application
+  - concurrent
 
-    ```python
-    class Filter:
-      def __init__(self):
-          self.input_pipe = None
-          self.output_pipe = None
-  
-      def set_input_pipe(self, pipe):
-          self.input_pipe = pipe
-  
-      def set_output_pipe(self, pipe):
-          self.output_pipe = pipe
-  
-      def process(self, data):
-          pass
-  
-  
-    class Pipe:
-      def __init__(self):
-          self.data = None
-  
-      def put(self, data):
-          self.data = data
-  
-      def get(self):
-          return self.data
-  
-  
-    class PipeAndFilterArchitecture:
-      def __init__(self):
-          self.filters = []
-  
-      def add_filter(self, filter):
-          self.filters.append(filter)
-  
-      def connect_filters(self):
-          for i in range(len(self.filters) - 1):
-              self.filters[i].set_output_pipe(self.filters[i + 1].input_pipe)
-  
-      def process(self, data):
-          self.filters[0].input_pipe.put(data)
-  
-          for filter in self.filters:
-              filter.process(filter.input_pipe.get())
-  
-          return self.filters[-1].output_pipe.get()
-  
-    ```
-    In this example, the `Filter` class represents a filter that processes data and passes it to the next filter in the pipeline. 
-    The `Pipe` class represents a pipe that connects two filters and holds the data that is passed between them. 
-    The `PipeAndFilterArchitecture` class represents the overall pipeline and manages the filters and pipes. 
-    The `add_filter` method adds a filter to the pipeline, the `connect_filters` method connects the filters together, and the `process` method processes the data through the pipeline.
+  ```python
+  class Filter:
+    def __init__(self):
+        self.input_pipe = None
+        self.output_pipe = None
+
+    def set_input_pipe(self, pipe):
+        self.input_pipe = pipe
+
+    def set_output_pipe(self, pipe):
+        self.output_pipe = pipe
+
+    def process(self, data):
+        pass
+
+
+  class Pipe:
+    def __init__(self):
+        self.data = None
+
+    def put(self, data):
+        self.data = data
+
+    def get(self):
+        return self.data
+
+
+  class PipeAndFilterArchitecture:
+    def __init__(self):
+        self.filters = []
+
+    def add_filter(self, filter):
+        self.filters.append(filter)
+
+    def connect_filters(self):
+        for i in range(len(self.filters) - 1):
+            self.filters[i].set_output_pipe(self.filters[i + 1].input_pipe)
+
+    def process(self, data):
+        self.filters[0].input_pipe.put(data)
+
+        for filter in self.filters:
+            filter.process(filter.input_pipe.get())
+
+        return self.filters[-1].output_pipe.get()
+
+  ```
+  In this example, the `Filter` class represents a filter that processes data and passes it to the next filter in the pipeline. 
+  The `Pipe` class represents a pipe that connects two filters and holds the data that is passed between them. 
+  The `PipeAndFilterArchitecture` class represents the overall pipeline and manages the filters and pipes. 
+  The `add_filter` method adds a filter to the pipeline, the `connect_filters` method connects the filters together, and the `process` method processes the data through the pipeline.
 
 ## data-centered
 
-- centralize data store
+- properties
 
-- three protocol: communication, definition, data manipulation
+  - centralize data store
+  
+  - three protocol: communication, definition, data manipulation
+  
+  - pros: data integrity, secure, performance on client side
 
-- ensure data integrity
+  - cons: scalability, unclear border of functionalities
 
-- repository
+- `repository`
 
   - clients send request to the system(via system interface)
+
+  - examples: database(clients use DML to work with data), REST architecture
 
   - A medical diagnosis system that uses a blackboard architecture. In this system, multiple independent knowledge sources, such as a symptom checker, a lab test analysis module, and a medical expert system, operate on the data stored on the blackboard (patient symptoms, lab test results, and medical knowledge) in parallel to generate a diagnosis.
 
@@ -360,9 +366,11 @@ Some keywords
     ```
     In this example, the Repository class represents a central data store that holds the data that is used by the components in the system. The Component class represents a component that accesses and modifies the data in the repository. The RepositoryArchitecture class manages the repository and the components, and the process method processes the data by calling the process method on each component.
 
-- blackboard
+- `blackboard`
 
   - system sends notification and data to subscriber
+
+  - examples: speech and pattern recognition(complex system), web architecture
 
   - An online shopping website that uses a repository pattern. In this system, a central data store (the repository) holds all of the product information, and the website's components (the shopping cart, the checkout process, and the order confirmation page) access and modify the data in the repository through well-defined interfaces.
 
@@ -403,47 +411,159 @@ Some keywords
     ```
     In this example, the Blackboard class now has a subscribers set to hold a list of subscribers, and a subscribe method to add new subscribers. The Knowledge_source class now has an update method to handle updates from the blackboard, and it subscribes to the blackboard when it is initialized. The Blackboard class also calls the update method on each subscriber when the data is updated. This allows knowledge sources to be notified when the data on the blackboard has been changed, so they can take appropriate action.
 
-- database
 
-  - clients use DML to work with data
-
-- web architecture
-
-- REST architecture
 
 ## layer architecture
 
-- connectors are protocols of layer interaction
+- properties
 
-- layers are replaceable
+  - connectors are protocols of layer interaction
+  
+  - example: OS, network, VM(specifies an interface between compiler and a real machine from conceptual point of view)
+  
+  - satisfy all design principles
 
-- example: OS, network, VM
+  - pros: portability, layers are replaceable, low couple, evolvability, reuse
 
-- satisfy all design principles
+  - cons: not all system fit, abstraction lead to low performance, hard to find right level of abstraction
 
-- N-tier
+- `N-tier`
 
   - conceptually separate architecture into presentation, application and data storage layers
 
 ## Event driven architecture(EDA)
 
-- loosely coupled components
+- properties
 
-- challenges: non-sequential execution, consistency
+  - loosely coupled components
+  
+  - connector is network protocol
 
-- connector is network protocol
+  - pros: decouple, timelessness, asynchronous
 
-- notification architecture(publish-subscribe)
+  - cons: non-sequential execution(no control over process flow), consistency, difficult to debug(testibility)
+
+- `notification architecture(publish-subscribe)`
 
   - indirect communication cause delay
 
-- event-based(such as message queue)
+- `event-based(such as message queue)`
 
-  - due to asynchronous nature, might not be deterministic(bad for test)
+  - components are event generator and consumer
+
+  - connectors are event buses
 
 ## network-centered style
 
-- focus on communication
+- properties
+
+  - components are servers and clients
+
+  - connectors are RPC-based network interaction protocols
+
+  - focus on communication
+
+  - cons: performance(communication slow)
+
+- `clinet-server`
+
+  - SOC(separation of concerns)
+
+  - scale vertically is often the only option
+
+  - `replicated server`
+
+    - pros: fault tolerance, less latency
+
+    - cons: consistency
+
+- `p2p`
+
+  - a bootstrapping mechanism is needed(how to find other peers)
+
+  - centralised peer to peer
+
+    - not all peers are equal, some have additional responsibility
+
+  - pros: scalability, reliability
+
+  - cons: quality of service is not deterministic, high latency
+
+## remote invocation architecture
+
+- properties
+
+  - client invoke method(function) on a remote component
+
+  - pros: increase performance through distributed computation
+
+  - cons: network, tightly couple, addressability increase communication overhead
+
+- `broker(proxy)`
+
+  - separation communication from the application functionality support for distributed systems
+
+  - can be used to transparently change a non-distributed system into a distributed one
+
+  - pros: decouple(network aspect), flexibility, maintainability, evolvability
+
+  - cons: network
+
+## interpreter
+
+- properties
+
+  - components: command interpreter, program state, user interface
+
+  - connectors: direct procedure call, shared state
+
+  - pros: flexibility, usability, adaptability
+
+  - cons: performance, security(wrong programs), design of DSL(domain specified language)
+
+- `embedded DSL`
+
+  - pros: reuse of host language(include syntax and libraries)
+
+  - cons: separation between DSL and host language
+
+## interceptor
+
+- properties:
+
+  - separate functionalities into separate components(SOC), AOP
+
+  - pros: reuse, flexibility, decouple, maintainability, evolvability
+
+  - cons: potential cascading callback, core components need to provide callback interface
+
+## GUI architecture
+
+## Adaptive style
+
+- properties
+
+  - allow extending system using plugins
+
+  - pros: extensibility, customization
+
+  - cons: consistency, performance, security(3rd-party)
+
+- `micro kernel`
+
+  - minimum functionality of internal server
+
+  - pros: security(critical parts are encapsulated)
+
+- `Reflection`
+
+  - has meta information about other elements of a system
+
+  - change the structure and behavior of an application dynamically
+
+  - pros: flexibility
+
+  - cons: low performance, complex
 
 # SOA(service oriented architecture)
 
