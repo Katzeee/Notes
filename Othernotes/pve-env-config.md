@@ -83,3 +83,15 @@ $ bash -c "$(wget -qLO - https://github.com/tteck/Proxmox/raw/main/vm/haos-vm-v4
 
   add `HomeKit` integration, scan the QR code at notification panel to finish setting
 
+## Install Arch
+
+### Download iso file
+
+Download iso file from 163 mirror into `local` storeage.
+
+### Create new virtual machine
+
+Set every options as defualt, except those about quantities(mem, disk, cpu cores).
+
+
+
