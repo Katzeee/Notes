@@ -11,9 +11,11 @@ Use `rufus` to create a bootable USB drive.
 
 Boot your device and just press continue, maybe set your dns server address to `8.8.8.8` instead of your gateway address will be more robust.
 
-Then you can login pve system from another pc's browser at `https://<your-ip-addr>:8006`, **https** not **http**
+Then you can login pve system from another pc's browser at `https://<your-ip-addr>:8006`, **https** not ~~http~~
 
 ### Config
+
+> *Try to use pve-tools*
 
 Change mirrors
 
@@ -25,7 +27,7 @@ deb https://mirrors.aliyun.com/debian-security buster/updates main contrib non-f
 deb https://mirrors.ustc.edu.cn/proxmox/debian/pve buster pve-no-subscription
 ```
 
-annotate enterprise source
+Annotate enterprise source
 
 ```bash
 # /etc/apt/sources.list.d/pve-enterprise.list
@@ -92,6 +94,38 @@ Download iso file from 163 mirror into `local` storeage.
 ### Create new virtual machine
 
 Set every options as defualt, except those about quantities(mem, disk, cpu cores).
+
+Choose the iso file as cd/rom, then boot the machine.
+
+### Start install
+
+Change source mirror, then directly start install via one command:
+
+```bash
+$ reflector --country 'China' --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+$ archinstall
+```
+
+Set all language related options to English(or there may some font problems). You can change it in `/etc/locale.gen` later.
+
+Additional package: neovim ranger net-tools
+
+Network: copy from iso
+
+Additional repo: mutilib
+
+### Rest configure
+
+Static IP:
+
+```bash
+# /etc/systemd/network/**
+Address: 192.168.x.x/24
+Gateway: 192.168.x.x
+DNS: 
+```
+
+
 
 
 
