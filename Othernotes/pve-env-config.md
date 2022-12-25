@@ -3,6 +3,8 @@
 
 ## Install pve
 
+### Install
+
 Download pve-iso from [pve-download](https://proxmox.com/en/downloads/category/iso-images-pve).
 
 Use `rufus` to create a bootable USB drive.
@@ -10,6 +12,25 @@ Use `rufus` to create a bootable USB drive.
 Boot your device and just press continue, maybe set your dns server address to `8.8.8.8` instead of your gateway address will be more robust.
 
 Then you can login pve system from another pc's browser at `https://<your-ip-addr>:8006`, **https** not **http**
+
+### Config
+
+Change mirrors
+
+```bash
+# /etc/apt/sources.list 
+deb https://mirrors.aliyun.com/debian buster main contrib non-free
+deb https://mirrors.aliyun.com/debian buster-updates main contrib non-free
+deb https://mirrors.aliyun.com/debian-security buster/updates main contrib non-free # proxmox source
+deb https://mirrors.ustc.edu.cn/proxmox/debian/pve buster pve-no-subscription
+```
+
+annotate enterprise source
+
+```bash
+# /etc/apt/sources.list.d/pve-enterprise.list
+# deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise
+```
 
 ## Install homeassitant
 
@@ -33,7 +54,7 @@ $ bash -c "$(wget -qLO - https://github.com/tteck/Proxmox/raw/main/vm/haos-vm-v4
 
   If there is no add-ons, add repo `https://github.com/hassio-addons/repository`.
 
-- Install `HACS`
+- Install `HACS`(add-on store)
 
   - via samba(tbc)
   
