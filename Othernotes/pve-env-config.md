@@ -93,7 +93,7 @@ Download iso file from 163 mirror into `local` storeage.
 
 ### Create new virtual machine
 
-Set every options as defualt, except those about quantities(mem, disk, cpu cores).
+Set every options as defualt, except those about quantities(mem, disk, cpu cores) and select to use qemu agent.
 
 Choose the iso file as cd/rom, then boot the machine.
 
@@ -125,7 +125,62 @@ Gateway: 192.168.x.x
 DNS: 
 ```
 
+## LXC container
 
+### Install LXC container
 
+Create CT, deselect `unprivilieged container`, about 64G disk, 2048 mem and 2048 swap, static ip. DNS domain is the smae as gateway, DNS servers set as blank.
+
+### Setup gpu share
+
+In pve: `vi /etc/lxc/<CT_ID>.conf`
+
+Add following(Get args by `ls -l /dev/dri`):
+```
+lxc.cgroup2.devices.allow: c 226:0 rwm
+lxc.cgroup2.devices.allow: c 226:128 rwm
+lxc.cgroup2.devices.allow: c 29:0 rwm
+lxc.mount.entry: /dev/dri dev/dri none bind,optional,create=dir
+lxc.mount.entry: /dev/fb0 dev/fb0 none bind,optional,create=file
+lxc.apparmor.profile: unconfined
+lxc.cgroup.devices.allow: a
+lxc.cap.drop:
+```
+
+Then start CT, you will see gpu by running `ls /dev/dri`.
+
+### Change apt source
+
+### Mount NAS
+
+Or just use sftp which need to add a new user to connect to this LXC via ssh.
+
+### Install docker
+
+- Docker
+
+  ```bash
+  $ apt install curl -y
+  $ curl -sSL https://get.daocloud.io/docker | sh
+  ```
+
+- Portainer
+
+  ```bash
+  $ docker volume create portainer_data
+  $ docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
+  ```
+
+Then go to <docker-CT-IP>:9000 to set up portainer.
+
+### Install docker containers
+
+- Docker compose
+
+local->Stack->Add stack
+
+- Docker cmd line
+
+local->Container->Add container 
 
 
