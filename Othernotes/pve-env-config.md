@@ -1,21 +1,26 @@
 2022.12.16
 ---
 
+## Bios setting(important for pass-through)
+
+IOMMU: enable
+SVM mode
+VT-D(intel), AMD-V(AMD)
+SCM disable(UEFI boot)
+
 ## Install pve
 
 ### Install
 
 Download pve-iso from [pve-download](https://proxmox.com/en/downloads/category/iso-images-pve).
 
-Use `rufus` to create a bootable USB drive.
+Use `rufus` to create a bootable USB drive.(GPT+DD)
 
 Boot your device and just press continue, maybe set your dns server address to `8.8.8.8` instead of your gateway address will be more robust.
 
 Then you can login pve system from another pc's browser at `https://<your-ip-addr>:8006`, **https** not ~~http~~
 
 ### Config
-
-> *Try to use pve-tools*
 
 Change mirrors
 
@@ -32,6 +37,12 @@ Annotate enterprise source
 ```bash
 # /etc/apt/sources.list.d/pve-enterprise.list
 # deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise
+```
+
+> *Try to use pve-tools*
+
+```bash
+$ apt update && apt -y install git && git clone https://github.com/ivanhao/pvetools.git
 ```
 
 ## Install homeassitant
@@ -183,4 +194,42 @@ local->Stack->Add stack
 
 local->Container->Add container 
 
+## Install windows and config GPU pass-through
 
+
+
+### Install windows
+
+System: q35, UEFI
+Disk: SCSI
+Network: virtIO
+
+Change boot sequential, then install windows as usual
+
+### setup Remote desktop
+
+- static ip
+
+- RDP
+
+  right click my computer->属性->远程桌面
+
+  win+r -> secpol.msc -> 本地策略 -> 安全选项，在右侧选中帐户: 使用空白密码的本地帐户只允许进行控制台登录
+
+  网络设置->防火墙->高级设置->入站设置（最下）->TCP-WSS-IN启用即可
+
+### GPU pass-through
+
+- Add PCIE device: select all options except `Primary GPU`.
+
+- Install GPU driver, check whether GPU is working
+
+- Change Display to `none`, add select `Primary GPU` option
+
+### Hide vm from guest
+
+Edit `/etc/pve/qemu-server/<vm-id>.conf`, **I don't know which are unnecessary**, but it works.
+
+```
+args: -cpu 'host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed,kvm=off,hv_vendor_id=null'
+```
