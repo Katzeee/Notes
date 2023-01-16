@@ -104,7 +104,7 @@ Download iso file from 163 mirror into `local` storeage.
 
 ### Create new virtual machine
 
-Set every options as defualt, except those about quantities(mem, disk, cpu cores) and select to use qemu agent.
+Set every options as defualt(UEFI), except those about quantities(mem, disk, cpu cores) and select to use qemu agent.
 
 Choose the iso file as cd/rom, then boot the machine.
 
@@ -114,16 +114,21 @@ Change source mirror, then directly start install via one command:
 
 ```bash
 $ reflector --country 'China' --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+$ https://mirrors.ustc.edu.cn/archlinux
 $ archinstall
 ```
 
 Set all language related options to English(or there may some font problems). You can change it in `/etc/locale.gen` later.
 
-Additional package: neovim ranger net-tools
+```
+Profile: minimal
+
+Additional package: neovim net-tools qemu-guest-agent git openssh man-db
 
 Network: copy from iso
 
 Additional repo: mutilib
+```
 
 ### Rest configure
 
@@ -142,7 +147,7 @@ DNS:
 
 Create CT, deselect `unprivilieged container`, about 64G disk, 2048 mem and 2048 swap, static ip. DNS domain is the smae as gateway, DNS servers set as blank.
 
-### Setup gpu share
+### Setup intel gpu share
 
 In pve: `vi /etc/lxc/<CT_ID>.conf`
 
