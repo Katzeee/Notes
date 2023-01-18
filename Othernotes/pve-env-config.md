@@ -32,7 +32,7 @@ deb https://mirrors.aliyun.com/debian-security buster/updates main contrib non-f
 deb https://mirrors.ustc.edu.cn/proxmox/debian/pve buster pve-no-subscription
 ```
 
-Annotate enterprise source
+Comment enterprise source
 
 ```bash
 # /etc/apt/sources.list.d/pve-enterprise.list
@@ -44,6 +44,25 @@ Annotate enterprise source
 ```bash
 $ apt update && apt -y install git && git clone https://github.com/ivanhao/pvetools.git
 ```
+
+### Enable ipv6
+
+Append these to `/etc/sysctl.conf`, reboot.
+
+```bash
+net.ipv6.conf.all.accept_ra=2
+net.ipv6.conf.default.accept_ra=2
+net.ipv6.conf.vmbr0.accept_ra=2
+net.ipv6.conf.all.autoconf=1
+net.ipv6.conf.default.autoconf=1
+net.ipv6.conf.vmbr0.autoconf=1
+```
+
+### DDNS
+
+https://github.com/jeessy2/ddns-go
+tar -zxvf
+./ddns-go -s install
 
 ## Install homeassitant
 
@@ -200,8 +219,6 @@ local->Stack->Add stack
 local->Container->Add container 
 
 ## Install windows and config GPU pass-through
-
-
 
 ### Install windows
 
