@@ -58,11 +58,37 @@ net.ipv6.conf.default.autoconf=1
 net.ipv6.conf.vmbr0.autoconf=1
 ```
 
+### Change Ip addr
+
+`/etc/network/interfaces`, `/etc/hosts`, `/etc/issue`, `/etc/resolv.conf`
+
 ### DDNS
 
-https://github.com/jeessy2/ddns-go
-tar -zxvf
+[ddns-go](https://github.com/jeessy2/ddns-go)
+```bash
+mkdir ddns-go && cd ddns-go
+tar -zxvf ../ddns-**
 ./ddns-go -s install
+# ./ddns-go -s uninstall
+```
+
+port: 9876
+
+create API, set up API and domain
+
+### ssh
+
+`/etc/ssh/sshd_config`
+```
+PermitRootLogin yes
+PasswordAuthentication yes
+```
+
+Use `WindTerm` as my ssh terminal
+
+Generate ssh key in both host and client, then copy `<client>/.ssh/id_rsa.pub` to host as `<host>/.ssh/authorized_keys`, then client can ssh to host without password
+
+In WindTerm, also set the sessions' authentication identity file as `<client>/.ssh/id_rsa` such that windterm to login host without password
 
 ## Install homeassitant
 
@@ -160,6 +186,19 @@ Gateway: 192.168.x.x
 DNS: 
 ```
 
+### git clone fail
+
+Fail with `kex_exchange_identification: Connection closed by remote host`
+
+`nvim ~/.ssh/config`
+
+```
+Host github.com
+    HostName ssh.github.com
+    User git
+    Port 443
+```
+
 ## LXC container
 
 ### Install LXC container
@@ -255,3 +294,14 @@ Edit `/etc/pve/qemu-server/<vm-id>.conf`, **I don't know which are unnecessary**
 ```
 args: -cpu 'host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed,kvm=off,hv_vendor_id=null'
 ```
+
+## Install TrueNAS
+
+### Install TrueNAS
+
+32G disk
+8192 Mem
+
+install then reboot
+
+### Disk pass-through
