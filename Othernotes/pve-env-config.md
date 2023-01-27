@@ -141,6 +141,30 @@ $ bash -c "$(wget -qLO - https://github.com/tteck/Proxmox/raw/main/vm/haos-vm-v4
 
   add `HomeKit` integration, scan the QR code at notification panel to finish setting
 
+## Install Openwrt
+
+### Download iso file
+
+https://github.com/coolsnowwolf/lede/releases
+
+### Create a virtual machine
+
+q35, no media, 2G ram, **delete disk**
+
+Run command `find / -name openwrt*` to get the path of our img file, then import a new disk to openwrt machine by excuting `qm importdisk <vm-id> <img-path> local-lvm`.
+
+Add the new disk in hardware tab, then select the boot device in device tab, start openwrt
+
+### Config
+
+- One-armed router(router on a stick)
+
+  Reserve only one lan interface, set its gateway as main router, then set every single devices manually route to openwrt. You can use either main router DHCP or openwrt DHCP. Do not use both of them!
+
+  ```
+  $ sudo route add default gw <openwrt-ip>
+  ```
+
 ## Install Arch
 
 ### Download iso file
