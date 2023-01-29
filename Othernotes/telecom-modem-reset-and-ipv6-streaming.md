@@ -48,6 +48,8 @@
 
 - 或许需要关闭防火墙
 
+- `internet hosting tool` 为了打开moonlight的ipv6支持 
+
 ## ipv6
 
 - route priority
