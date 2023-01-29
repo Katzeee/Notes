@@ -155,6 +155,28 @@ Run command `find / -name openwrt*` to get the path of our img file, then import
 
 Add the new disk in hardware tab, then select the boot device in device tab, start openwrt
 
+### Pre-config
+
+- Update source
+
+`System->software package->configuration`, use origin source instead of local source
+
+```
+src/gz openwrt_koolshare_mod_core http://downloads.openwrt.org/snapshots/targets/x86/64/packages
+src/gz openwrt_koolshare_mod_base http://downloads.openwrt.org/snapshots/packages/x86_64/base
+src/gz openwrt_koolshare_mod_luci http://downloads.openwrt.org/snapshots/packages/x86_64/luci
+src/gz openwrt_koolshare_mod_packages http://downloads.openwrt.org/snapshots/packages/x86_64/packages
+src/gz openwrt_koolshare_mod_routing http://downloads.openwrt.org/snapshots/packages/x86_64/routing
+src/gz openwrt_koolshare_mod_telephony http://downloads.openwrt.org/snapshots/packages/x86_64/telephony
+```
+
+Then run:
+
+```bash
+$ opkg update
+$ opkg install qemu-ga
+$ reboot
+```
 ### Config
 
 - One-armed router(router on a stick)
