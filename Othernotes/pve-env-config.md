@@ -351,3 +351,22 @@ args: -cpu 'host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_v
 install then reboot
 
 ### Disk pass-through
+
+### SMB share
+
+### guest-agent
+
+`cd /usr/local/etc/pkg/repos/`, change `local.conf` `enabled=yes` to `no`, change `FreeBSD.conf` `enabled=no`to `yes`.
+
+then run command:
+
+```bash
+$ pkg install qemu-guest-agent
+# Modify your `/etc/rc.conf` by adding these settings
+
+qemu_guest_agent_enable="YES"
+qemu_guest_agent_flags="-d -v -l /var/log/qemu-ga.log"
+
+and run
+# service qemu-guest-agent start
+```
