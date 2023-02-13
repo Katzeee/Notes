@@ -65,6 +65,7 @@ net.ipv6.conf.vmbr0.autoconf=1
 ### DDNS
 
 [ddns-go](https://github.com/jeessy2/ddns-go)
+wget https://github.com/jeessy2/ddns-go/releases/download/v4.5.3/ddns-go_4.5.3_linux_x86_64.tar.gz
 ```bash
 mkdir ddns-go && cd ddns-go
 tar -zxvf ../ddns-**
@@ -250,6 +251,8 @@ Host github.com
 ### Install LXC container
 
 Create CT, deselect `unprivilieged container`, about 20G(or 64G for not mount NAS folder) disk, 2048 mem and 2048 swap, static ip. DNS domain is the smae as gateway, DNS servers set as blank.
+
+network ipv6 SLAAC
 
 ### Setup intel gpu share(optional)
 
