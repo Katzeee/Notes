@@ -1,4 +1,5 @@
-# 2021.5.14
+2021.5.14
+---
 
 - tutorial
 
@@ -8,7 +9,8 @@
 
 > https://github.com/microsoft/vcpkg
 
-# 2022.5.5
+2022.5.5
+---
 
 ## using vcpkg on ubuntu
 
@@ -58,3 +60,25 @@ adding the following to the `c_cpp_properties.json`
 
 - **DELETE THE CMAKECHACHE AND BUILD AGAIN!!**
 - **REOPEN VSCODE AND BUILD AGAIN!!**
+
+2023.02.13
+---
+
+## using vcpkg on windows
+
+```bash
+$ scoop config proxy 127.0.0.1:8889
+$ scoop install vcpkg
+```
+
+```powershell
+$ $env:HTTP_PROXY="http://localhost:7890"
+$ $env:HTTPS_PROXY="http://localhost:7890" # both need to be http://
+```
+
+```
+$ vcpkg install glfw3:x64-windows
+$ vcpkg integrate install
+```
+
+**I find use x86 library doesn't work, where the architecture does not match i.e. x86 vs x64.**
