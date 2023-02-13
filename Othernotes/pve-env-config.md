@@ -249,31 +249,72 @@ Host github.com
 
 ### Install LXC container
 
-Create CT, deselect `unprivilieged container`, about 64G disk, 2048 mem and 2048 swap, static ip. DNS domain is the smae as gateway, DNS servers set as blank.
+Create CT, deselect `unprivilieged container`, about 20G(or 64G for not mount NAS folder) disk, 2048 mem and 2048 swap, static ip. DNS domain is the smae as gateway, DNS servers set as blank.
 
-### Setup intel gpu share
+### Setup intel gpu share(optional)
 
-In pve: `vi /etc/lxc/<CT_ID>.conf`
+In pve: `vi /etc/pve/lxc/<CT_ID>.conf`
 
 Add following(Get args by `ls -l /dev/dri`):
+
+Mandatory!!!
+
+```
+lxc.apparmor.profile: unconfined
+lxc.cgroup.devices.allow: a
+lxc.cap.drop:
+```
+
+Optional
 ```
 lxc.cgroup2.devices.allow: c 226:0 rwm
 lxc.cgroup2.devices.allow: c 226:128 rwm
 lxc.cgroup2.devices.allow: c 29:0 rwm
 lxc.mount.entry: /dev/dri dev/dri none bind,optional,create=dir
 lxc.mount.entry: /dev/fb0 dev/fb0 none bind,optional,create=file
-lxc.apparmor.profile: unconfined
-lxc.cgroup.devices.allow: a
-lxc.cap.drop:
 ```
 
 Then start CT, you will see gpu by running `ls /dev/dri`.
 
 ### Change apt source
 
+ubuntu20.04, `vi /etc/apt/source.list`
+
+```
+deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe
+```
+
 ### Mount NAS
 
 Or just use sftp which need to add a new user to connect to this LXC via ssh.
+
+```bash
+$ apt install cifs-utils
+$ mkdir /mnt/<folder-name>
+$ vi ~/.smbcredentials # password
+```
+
+type in things like 
+
+```bash
+username=<username>
+password=<password>
+```
+
+Then `vi /etc/fstab`
+
+```bash
+//$smb_server/share /mnt/nas_share cifs credentials=/root/.smbcredentials,iocharset=utf8 0 0
+```
+
+Then reboot, you will find your smb folder
 
 ### Install docker
 
@@ -345,14 +386,49 @@ args: -cpu 'host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_v
 
 ### Install TrueNAS
 
-32G disk
+32G disk SATA
 8192 Mem
 
 install then reboot
 
 ### Disk pass-through
 
+Use pvetools to pass through disks (qm set), only choose the whole sata, not sata1, sata2 or etc.
+
+Or use SATA controller PCI pass through(may not work)
+
+### Config 
+
+- Network
+
+  Network->interface
+  
+  De-select DHCP, select autoconfig IPV6
+  
+  type in the IPV4 address
+  
+  TEST then confirm
+
+- Users
+
+  Account->Users->Add
+
+- General
+
+  System->General->Time zone
+
+
+### Create Pool and dataset
+
+Storage->Pool->Create new pool->type in a name and choose which disks to compose to a what kind of pool->press create
+
+Click the threes dots at right of the pool->add dataset
+
 ### SMB share
+
+Sharing->SMB
+
+Choose the folder then submit
 
 ### guest-agent
 

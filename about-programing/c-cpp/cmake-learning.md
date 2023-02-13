@@ -133,7 +133,7 @@ endif()
 set (CMAKE_BUILD_TYPE Release)
 ```
 
-Writing by the first way is normal, as if user set `Debug` manually, we will not cover his settings.
+Writing by the first way is common, as if user set `Debug` manually, we will not cover his settings.
 
 ### `project()`
 
