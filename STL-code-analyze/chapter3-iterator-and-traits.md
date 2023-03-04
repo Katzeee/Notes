@@ -173,3 +173,6 @@ where
 
 The standard `type_traits` is now defined in header file `.../bits/type_traits`, and the old one is located in `.../ext/type_traits.h`
 
+## Summary
+
+Use SFINAE(substitution failure is not an error) rewrite the traits, prohibiting the abuse like `iterator_traits<int>`.

@@ -169,7 +169,7 @@ The iterator of the `vector`:
       typedef std::iterator_traits<_Iterator>		__traits_type;
 ```
 
-Meanwhile, we notice that `gcc` is now using `pointer` as the type of `iterator`, so we should pay attention to the definition of `pointer`.
+Meanwhile, we notice that `gcc` is now using `pointer` instead of `iterator`, so we should pay attention to the definition of `pointer`.
 
 `.../bits/stl_vector.h[92]`
 
@@ -945,7 +945,7 @@ After `c++11`, we have `_Map_pointer` as `__ptr_rebind<_Ptr, _Elt_pointer>`.
     using __ptr_rebind = typename pointer_traits<_Ptr>::template rebind<_Tp>; // return type `_Tp*`
 ```
 
-So we get `_Map_pointer` = `_Elt_pointer*` = `_Tp**`, just as `gcc2.9` in the book.
+So we get `_Map_pointer` = `_Elt_pointer*` = `_Tp**`, just as `gcc2.9` in the book. But there are some check makes it legal.
 
 ## p146
 
@@ -1148,3 +1148,18 @@ The first version is just like the old version in `gcc2.9` with some function na
 The change in `push_front` is mostly the same as the change in `push_back`.
 
 ## 
+
+## Summary 
+
+- Restrutured the class with struct `impl`
+
+- Allocator changes, make `std::vector<int, __gnu_cxx::malloc_allocator<double>>` legal
+
+- `rebind`, Lots of `tpyedef` changes. Use `pointer` instead `iterator` to declare data members
+
+- Constructor changes
+
+- `push_back` parameter and implement change
+
+- `static_assert` in `deque`
+
