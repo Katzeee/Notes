@@ -7,7 +7,7 @@ Now, using allocator in `gcc` is also the same as others.
 
 `.../bits/vector[422]`
 
-```c++
+```cpp
  template<typename _Tp, typename _Alloc = std::allocator<_Tp> >
     class vector : protected _Vector_base<_Tp, _Alloc>
     {
@@ -20,7 +20,7 @@ Now, function `construct()` is rewritten to `_Construct()`.
 
 `.../bits/stl_construct.h[91]`
 
-```c++
+```cpp
 #if __cplusplus >= 201103L
   template<typename _Tp, typename... _Args>
     _GLIBCXX20_CONSTEXPR
@@ -53,7 +53,7 @@ After prepossessing:
 
 Before `c++11`
 
-```c++
+```cpp
   template<typename _T1, typename _T2>
     inline void
     _Construct(_T1* __p, const _T2& __value)
@@ -65,7 +65,7 @@ Before `c++11`
 
 For `c++11`
 
-```c++
+```cpp
   template<typename _Tp, typename... _Args>
     _GLIBCXX20_CONSTEXPR
     inline void
@@ -77,7 +77,7 @@ For `c++11`
 
 For `c++20`
 
-```c++
+```cpp
   template<typename _Tp, typename... _Args>
     _GLIBCXX20_CONSTEXPR
     inline void
@@ -95,7 +95,7 @@ For `c++20`
 
 `.../bits/stl_construct.h[141]`
 
-```c++
+```cpp
   /**
    * Destroy the object pointed to by a pointer type.
    */
@@ -114,7 +114,7 @@ For `c++20`
 After prepossessing:
 
 Before `c++17`
-```c++
+```cpp
   template<typename _Tp>
     _GLIBCXX14_CONSTEXPR inline void
     _Destroy(_Tp* __pointer)
@@ -125,7 +125,7 @@ Before `c++17`
 
 For `c++17`
 
-```c++
+```cpp
   template<typename _Tp>
     _GLIBCXX14_CONSTEXPR inline void
     _Destroy(_Tp* __pointer)
@@ -137,7 +137,7 @@ For `c++17`
 
 `.../bits/stl_construct.h[78]`
 
-```c++
+```cpp
   template <typename _Tp>
     _GLIBCXX20_CONSTEXPR inline void
     destroy_at(_Tp* __location)
@@ -155,7 +155,7 @@ For `c++17`
 
 `.../bits/stl_construct.h[175]`
 
-```c++
+```cpp
   /**
    * Destroy a range of objects.  If the value_type of the object has
    * a trivial destructor, the compiler should optimize all of this
@@ -185,7 +185,7 @@ After preprocessing:
 
 Before `c++11`
 
-```c++
+```cpp
   template<typename _ForwardIterator>
     _GLIBCXX20_CONSTEXPR inline void
     _Destroy(_ForwardIterator __first, _ForwardIterator __last)
@@ -200,7 +200,7 @@ Before `c++11`
 
 For `c++11`
 
-```c++
+```cpp
   template<typename _ForwardIterator>
     _GLIBCXX20_CONSTEXPR inline void
     _Destroy(_ForwardIterator __first, _ForwardIterator __last)
@@ -216,7 +216,7 @@ For `c++11`
 
 For `c++20`
 
-```c++
+```cpp
   template<typename _ForwardIterator>
     _GLIBCXX20_CONSTEXPR inline void
     _Destroy(_ForwardIterator __first, _ForwardIterator __last)
@@ -236,7 +236,7 @@ For `c++20`
 
 `.../bits/stl_construct.h[175]`
 
-```c++
+```cpp
   // primary template dealing with false
   // which means trivial type
   template<bool>
@@ -271,7 +271,7 @@ The using allocator is defined in `.../bits/allocator.h`
 
 `.../bits/allocator.h[124]`
 
-```c++
+```cpp
   template<typename _Tp>
     class allocator : public __allocator_base<_Tp>
     {
@@ -280,7 +280,7 @@ The using allocator is defined in `.../bits/allocator.h`
 
 Class `allocator` is inherited from `__allocator_base<_Tp>` which is defined in <c++allocator.h> and is an alias of an allocator base class. 
 
-Which allocator is chosen is decided by the compiler defining the alias in header file `c++allocator.h`.
+Which allocator will be chosen is decided by the compiler defining the alias in header file `c++allocator.h`.
 
 Such as:
 
@@ -288,14 +288,14 @@ The chosen allocator in mingw64 on Windows is `__new_allocator`.
 
 `.../x86_64-w64-mingw32/bits/c++allocator.h[39]`
 
-```c++
+```cpp
   template<typename _Tp>
     using __allocator_base = __new_allocator<_Tp>;
 ```
 
 Allocators are supposed to have the following definitions.
 
-```c++
+```cpp
 allocator::value_type
 allocator::pointer
 allocator::const_pointer
@@ -328,7 +328,7 @@ void allocator::destroy(pointer p)
 The functions `uninitialized_fill_n`, `uninitialized_copy` etc. have been rewritten to template functions, take `uninitialized_fill_n` as an example.
 
 `.../bits/stl_uninitialized.h[258]`
-```c++
+```cpp
   template<typename _ForwardIterator, typename _Size, typename _Tp>
     _GLIBCXX20_CONSTEXPR
     _ForwardIterator
@@ -374,7 +374,7 @@ The functions `uninitialized_fill_n`, `uninitialized_copy` etc. have been rewrit
 The trivial type evaluation will be done in function `uninitialized_fill_n`
 
 `.../bits/stl_uninitialized.h[310]`
-```c++
+```cpp
   template<typename _ForwardIterator, typename _Size, typename _Tp>
     inline _ForwardIterator
     uninitialized_fill_n(_ForwardIterator __first, _Size __n, const _Tp& __x)

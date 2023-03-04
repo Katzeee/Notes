@@ -9,7 +9,7 @@ Before `c++11`, it looks like the same as the book illustrated.
 
 `.../bits/stl_iterator_base_types.h[181]`
 
-```c++
+```cpp
   template<typename _Iterator>
     struct iterator_traits
     {
@@ -50,7 +50,7 @@ The specialization of `Tp*` and `const Tp*` didn't change.
 
 `.../bits/stl_iterator_base_types.h[149]`
 
-```c++
+```cpp
   template<typename _Iterator>
     struct iterator_traits;
 
@@ -90,7 +90,7 @@ There are only a few lines in `stl_iterator_base_types.h`, most of it has locate
 They have been rewritten by `concept` and `requires`.
 
 `.../bits/iterator_concepts.h[365]`
-```c++
+```cpp
   template<typename _Iterator>
     requires __detail::__iter_with_nested_types<_Iterator>
     struct __iterator_traits<_Iterator, void>
@@ -117,7 +117,7 @@ They have been rewritten by `concept` and `requires`.
 where `__iter_with_nested_types` is defined as follows:
 
 `.../bits/iterator_concepts.h[348]`
-```c++
+```cpp
     template<typename _Iter>
       concept __iter_with_nested_types = requires {
 	typename _Iter::iterator_category;
@@ -134,7 +134,7 @@ There are now six `iterator_category`s in `c++17`.
 The added category is `contiguous_iterator_tag` which inherits from `random_access_iterator_tag `
 
 `.../bits/stl_iterator_base_types.h[109]`
-```c++
+```cpp
 #if __cplusplus > 201703L
   /// Contiguous iterators point to objects stored contiguously in memory.
   struct contiguous_iterator_tag : public random_access_iterator_tag { };
@@ -146,7 +146,7 @@ The added category is `contiguous_iterator_tag` which inherits from `random_acce
 The `iterator` structure is not recommended being used now.
 
 `.../bits/stl_iterator_base_types.h[125]`
-```c++
+```cpp
   template<typename _Category, typename _Tp, typename _Distance = ptrdiff_t,
            typename _Pointer = _Tp*, typename _Reference = _Tp&>
     struct _GLIBCXX17_DEPRECATED iterator
@@ -165,7 +165,7 @@ The `iterator` structure is not recommended being used now.
 ```
 where
 
-```c++
+```cpp
 # define _GLIBCXX17_DEPRECATED [[__deprecated__]]
 ```
 

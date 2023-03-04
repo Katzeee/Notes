@@ -6,7 +6,7 @@
 Vector is implemented as a base class `_Vector_base` and `vector` itself. As the book said, both of them are in `stl_vector.h`.
 
 `.../bits/stl_vector.h[422]`
-```c++
+```cpp
   template<typename _Tp, typename _Alloc = std::allocator<_Tp> >
     class vector : protected _Vector_base<_Tp, _Alloc>
     {
@@ -14,7 +14,7 @@ Vector is implemented as a base class `_Vector_base` and `vector` itself. As the
 ```
 
 `.../bits/stl_vector.h[84]`
-```c++
+```cpp
   template<typename _Tp, typename _Alloc>
     struct _Vector_base
     {
@@ -24,7 +24,7 @@ Vector is implemented as a base class `_Vector_base` and `vector` itself. As the
 The definition of the allocator has changed.
 
 `.../bits/stl_vector.h[87]`
-```c++
+```cpp
       typedef typename __gnu_cxx::__alloc_traits<_Alloc>::template
 	rebind<_Tp>::other _Tp_alloc_type; // template<typename _Tp, typename _Alloc> struct _Vector_base
       typedef typename __gnu_cxx::__alloc_traits<_Tp_alloc_type>::pointer
@@ -36,32 +36,32 @@ It uses `rebind` to change the type parameter of the allocator to the template p
 Besides, this `rebind` is not just the `rebind` structure which defined in allocators, because some allocators don't implement the `rebind` method.
 
 `.../ext/alloc_traits.h[118]`
-```c++
+```cpp
     template<typename _Tp>
       struct rebind // __alloc_traits::rebind
       { typedef typename _Base_type::template rebind_alloc<_Tp> other; };
 ```
 
 `.../ext/alloc_traits.h[55]`
-```c++
+```cpp
     typedef std::allocator_traits<_Alloc>           _Base_type; // __alloc_traits::_Base_type
 ```
 
 `.../bits/alloc_traits.h[212]`
-```c++
+```cpp
       template<typename _Tp>
 	using rebind_alloc = __alloc_rebind<_Alloc, _Tp>; // allocator_traits::rebind_alloc
 ```
 
 `.../bits/alloc_traits.h[78]`
-```c++
+```cpp
   template<typename _Alloc, typename _Up>
     using __alloc_rebind // __allocator_traits_base::__alloc_rebind
       = typename __allocator_traits_base::template __rebind<_Alloc, _Up>::type;
 ```
 
 `.../bits/alloc_traits.h[51]`
-```c++
+```cpp
     template<typename _Tp, typename _Up, typename = void>
       struct __rebind : __replace_first_arg<_Tp, _Up> { };
 
@@ -74,7 +74,7 @@ Besides, this `rebind` is not just the `rebind` structure which defined in alloc
 As a result, if the allocator has implemented the `rebind` structure, we will use it, otherwise, we use `__replace_first_arg` to construct a new allocator by replacing the argument in `allocator<_Tp>`.
 
 `.../bits/ptr_traits.h[65]`
-```c++
+```cpp
   template<typename _Tp, typename _Up>
     struct __replace_first_arg
     { };
@@ -93,7 +93,7 @@ The implementation of `vector` is much more complicated than old version. The th
 
 `.../bits/stl_vector.h[92]`
 
-```c++
+```cpp
       struct _Vector_impl_data
       {
 	pointer _M_start;
@@ -105,7 +105,7 @@ And in `class vector`, we are using the `struct _Vector_impl` which inheriting f
 
 `.../bits/stl_vector.h[133]`
 
-```c++
+```cpp
       struct _Vector_impl
 	: public _Tp_alloc_type, public _Vector_impl_data
 ```
@@ -114,7 +114,7 @@ Meanwhile, some methods in vector are defined in `vector.tcc`, such as `emplace_
 
 `.../bits/vector.tcc[102]`
 
-```c++
+```cpp
 #if __cplusplus >= 201103L
   template<typename _Tp, typename _Alloc>
     template<typename... _Args>
@@ -149,7 +149,7 @@ Meanwhile, some methods in vector are defined in `vector.tcc`, such as `emplace_
 The iterator of the `vector`:
 
 `.../bits/stl_vector.h[453]`
-```c++
+```cpp
       typedef __gnu_cxx::__normal_iterator<pointer, vector> iterator;
       typedef __gnu_cxx::__normal_iterator<const_pointer, vector>
       const_iterator;
@@ -159,7 +159,7 @@ The iterator of the `vector`:
 
 `.../bits/stl_iterator.h[1042]`
 
-```c++
+```cpp
   template<typename _Iterator, typename _Container>
     class __normal_iterator
     {
@@ -173,7 +173,7 @@ Meanwhile, we notice that `gcc` is now using `pointer` as the type of `iterator`
 
 `.../bits/stl_vector.h[92]`
 
-```c++
+```cpp
       struct _Vector_impl_data
       {
 	pointer _M_start;
@@ -183,13 +183,13 @@ Meanwhile, we notice that `gcc` is now using `pointer` as the type of `iterator`
 
 `.../bits/stl_vector.h[92]`
 
-```c++
+```cpp
       typedef typename __gnu_cxx::__alloc_traits<_Tp_alloc_type>::pointer pointer; // _Vector_base::pointer
 ```
 
 `.../ext/alloc_traits.h[55]`
 
-```c++
+```cpp
     typedef std::allocator_traits<_Alloc>           _Base_type;
     typedef typename _Base_type::value_type         value_type;
     typedef typename _Base_type::pointer            pointer; // __gnu_cxx::__alloc_traits<_Alloc>::pointer
@@ -197,14 +197,14 @@ Meanwhile, we notice that `gcc` is now using `pointer` as the type of `iterator`
 
 `.../ext/alloc_traits.h[95]`
 
-```c++
+```cpp
       typedef typename _Alloc::value_type value_type;
       using pointer = __detected_or_t<value_type*, __pointer, _Alloc>; // std::allocator_traits<_Alloc>::pointer
 ```
 
 
 `.../ext/alloc_traits.h[60]`
-```c++
+```cpp
     template<typename _Tp>
       using __pointer = typename _Tp::pointer; // __allocator_traits_base::__pointer
 ```
@@ -214,7 +214,7 @@ So the `pointer` in `vector` is `Alloc::pointer` if that type exists, otherwise 
 We take `__new_allocator` as an example because it is the default `Alloc` of `vector` in `gcc12.1`. Before `c++17`, there still existed `Alloc::pointer` which is `_Tp*`, however, after `c++17`, there only exist `value_type`. No matter how, `pointer` is an alias of `_Tp*`.
 
 `.../bits/new_allocator.h[55]`
-```c++
+```cpp
   template<typename _Tp>
     class __new_allocator
     {
@@ -235,7 +235,7 @@ Take `begin` as an example:
 
 `.../bits/stl_vector.h[866]`
 
-```c++
+```cpp
       _GLIBCXX_NODISCARD _GLIBCXX20_CONSTEXPR
       iterator
       begin() _GLIBCXX_NOEXCEPT
@@ -249,7 +249,7 @@ As you can see, `begin` doesn't return a `pointer` directly, but wraps it as an 
 About the constructor of `vector`:
 
 `.../bits/stl_vector.h[563]`
-```c++
+```cpp
       _GLIBCXX20_CONSTEXPR
       vector(size_type __n, const value_type& __value,
 	     const allocator_type& __a = allocator_type())
@@ -260,7 +260,7 @@ About the constructor of `vector`:
 The initialization is finished by `_Base` using delegate constructor.
 
 `.../bits/stl_vector.h[329]`
-```c++
+```cpp
       _GLIBCXX20_CONSTEXPR
       _Vector_base(size_t __n, const allocator_type& __a)
       : _M_impl(__a)
@@ -268,7 +268,7 @@ The initialization is finished by `_Base` using delegate constructor.
 ```
 
 `.../bits/stl_vector.h[391]`
-```c++
+```cpp
       _GLIBCXX20_CONSTEXPR
       void
       _M_create_storage(size_t __n)
@@ -280,7 +280,7 @@ The initialization is finished by `_Base` using delegate constructor.
 ```
 
 `.../bits/stl_vector.h[373]`
-```c++
+```cpp
       _GLIBCXX20_CONSTEXPR
       pointer
       _M_allocate(size_t __n)
@@ -293,7 +293,7 @@ The initialization is finished by `_Base` using delegate constructor.
 As to the body of the function:
 
 `.../bits/stl_vector.h[1697]`
-```c++
+```cpp
       _GLIBCXX20_CONSTEXPR
       void
       _M_fill_initialize(size_type __n, const value_type& __value)
@@ -305,7 +305,7 @@ As to the body of the function:
 ```
 
 `.../bits/stl_vector.h[296]`
-```c++
+```cpp
       _GLIBCXX20_CONSTEXPR
       _Tp_alloc_type&
       _M_get_Tp_allocator() _GLIBCXX_NOEXCEPT
@@ -316,7 +316,7 @@ As to the body of the function:
 
 `_Tp_alloc_type` is the allocator class allocates the space of vector's type.
 
-```c++
+```cpp
       struct _Vector_impl
 	: public _Tp_alloc_type, public _Vector_impl_data
 ```
@@ -326,7 +326,7 @@ As to the body of the function:
 `push_back` has two implementation, the first version will be called if passing an `lvalue-reference`, and the second version will be called if passing an `rvalue-reference`.
 
 `.../bits/stl_vector.h[1274]`
-```c++
+```cpp
       _GLIBCXX20_CONSTEXPR
       void
       push_back(const value_type& __x)
@@ -351,7 +351,7 @@ As to the body of the function:
 ```
 
 `.../bits/vector.tcc[434]`
-```c++
+```cpp
 #if __cplusplus >= 201103L
   template<typename _Tp, typename _Alloc>
     template<typename... _Args>
@@ -441,7 +441,7 @@ As to the body of the function:
 
 Take the version after `c++11` as an example:
 
-```c++
+```cpp
   template<typename _Tp, typename _Alloc>
     template<typename... _Args>
       _GLIBCXX20_CONSTEXPR
@@ -515,7 +515,7 @@ Take the version after `c++11` as an example:
 ```
 
 `.../bits/stl_vector.h[1889]`
-```c++
+```cpp
       _GLIBCXX20_CONSTEXPR
       size_type
       _M_check_len(size_type __n, const char* __s) const
@@ -532,7 +532,7 @@ After `c++11`, we call `emplace_back` in `push_back`:
 
 `.../bits/vector.tcc[102]`
 
-```c++
+```cpp
 #if __cplusplus >= 201103L
   template<typename _Tp, typename _Alloc>
     template<typename... _Args>
@@ -569,7 +569,7 @@ After `c++11`, we call `emplace_back` in `push_back`:
 About `__list_node`, two pointers are defined in `_List_node_base`, and the data is defined in `_List_node`:
 
 `.../bits/stl_list.h[233]`
-```c++
+```cpp
   template<typename _Tp>
     struct _List_node : public __detail::_List_node_base
     {
@@ -586,7 +586,7 @@ About `__list_node`, two pointers are defined in `_List_node_base`, and the data
 ```
 
 `.../bits/stl_list.h[233]`
-```c++
+```cpp
     struct _List_node_base
     {
       _List_node_base* _M_next;
@@ -611,7 +611,7 @@ About `__list_node`, two pointers are defined in `_List_node_base`, and the data
 ```
 
 `.../ext/aligned_buffer.h[46]`
-```c++
+```cpp
   template<typename _Tp>
     struct __aligned_membuf
     {
@@ -652,7 +652,7 @@ About `__list_node`, two pointers are defined in `_List_node_base`, and the data
 `link_type node;` has been changed to `__detail::_List_node_base* _M_node;` which also point to the real node. If we want to get the data in the node, we should use `static_cast`.
 
 `.../bits/stl_list.h[252]`
-```c++
+```cpp
   template<typename _Tp>
     struct _List_iterator
     {
@@ -739,7 +739,7 @@ About `__list_node`, two pointers are defined in `_List_node_base`, and the data
 As for the data structure of `list`, it is similar to `vector`. `std::list` is inherited from `std::_List_base`, and `std::_List_base` has a struct called `_List_impl` which contains the real implementation of `list`.
 
 `.../bits/stl_list.h[450]`
-```c++
+```cpp
       struct _List_impl
       : public _Node_alloc_type
       {
@@ -770,14 +770,14 @@ As for the data structure of `list`, it is similar to `vector`. `std::list` is i
       _List_impl _M_impl;
 ```
 
-Notice `_M_node` is of class `_List_node_header` which is inherited from `_List_node_base` adding an attribute `_M_size`, using for recording the length of the list. 
+Notice `_M_node` is of class `_List_node_header` which is inherited from `_List_node_base` adding an attribute `_M_size`, used to record the length of the list. 
 
 ## p135
 
 `push_back` has its version of lvalue and rvalue after `c++11`.
 
 `.../bits/stl_list.h[1304]`
-```c++
+```cpp
       void
       push_back(const value_type& __x)
       { this->_M_insert(end(), __x); }
@@ -791,7 +791,7 @@ Notice `_M_node` is of class `_List_node_header` which is inherited from `_List_
 `_M_insert` is using universal reference now:
 
 `.../bits/stl_list.h[1992]`
-```c++
+```cpp
 #if __cplusplus < 201103L
       void
       _M_insert(iterator __position, const value_type& __x)
@@ -817,7 +817,7 @@ Notice `_M_node` is of class `_List_node_header` which is inherited from `_List_
 About `erase`:
 
 `.../bits/list.tcc[152]`
-```c++
+```cpp
   template<typename _Tp, typename _Alloc>
     typename list<_Tp, _Alloc>::iterator
     list<_Tp, _Alloc>::
@@ -834,7 +834,7 @@ About `erase`:
 ```
 
 `.../bits/stl_list.h[2012]`
-```c++
+```cpp
       void
       _M_erase(iterator __position) _GLIBCXX_NOEXCEPT
       {
@@ -857,7 +857,7 @@ About `erase`:
 There are two asserts in class `deque`. And the third template argument `BufSiz` has been deleted.
 
 `.../bits/stl_deque.h[787]`
-```c++
+```cpp
   template<typename _Tp, typename _Alloc = std::allocator<_Tp> >
     class deque : protected _Deque_base<_Tp, _Alloc>
     {
@@ -892,17 +892,17 @@ There are two asserts in class `deque`. And the third template argument `BufSiz`
 In `deuqe::_Base` which is `_Deque_base<_Tp, _Alloc>`, we have following two snippets:
 
 `.../bits/stl_deque.h[507]`
-```c++
+```cpp
       typedef typename iterator::_Map_pointer _Map_pointer; // _Deque_base::_Map_pointer
 ```
 
 `.../bits/stl_deque.h[455]`
-```c++
+```cpp
       typedef _Deque_iterator<_Tp, _Tp&, _Ptr>	  iterator; // _Deque_base::iterator
 ```
 
 `.../bits/stl_deque.h[112]`
-```c++
+```cpp
   template<typename _Tp, typename _Ref, typename _Ptr>
     struct _Deque_iterator
     {
@@ -926,7 +926,7 @@ In `deuqe::_Base` which is `_Deque_base<_Tp, _Alloc>`, we have following two sni
 After `c++11`, we have `_Map_pointer` as `__ptr_rebind<_Ptr, _Elt_pointer>`.
 
 `.../bits/ptr_traits.h[209]`
-```c++
+```cpp
   template<typename _Tp>
     struct pointer_traits<_Tp*> : __ptr_traits_ptr_to<_Tp*, _Tp>
     {
@@ -952,7 +952,7 @@ So we get `_Map_pointer` = `_Elt_pointer*` = `_Tp**`, just as `gcc2.9` in the bo
 Here are the attributes of `_Deque_iterator`.
 
 `.../bits/stl_deque.h[142]`
-```c++
+```cpp
       _Elt_pointer _M_cur;
       _Elt_pointer _M_first;
       _Elt_pointer _M_last;
@@ -964,13 +964,13 @@ Here are the attributes of `_Deque_iterator`.
 The calculation of buffer size is basically same as the old version of `gcc`.
 
 `.../bits/stl_deque.h[131]`
-```c++
+```cpp
       static size_t _S_buffer_size() _GLIBCXX_NOEXCEPT
       { return __deque_buf_size(sizeof(_Tp)); }
 ```
 
 `.../bits/stl_deque.h[91]`
-```c++
+```cpp
 #ifndef _GLIBCXX_DEQUE_BUF_SIZE
 #define _GLIBCXX_DEQUE_BUF_SIZE 512
 #endif
@@ -986,7 +986,7 @@ The calculation of buffer size is basically same as the old version of `gcc`.
 So as `vector` and `list`, the attributes of `deque` is defined in a struct of `_Deque_base`:
 
 `.../bits/stl_deque.h[509]`
-```c++
+```cpp
       struct _Deque_impl_data
       {
 	_Map_pointer _M_map;
@@ -1000,7 +1000,7 @@ So as `vector` and `list`, the attributes of `deque` is defined in a struct of `
 One of the constructor of `deque`:
 
 `.../bits/stl_deque.h[890]`
-```c++
+```cpp
       deque(size_type __n, const value_type& __value,
 	    const allocator_type& __a = allocator_type())
       : _Base(__a, _S_check_init_len(__n, __a))
@@ -1008,7 +1008,7 @@ One of the constructor of `deque`:
 ```
 
 `.../bits/deque.tcc[391]`
-```c++
+```cpp
   template <typename _Tp, typename _Alloc>
     void
     deque<_Tp, _Alloc>::
@@ -1036,14 +1036,14 @@ One of the constructor of `deque`:
 ```
 
 `.../bits/stl_deque.h[466]`
-```c++
+```cpp
       _Deque_base(const allocator_type& __a, size_t __num_elements)
       : _M_impl(__a)
       { _M_initialize_map(__num_elements); }
 ```
 
 `.../bits/stl_deque.h[636]`
-```c++
+```cpp
   template<typename _Tp, typename _Alloc>
     void
     _Deque_base<_Tp, _Alloc>::
@@ -1089,7 +1089,7 @@ One of the constructor of `deque`:
 `push_back` also has two versions, which are for lvalue and rvalue respectively.
 
 `.../bits/stl_deque.h[1537]`
-```c++
+```cpp
       void
       push_back(const value_type& __x)
       {
@@ -1115,7 +1115,7 @@ The first version is just like the old version in `gcc2.9` with some function na
 `emplace_back` is as follows:
 
 `.../bits/deque.tcc[157]`
-```c++
+```cpp
   template<typename _Tp, typename _Alloc>
     template<typename... _Args>
 #if __cplusplus > 201402L
