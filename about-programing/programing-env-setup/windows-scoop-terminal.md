@@ -10,6 +10,7 @@ $ iwr -useb get.scoop.sh | iex
 $ .\install.ps1 -ScoopDir 'D:\Scoop' -ScoopGlobalDir 'D:\Scoop\Global'
 
 # 开始安装软件
+$ scoop config proxy 127.0.0.1:8889
 $ scoop install aria2
 $ scoop install sudo
 # scoop install <软件名>
