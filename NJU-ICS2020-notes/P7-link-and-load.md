@@ -1,146 +1,182 @@
-> GNU Binutils
+> Static link and load
+
+- Use `-fno-pic` compile and `-static` link
+
+---
+
+> Somthing about GNU Binutils(a collection of binary tools)
 
 - addr2line
 
   ```shell
-  $addr2line 0x000000000000878 ./a.out #根据地址得到是程序源文件的第多少行
+  $addr2line 0x000000000000878 ./a.out # Get the source line number at the object address
   ```
 
 - objdump
 
   ```shell
-  $ objdump -d a.out | less #反汇编a.out的text section
-  $ objdump -D b.o #反汇编b.o的所有段
+  $ objdump -d a.out # disassemble the test section of a.out
+  $ objdump -D b.o # disassemble all sections of b.o
+  ```
+
+- nm 
+
+  Show all symbols and its address
 
 - readelf
 
 - objcopy
 
-  ```shell
-  #将二进制文件一段拷贝出来
-  ```
+  Copy from an object file
 
 - gprof
 
-  ```shell
-  #调试程序性能
-  ```
+  profiler
 
 ---
 
-> 链接前的代码main.o
+> About main.o before linking
 
-链接前的代码有很多00，链接之后会变成偏移量
+Jump locations are just 0, they will be set to offset after linking
 
-> 链接器如何填上偏移量
-
-Relocation section的表帮助链接器填上上述偏移量
-
-```shell
-$ readelf -a main.o #采用readelf可以看到该信息
+```asm
+14:   e8 00 00 00 00    callq 19 <main+0x19>
 ```
 
-> 为什么偏移量要-4
+Because main.c don't know where to jump before linking, they may located at other files
 
-PC寄存器指向下一条指令地址
+> How to know those offsets(say static link)
+
+Table in `relocation section` recorded these offsets
+
+```shell
+$ readelf -a main.o # use readelf to find it(search `offset`)
+```
+
+> Why the offset in that table need to minus 4
+
+PC reg has pointed to the next instruction
 
 ---
 
-> `file`命令
+> `file`
 
 ```shell
-$ file a.out #展示a.out的信息
+$ file a.out # display info of a.out
 ```
 
-> `readelf`命令
+> Where is the first instruction of this file? Is it main?
 
 ```shell
-$ readelf -h a.out #展示elf文件相关信息
-#Entry point address为程序入口地址
+$ readelf -h a.out # display info of elf files
+# Entry point address shows the first instruction address
 ```
 
----
+> `starti` in `gdb`
 
-> `gdb`的`starti`
-
-`starti`可以从程序的第一条指令开始执行，从`_start()`开始
+Use `starti` to debug a program from the first instruction, which is `_start()`
 
 ```shell
+$ gdb ./a.out
 (gdb) starti
 ```
 
-> `strace`
+> Use `strace` to get all of the system call of the program
 
 ```shell
-$ strace ./a.out #查看执行过程中所有系统调用序列
-```
----
-> 为什么用gcc链接而不是ld, ld链接的为什么不能运行？
-
-```shell
-$ ld a.o b.o main.o #会报warning，没有entry point，此时运行会造成segmentation fault
-```
-
-此时用`starti`进行调试时，当`main()` `return`时，由于`main`是操作系统调用的而不是`_start`，返回至调用栈的顶端，为无意义的地址，段错误
-
-```shell
-(gdb) bt #可以查看系统调用栈
+$ strace ./a.out 
 ```
 
 ---
 
-> 查看ld编译过程
+> Why use `gcc` link rather than `ld`? Why it cannot run via `ld`?
 
-gcc编译选项中加入 -Wl, --verbose给ld加入verbose选项
-
+```shell
+# Will get a warning，cannot find entry symbol, run with a segmentation fault
+$ ld a.o b.o main.o 
 ```
+
+Try to use `starti` to debug it. When `main` returns, it will return to the top of the call stack which is a meaningless address because `main` is called by OS not `_start`.
+
+Use `bt` to show the call stack, then you will see it.
+
+> Minimal executable
+
+Use syscall to do it.
+
+```asm
+mov $0xe7 %rax # interupt number(exit)
+mov $0x63 %rdi # return value
+syscall
+```
+
+---
+
+> How `gcc` link?
+
+Use `gcc -Wl --verbose`, `-Wl` means add flags to `ld`, so `--verbose` is add to `ld`
+
+```Makefile
 LDFLAGES += -Wl,--verbsoe
 ```
 
 ---
 
-> `__attribute__((constructor))`和`__attribute__((destructor))`
+> `__attribute__((constructor))` and `__attribute__((destructor))`
+
+No standard C
 
 ```c
-__attribute__((constructor)) void a() { } //main函数调用之前调用
-__attribute__((destructor)) void a() { } //main函数调用之后调用
+__attribute__((constructor)) void a() { } // before main
+__attribute__((destructor)) void a() { } // after main
+
 int main() 
 {
-    atexit(b); //类似destructor
+    atexit(b); // after main(standard C) stdlib.h
 }
 ```
 
 ---
 
-> 动态链接
+> Dynamic link
 
-在LDFLAGES里面去掉-fno-pic和-static
+No `-fno-pic` and `-static` in LDFLAGES
 
-> `ldd`查看动态链接信息
+> `get_pc_thunk` 
+
+Use to get the address of next PC, because i386 doesn't support mov to eip
+
+> How to get the link info?
+
+Use `ldd`
 
 ```shell
 $ ldd a.out
-#lbc.so.6是libc的动态链接库
-#ld-linux-x86-64.so.2是解释器
-$ vim $(which ldd) #ldd是一个脚本，可以通过vim编辑
+$ vim $(which ldd) # ldd is a script, so you can edit it via vim
 ```
+`lbc.so.6` is the dynamic link library of `libc`
+`ld-linux-x86-64.so.2` is the interpreter, which is the *real thing* execute the code
 
-> 动态链接的a.out如何运行
+> How dynamic linked a.out run
 
 ```shell
-$ /lib64/ld-linux-x86-64.so.2 ./a.out #实际上是通过这样运行的
-# 静态链接的相当于直接把二进制文件搬进内存运行
+$ ./a.out # is the same as
+$ /lib64/ld-linux-x86-64.so.2 ./a.out # the real thing it did
 ```
 
-> 如何链接
+Static linked programs run by just putting the binary code into memory
 
-```assembly
-call *table[PRINTF] 在ELF中放入一张TABLE，调用时查表
-#可以使用gcc -fno-plt -c开启此款
+> What does dynamic link do?
+
+Use `gcc -fno-plt -c` to try this
+
+```asm
+call *table[PRINTF] # put a table in ELF, then every call search it from table
 ```
 
-```assembly
-#默认选项，使用plt
+Default option, use plt
+
+```asm
 printf@plt:
 	jump *table[PRINTF]
 	push $PRINTF
