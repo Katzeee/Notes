@@ -2,7 +2,7 @@
 
 ## 托盘程序创建
 
-```c++
+```cpp
 不建窗口无法实现托盘消息的处理，随便建个窗口，隐藏了不就行了？
 #define WM_NOTIFYICON (WM_USER+1)
 #define IDM_SHOWMAIN 8577//托盘右键菜单的打开主界面选项

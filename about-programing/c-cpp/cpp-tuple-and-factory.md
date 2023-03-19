@@ -1,9 +1,9 @@
 2022.10.10
 ---
 
-## tuple can store lvalue
+## tuple can store reference
 
-```c++
+```cpp
 a = 1;
 std::tuple<int&> t(a);
 std::get<0>(t)++; // a == 2 now
@@ -11,23 +11,24 @@ std::get<0>(t)++; // a == 2 now
 
 however, `make_tuple` can't do this.
 
-```c++
+```cpp
 std::tupe<int&> t = std::make_tuple<int&>(a); // fail, can't covert std::tuple<int> to std::tuple<int&>
 ```
 
 ## expand tuple and pass to next caller
 
-```c++
+For c++17, we have:
+```cpp
 void f(int a, float b) {
     a++;
 }
 std::tuple t(1, 2f);
-std::apply(f, t); // = f(1, 2f); for c++17
+std::apply(f, t); // = f(1, 2f); 
 ```
 
-There still something we can do with c++14 which is almost the same as the `std::apply`'s implementation.
+But there still something we can do with c++14 which is almost the same as the `std::apply`'s implementation.
 
-```c++
+```cpp
 template<typename Func, typename ...Args>
 void apply(Func f, std::tuple<Args...> &&args) {
     constexpr auto size = sizeof...(Args);
@@ -47,13 +48,13 @@ void apply_helper(Func f, std::tuple<Args...> &&args, std::index_sequence<I...>)
 
 So there is an easy implementation of the factory class:
 
-```c++
+```cpp
 class ComponentBase {};
 
 template <typename... Arg> class Factory {
 public:
   using CreateFunc = std::function<ComponentBase *(Arg...)>;
-  CompnentBase *Create(std::string classname, std::tuple<Arg...> args) {
+  CompnentBase *Create(std::string classname, std::tuple<Arg...> &&args) {
     // constexpr auto size = std::tuple_size_v<std::tuple<Arg...>>;
     constexpr auto size = sizeof...(Arg);
     return CreateHelper(classname, std::forward<std::tuple<Arg...>>(args),

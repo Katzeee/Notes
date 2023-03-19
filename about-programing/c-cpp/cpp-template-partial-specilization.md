@@ -16,7 +16,7 @@ struct has_member<T, void_t<T::member>> : true_type {};
 
 The matching mechanism for partial specialization is as follows:
 
-- When calling `has_member<X>`, it will first be completed to match the primary template using the default arguments which (here) is `void`. So `has_member<X>` means `has_member<X, void>`.
+- When calling `has_member<X>`, it will *first be completed to match the primary template using the default arguments which (here) is `void`.* So `has_member<X>` means `has_member<X, void>`.
 
 - Then the compiler will find whether there is a specialization for the calling. Here is `has_member<X, void_t<X::member>>`, and we suppose it is a well-formed expression, so it will be seen as `has_member<X, void>`.
 
