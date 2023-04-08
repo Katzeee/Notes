@@ -97,7 +97,7 @@
 
     直接光照＋反射光照＋折射光照
 
-  - **Path tracing**
+  - **Path tracing**（SVGF空间滤波，时序滤波）
 
   - Distributed ray tracing
 
@@ -127,7 +127,7 @@
 
 ## Shadow
 
-   拆分V项考虑阴影构成
+  拆分V项考虑阴影构成
 
   ![](../images/rendering-equation-split-visibility.png)
 
@@ -250,7 +250,7 @@
 
   - Cons:
 
-    并不是每一个pixel都可以为其它地方补光（V的问题），考虑采样
+    并不是每一个pixel都可以为其它地方补光（V的问题）（也就是有无意义点），考虑采样
 
 - LPV(Light Propagation Volumes)
 
@@ -260,7 +260,7 @@
 
   - Cons:
 
-    小格划分问题，可能会出现light leaking
+    小格划分问题，可能会出现 **light leaking**
 
 - VXGI(Voxel Global Illumination)
 
@@ -276,11 +276,17 @@
 
   ![](../images/ssao-rendering-equation.png)
 
-  使用z-buffer直接计算ka项，sample然后比较
+  使用z-buffer计算ka项，撒点sample然后比较
+
+  - Cons
+
+    距离采样点实际很远但是屏幕空间遮挡时会有假阴影
 
 - HBAO
 
-  需要法线信息，采样更自由，可以加权采样
+  找半球被遮挡面积，视角与障碍物交点
+
+  ~~需要法线信息，采样更自由，可以加权采样~~
 
 - SSDO(Directional Occlusion)
 
@@ -288,7 +294,13 @@
 
   AO考虑被挡住了就没法被外部照到了，由远处给我打光
 
-  DO考虑远处的点打不到我这点光，由近处的点给我打光，问题就是远处的光就照不到了
+  DO考虑远处的点打不到我这点光，由近处的点给我打光
+
+  indir来自对周围点Sample做光照
+  
+  - Cons
+    
+    远处的光就照不到了
 
 - SSR
 
@@ -304,6 +316,10 @@
 
     有反射点信息作为Li，只需要直接计算即可
 
+    重要性采样，预过滤，
+
+ddgi
+rtxgi
 
 ## PBR
 
@@ -328,6 +344,10 @@
     - F
 
       Reflectance depends on incident angle (and polarization of light)
+
+      越靠近gressing angle反射越强
+
+      M(决定k)R（决定D和G） 和 S
 
       - Fresnel Equation
 
@@ -397,5 +417,19 @@
       
         能量损失，需要把能量补回来
 
+## Post Processing
+
+- Bloom
+
+  down sample 后 blur 相加
+
+- Tone Mapping
+
+  解决曝光，色偏问题
+
+- Color Grading
+
+  LUT(Look up table)，做颜色的映射
 
 
+## 延迟渲染
