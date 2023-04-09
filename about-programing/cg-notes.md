@@ -62,7 +62,7 @@
 
     延边界两侧方向查询找到边界，再计算混合系数，混合系数取最大值
 
-  - Console则
+  - 算法过程（Console）
     
     - 以半像素采样斜对角线的点，然后计算边界法线方向
 
@@ -86,6 +86,8 @@
 - 渲染方程
 
   Describes how much light is reflected into each outgoing direction
+
+  入射考虑的是irradiance，出射考虑的是radians
 
   ![](../images/brdf.png)
 
@@ -124,6 +126,8 @@
   - BSP树（多边形对齐bsp树）（Binary Space Partitioning）
 
   - BVH（Bounding Volume Hierarchies）
+
+- RTRT
 
 ## Shadow
 
@@ -196,7 +200,7 @@
 
 ## Physically Based Environment Lighting
 
-- IBL(**Shading** from environment light)
+- **IBL(Shading from environment light)**
 
   避免采样，解析解。没有阴影因为没有考虑V项
 
@@ -211,6 +215,12 @@
     ![](../images/ibl-brdf.png)
 
     转化成关于$cos \theta$和roughness的函数，texture保存
+
+  - 分成Diffuse和Specular分别考虑
+
+    diffuse 项中kd与视线角度有关，通过近似将其提出，得到预计算部分仅与法线，光线方向相关，预计算cubemap(irradians map)
+
+
 
 - PRT(Shading and **Shadowing**)
 
@@ -433,3 +443,59 @@ rtxgi
 
 
 ## 延迟渲染
+
+- 流程
+
+  1. 第一个pass渲染G-buffer
+
+  ![](../images/g-buffer.jpg)
+
+  2. 第二个pass计算光照
+
+- 解决问题
+
+  多光源情况下渲染复杂度过高
+
+- Cons
+
+  - 一般不支持MSAA：
+  
+    你不能在G-buffer中保存抗锯齿后的数据，多倍G-buffer也没有顶点信息，无法插值获取中心信息
+
+    MSAA发生在着色阶段之前，你需要有几何信息，但G-buffer会丢失几何信息
+    
+    但可以考虑通过某些手段将丢失的信息补充回来
+
+  - 无法渲染透明物体：没有办法在G-buffer的一个像素点中保存那么多信息
+
+  - 带宽大：G-buffer需要保存很多东西
+
+  - 只能使用一个光照pass，同理是因为丢失了几何信息
+
+- Forward+
+
+  对视锥体进行细分，只考虑在一个划分里的光源
+
+  - Tailed
+
+  - Grid
+
+- TBDR(Tailed based)
+
+  把屏幕分成小格，计算会受到哪些光照停下，进行分块处理
+
+- Deferred lighting
+
+  考虑减少G-buffer的内存消耗，用尽量少的空间存储
+
+  1. pass1保存法线向量和镜面因子
+
+  2. pass2计算光照（漫反射和镜面），写入两个缓冲区
+
+  3. pass3计算着色，可以根据不同mesh使用不同着色，从pass2中读取一些预计算的结果
+
+  4. 渲染半透明
+
+- Z-prepass
+
+  先走一遍光栅化但什么都不做，写入z-buffer
