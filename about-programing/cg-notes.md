@@ -141,6 +141,18 @@
 
     - Joint Bilateral filtering（用其他信息作为指导进行滤波）
 
+      - SVGF
+
+        Depth：梯度
+
+        Normal：次方
+
+        Luminance：空间时间上的平均
+
+      - RAE
+
+        U-Net
+
 ## Shadow
 
   拆分V项考虑阴影构成
@@ -197,10 +209,16 @@
   - CSM(Cascaded shadow map)
     
     可提高shadow map精度，针对视锥体中不同位置使用不同光锥体进行渲染
+    
+    每一级的CSM阴影分辨率在投影到摄像机屏幕空间时，有相似的分辨率
 
     - 在渲染视角附近的物体时需要更高的shadow map精度
 
     - 指数分布的CSM或自指定
+
+    - 光锥体的选取：可考虑方形或球形包围盒
+
+    - 在overlapping处进行blend(LoD的通病)
 
     - Stablize CSM: 视锥体发生变化，就会造成两帧直接的阴影位置不一样，抖动现象
 
@@ -231,8 +249,6 @@
   - 分成Diffuse和Specular分别考虑
 
     diffuse 项中kd与视线角度有关，通过近似将其提出，得到预计算部分仅与法线，光线方向相关，预计算cubemap(irradians map)
-
-
 
 - PRT(Precomputed Radiance Transfer)(Shading and **Shadowing**)
 
@@ -322,15 +338,27 @@
 
 - SSAO(Ambient Occlusion)
 
+  AO解决的是几何上被遮挡的接收不到环境光的部分
+
   假设来自各个方向的间接光是相同的，但考虑每一点的V是不同的，diffuse
 
   ![](../images/ssao-rendering-equation.png)
 
-  使用z-buffer计算ka项，撒点sample然后比较
+  - kA的计算方法
 
-  - Cons
+    - ray tracing（对室内环境是一定被遮蔽）
 
-    距离采样点实际很远但是屏幕空间遮挡时会有假阴影
+    - 使用z-buffer计算ka项，撒点sample然后比较
+
+      但在Sample时会有很大问题，球形采样情况下对于平地来说有一部分点会在几何体内部，一定是照不到光的，导致画面变暗
+
+      屏幕空间带来的问题，距离采样点实际很远但是屏幕空间遮挡时会有假阴影
+
+  - 优化kA计算
+
+    复用上一帧AO信息
+
+    降采样计算AO（因为最终都需要对画面进行降噪）
 
 - HBAO
 
@@ -352,23 +380,63 @@
     
     远处的光就照不到了
 
-- SSR
+- [SSR](https://blog.csdn.net/ZJU_fish1996/article/details/89007236)
 
-  1. 在屏幕空间中找到对应的反射点
+  - 算法过程
 
-    - Hierarchy ray tracing
+    1. 在屏幕空间中找到对应的反射点
+  
+      - Hierarchy ray tracing
+  
+      - Depth buffer Min pooling
+  
+    2. shading
+  
+      反射物（次级光源）是 diffuse 的
+  
+      有反射点信息作为Li，只需要按照渲染方程直接计算即可，glossy的需多采样
+  
+      重要性采样，时空复用，预过滤（做模糊，单次查询）
+    
+  - 可以做各种反射，不止specular，因为可以做ray tracing
+  
+  - 实现问题
 
-    - Min pooling
+    只有屏幕空间信息（其他部分使用RTRT）
 
-  2. shading
+    比较域值过大，会导致冗余反射
 
-    反射物（次级光源）是 diffuse 的
-
-    有反射点信息作为Li，只需要直接计算即可
-
-    重要性采样，预过滤，
+    步长过大，带状的反射
 
 - DDGI(Dynamic Diffuse GI)基于Light Probe
+
+  - 数据结构
+
+    1. 球面上的diffuse irradiance(E)
+
+    2. 球面距离
+
+    3. 球面各点到最近几何体的距离平方
+
+  - 由Probe发出光线并记录，使用八面体映射存放在一张texture内
+
+  - 基于RTRT：通过级联不同大小的Probe Volume在摄像机上
+
+  - 烘焙Probe
+
+    - 当前帧进行若干光线的直接光照计算（延迟渲染，先记录到G-buffer）
+
+    - 用上一帧的DDGI Volume来计算交点的间接光照，获取到的是L，通过蒙特卡洛算E（因为我们要记录E）
+
+    - 从Position texture中更新depth
+
+    - 每次更新时并不需要更新所有的Probe，通过状态来查询哪些Probe需要被更新
+
+  - Shading
+
+    只计算Diffuse，根据渲染方程可得只需要E，则可以插值获得
+
+    Probe权重由三线性插值，法线与方向，遮挡物（切比雪夫不等式）决定
 
   - Probe漏光问题
 
@@ -381,7 +449,6 @@
     - 存储探针可见性 z buffer 的
     
     - 直接打光线判断可见性
-
 
 ## PBR
 
@@ -397,11 +464,11 @@
 
     - 基于物理型
 
-      
-  
   - Specular(Microfacet Cook-Torrance BRDF)
 
     ![](../images/specular-BRDF.png)
+
+    分母中与v的夹角是因为要计算radians，4是因为计算过程中有$\mathrm{d}\omega_i$和$\mathrm{d}\omega_o$的比值，通过半程向量的对应关系计算之后有一个4，G项携带了与l的夹角
 
     - F
 
@@ -494,7 +561,7 @@
   LUT(Look up table)，做颜色的映射
 
 
-## 延迟渲染
+## Deferred Shading
 
 - 流程
 
