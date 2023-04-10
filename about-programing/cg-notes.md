@@ -42,7 +42,7 @@
 
 - TAA
 
-  每帧采样时，将采样的点进行偏移，Halton采样序列，改写投影矩阵
+  每帧采样时，将采样的点进行偏移，Halton采样序列（改写投影矩阵）
 
   Motion Vector处理动，且clamp至合理范围内，如AABB包围盒内，$3\sigma$内
 
@@ -128,6 +128,18 @@
   - BVH（Bounding Volume Hierarchies）
 
 - RTRT
+
+  - **Denoising**
+
+  - Temporal Failure
+
+    Temporal Clamping（更愿意相信当前帧） tradeoff between noise and lagging
+
+  - Spatical filter 
+
+    保留高频
+
+    - Joint Bilateral filtering（用其他信息作为指导进行滤波）
 
 ## Shadow
 
@@ -222,7 +234,7 @@
 
 
 
-- PRT(Shading and **Shadowing**)
+- PRT(Precomputed Radiance Transfer)(Shading and **Shadowing**)
 
   SH函数，可旋转
 
@@ -248,6 +260,30 @@
     
     会保留高频信息
 
+  - PRTGI
+
+    将光照信息使用SH保存在场景的各个probe当中
+
+    - 数据结构
+
+      Surfel：保存自己的position，normal，albedo
+
+      Brick：保存Surfel索引
+
+      Probe：保存自己位置，对自己产生影响的Brick索引，天空可见性（可解决远距离的AO）
+
+    - 烘焙
+
+      由Probe发射光线进行求教，将数据保存到Surfel中（即预计算光线追踪的几何部份）
+
+    - 在运行时通过保存的几何信息，动态计算irradiance（也可预先烘焙），再将信息编码到probe上
+
+    - Cons
+
+      一般对per object进行四面体插值（当物体过大时不准确），可通过将SH信息pack到体素上（即长方体），对于每个像素获取其周围8个进行插值
+
+    - 对于多次弹射可以复用上一帧的结果
+
 ## GI
 
   one bounce indirect illumination
@@ -256,11 +292,15 @@
 
   考虑直接光源照到的地方成为第二光源进行补光
 
-  要求反射源必须是diffuse，以获得均匀Li，(?使用深度直接作为距离)
+  假设反射源必须是diffuse，以获得均匀Li。假设以shadow map距离作为世界空间距离
+
+  - 数据需求
+
+    深度，世界坐标，法线，反射光功率（功率是因为便于计算，不需要除以面积或立体角）
 
   - Cons:
 
-    并不是每一个pixel都可以为其它地方补光（V的问题）（也就是有无意义点），考虑采样
+    并不是每一个pixel都可以为其它地方补光（V的问题）（也就是有无意义点），考虑采样（为保证一致性预计算一个采样图案），也就是采样该像素周围的点
 
 - LPV(Light Propagation Volumes)
 
@@ -328,8 +368,20 @@
 
     重要性采样，预过滤，
 
-ddgi
-rtxgi
+- DDGI(Dynamic Diffuse GI)基于Light Probe
+
+  - Probe漏光问题
+
+    - 标记法
+
+    - 法线与像素和probe连线夹角解决
+    
+    - 存储 E(x) 和 E^2(x) 然后做切比雪夫的
+
+    - 存储探针可见性 z buffer 的
+    
+    - 直接打光线判断可见性
+
 
 ## PBR
 
