@@ -673,7 +673,7 @@ Some keywords
 
 # MVP
 
-```cpp
+```javascript
 // The model represents the data and business logic of the application.
 class User {
   int id;
