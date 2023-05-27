@@ -17,3 +17,10 @@ $ systemctl restart docker
 ```
 $ sudo apt install gnupg2 pass 
 ```
+
+# Docker commands
+
+```bash
+--name=container_name
+docker start <id> or <name> # continue to run a container
+```
