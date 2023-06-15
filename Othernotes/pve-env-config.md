@@ -4,8 +4,11 @@
 ## Bios setting(important for pass-through)
 
 IOMMU: enable
+
 SVM mode
+
 VT-D(intel), AMD-V(AMD)
+
 SCM disable(UEFI boot)
 
 ## Install pve
@@ -16,13 +19,13 @@ Download pve-iso from [pve-download](https://proxmox.com/en/downloads/category/i
 
 Use `rufus` to create a bootable USB drive.(GPT+DD)
 
-Boot your device and just press continue, maybe set your dns server address to `8.8.8.8` instead of your gateway address will be more robust.
+Boot from your usb device and just press continue, maybe setting your dns server address to `8.8.8.8` instead of your gateway address will be more robust.
 
-Then you can login pve system from another pc's browser at `https://<your-ip-addr>:8006`, **https** not ~~http~~
+Then you can login pve system from another pc's browser at `https://<your-ip-addr>:8006`, mind **https** not ~~http~~
 
 ### Config
 
-Change mirrors
+Change mirror sources
 
 ```bash
 # /etc/apt/sources.list 
@@ -58,9 +61,42 @@ net.ipv6.conf.default.autoconf=1
 net.ipv6.conf.vmbr0.autoconf=1
 ```
 
-### Change Ip addr
+### To change ip-address and examples
 
-`/etc/network/interfaces`, `/etc/hosts`, `/etc/issue`, `/etc/resolv.conf`
+`/etc/network/interfaces`
+```
+auto lo
+iface lo inet loopback
+
+iface enp34s0 inet manual
+
+auto vmbr0
+iface vmbr0 inet static
+    address 192.168.2.200/24
+    gateway 192.168.2.2
+    bridge-ports enp34s0
+    bridge-stp off
+    bridge-fd 0
+```
+
+`/etc/hosts` 
+```
+127.0.0.1 localhost.localdomain localhost
+192.168.2.200 xac.pve xac
+
+# IPv6
+
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+```
+
+`/etc/issue` for welcome page
+
+`/etc/resolv.conf` for dns server
 
 ### DDNS
 
@@ -90,57 +126,6 @@ Use `WindTerm` as my ssh terminal
 Generate ssh key in both host and client, then copy `<client>/.ssh/id_rsa.pub` to host as `<host>/.ssh/authorized_keys`, then client can ssh to host without password
 
 In WindTerm, also set the sessions' authentication identity file as `<client>/.ssh/id_rsa` such that windterm to login host without password
-
-## Install homeassitant
-
-### Install
-
-One script in pve shell can help you install it
-
-```bash
-$ bash -c "$(wget -qLO - https://github.com/tteck/Proxmox/raw/main/vm/haos-vm-v4.sh)"
-```
-
-### Set up homeassitant
-
-- Init
-
-  you can access the manage page at `<ha-ip>:8123`
-  
-  Set your username or something, enable `Advanced mode` by click your avatar at the bottom-left of your screen.
-
-- Install two add-ons in `settings->add-ons->add-on store`, which are `ssh` and `samba`
-
-  If there is no add-ons, add repo `https://github.com/hassio-addons/repository`.
-
-- Install `HACS`(add-on store)
-
-  - via samba(tbc)
-  
-    config samba and start samba, open `\\<ha-ip>:8123` in your explore
-
-  - via ssh
-
-    start ssh
-
-    `https://github.com/hacs-china`
-
-    ```
-    $ wget -q -O - https://install.hacs.xyz | bash -
-    $ wget -O - https://hacs.vip/get | bash - # china
-    ```
-
-    restart HA, then add `HACS` integration in `settings->devices and services`, authorize on github follow the instruction.
-
-- integrate MI devices
-
-  click `HACS->integrations->Explore & Download repos`, choose `Xiaomi MIoT`, restart HA
-
-  then add `Xiaomi MIoT` integration, now you can see all your devices, rename the devices at web 
-
-- integrate to HomeKit
-
-  add `HomeKit` integration, scan the QR code at notification panel to finish setting
 
 ## Install Openwrt
 
@@ -186,6 +171,7 @@ $ reboot
 
   ```
   $ sudo route add default gw <openwrt-ip>
+  $ sudo route del default
   ```
 
 ## Install Arch
@@ -246,11 +232,114 @@ Host github.com
     Port 443
 ```
 
+## Install windows and config GPU pass-through
+
+### Install windows
+
+System: q35, UEFI
+Disk: SCSI
+Network: virtIO
+
+Change boot sequential, then install windows as usual, **need install virtio driver from iso file.**
+
+### setup Remote desktop
+
+- static ip
+
+- RDP
+
+  right click my computer->属性->远程桌面
+
+  win+r -> secpol.msc -> 本地策略 -> 安全选项，在右侧选中帐户: 使用空白密码的本地帐户只允许进行控制台登录
+
+  网络设置->防火墙->高级设置->入站设置（最下）->TCP-WSS-IN启用即可
+
+### GPU pass-through
+
+- Add PCIE device: select all options except `Primary GPU`.
+
+- Install GPU driver, check whether GPU is working
+
+- Change Display to `none`, add select `Primary GPU` option
+
+### Hide vm from guest
+
+Edit `/etc/pve/qemu-server/<vm-id>.conf` in host, **I don't know which options are unnecessary**, but it works.
+
+```
+args: -cpu 'host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed,kvm=off,hv_vendor_id=null'
+```
+
+## Install TrueNAS
+
+### Install TrueNAS
+
+32G disk SATA
+8192 Mem
+
+install then reboot
+
+### Disk pass-through
+
+Use pvetools to pass through disks (qm set), only choose the whole sata, not sata1, sata2 or etc.
+
+Or use SATA controller PCI pass through(may not work)
+
+### Config 
+
+- Network
+
+  Network->interface
+  
+  De-select DHCP, select autoconfig IPV6
+  
+  type in the IPV4 address
+  
+  TEST then confirm
+
+- Users
+
+  Account->Users->Add
+
+- General
+
+  System->General->Time zone
+
+
+### Create Pool and dataset
+
+Storage->Pool->Create new pool->type in a name and choose which disks to compose to a what kind of pool->press create
+
+Click the threes dots at right of the pool->add dataset
+
+### SMB share
+
+Sharing->SMB
+
+Choose the folder then submit
+
+### guest-agent
+
+`cd /usr/local/etc/pkg/repos/`, change `local.conf` `enabled=yes` to `no`, change `FreeBSD.conf` `enabled=no`to `yes`.
+
+then run command:
+
+```bash
+$ pkg install qemu-guest-agent
+# Modify your `/etc/rc.conf` by adding these settings
+
+qemu_guest_agent_enable="YES"
+qemu_guest_agent_flags="-d -v -l /var/log/qemu-ga.log"
+
+and run
+# service qemu-guest-agent start
+```
+
 ## LXC container
 
 ### Install LXC container
 
-Create CT, deselect `unprivilieged container`, about 20G(or 64G for not mount NAS folder) disk, 2048 mem and 2048 swap, static ip. DNS domain is the smae as gateway, DNS servers set as blank.
+Create CT, **deselect** `unprivilieged container`, about 20G(or 64G for not mount NAS folder) disk, 2048 mem and 2048 swap, static ip. DNS domain is the smae as gateway, DNS servers set as blank.
 
 network ipv6 SLAAC
 
@@ -347,105 +436,53 @@ local->Stack->Add stack
 
 local->Container->Add container 
 
-## Install windows and config GPU pass-through
+## Install homeassitant
 
-### Install windows
+### Install
 
-System: q35, UEFI
-Disk: SCSI
-Network: virtIO
-
-Change boot sequential, then install windows as usual
-
-### setup Remote desktop
-
-- static ip
-
-- RDP
-
-  right click my computer->属性->远程桌面
-
-  win+r -> secpol.msc -> 本地策略 -> 安全选项，在右侧选中帐户: 使用空白密码的本地帐户只允许进行控制台登录
-
-  网络设置->防火墙->高级设置->入站设置（最下）->TCP-WSS-IN启用即可
-
-### GPU pass-through
-
-- Add PCIE device: select all options except `Primary GPU`.
-
-- Install GPU driver, check whether GPU is working
-
-- Change Display to `none`, add select `Primary GPU` option
-
-### Hide vm from guest
-
-Edit `/etc/pve/qemu-server/<vm-id>.conf`, **I don't know which are unnecessary**, but it works.
-
-```
-args: -cpu 'host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed,kvm=off,hv_vendor_id=null'
-```
-
-## Install TrueNAS
-
-### Install TrueNAS
-
-32G disk SATA
-8192 Mem
-
-install then reboot
-
-### Disk pass-through
-
-Use pvetools to pass through disks (qm set), only choose the whole sata, not sata1, sata2 or etc.
-
-Or use SATA controller PCI pass through(may not work)
-
-### Config 
-
-- Network
-
-  Network->interface
-  
-  De-select DHCP, select autoconfig IPV6
-  
-  type in the IPV4 address
-  
-  TEST then confirm
-
-- Users
-
-  Account->Users->Add
-
-- General
-
-  System->General->Time zone
-
-
-### Create Pool and dataset
-
-Storage->Pool->Create new pool->type in a name and choose which disks to compose to a what kind of pool->press create
-
-Click the threes dots at right of the pool->add dataset
-
-### SMB share
-
-Sharing->SMB
-
-Choose the folder then submit
-
-### guest-agent
-
-`cd /usr/local/etc/pkg/repos/`, change `local.conf` `enabled=yes` to `no`, change `FreeBSD.conf` `enabled=no`to `yes`.
-
-then run command:
+One script in pve shell can help you install it
 
 ```bash
-$ pkg install qemu-guest-agent
-# Modify your `/etc/rc.conf` by adding these settings
-
-qemu_guest_agent_enable="YES"
-qemu_guest_agent_flags="-d -v -l /var/log/qemu-ga.log"
-
-and run
-# service qemu-guest-agent start
+$ bash -c "$(wget -qLO - https://github.com/tteck/Proxmox/raw/main/vm/haos-vm-v4.sh)"
 ```
+
+### Set up homeassitant
+
+- Init
+
+  you can access the manage page at `<ha-ip>:8123`
+  
+  Set your username or something, enable `Advanced mode` by click your avatar at the bottom-left of your screen.
+
+- Install two add-ons in `settings->add-ons->add-on store`, which are `ssh` and `samba`
+
+  If there is no add-ons, add repo `https://github.com/hassio-addons/repository`.
+
+- Install `HACS`(add-on store)
+
+  - via samba(tbc)
+  
+    config samba and start samba, open `\\<ha-ip>:8123` in your explore
+
+  - via ssh
+
+    start ssh
+
+    `https://github.com/hacs-china`
+
+    ```
+    $ wget -q -O - https://install.hacs.xyz | bash -
+    $ wget -O - https://hacs.vip/get | bash - # china
+    ```
+
+    restart HA, then add `HACS` integration in `settings->devices and services`, authorize on github follow the instruction.
+
+- integrate MI devices
+
+  click `HACS->integrations->Explore & Download repos`, choose `Xiaomi MIoT`, restart HA
+
+  then add `Xiaomi MIoT` integration, now you can see all your devices, rename the devices at web 
+
+- integrate to HomeKit
+
+  add `HomeKit` integration, scan the QR code at notification panel to finish setting
