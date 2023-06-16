@@ -33,4 +33,8 @@ Then run `docker run -v ${HOME}/.klei/DoNotStarveTogether:/data -p 10999-11000:1
 
 I don't know why docker compose doesn't work!!!
 
+- Mods cannot download
+
+Copy the folder in `E:\SteamLibrary\steamapps\workshop\content\322330` to `~/.klei/DoNotStarveTogether/ucg/content/322330`
+
 
