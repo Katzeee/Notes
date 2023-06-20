@@ -23,7 +23,7 @@ Boot from your usb device and just press continue, maybe setting your dns server
 
 Then you can login pve system from another pc's browser at `https://<your-ip-addr>:8006`, mind **https** not ~~http~~
 
-### Config
+### Tools Config
 
 Change mirror sources
 
@@ -47,6 +47,34 @@ Comment enterprise source
 ```bash
 $ apt update && apt -y install git && git clone https://github.com/ivanhao/pvetools.git
 ```
+
+### IOMMU and hardware pass-through
+
+`vi /etc/default/grub`
+```diff
+- GRUB_CMDLINE_LINUX_DEFAULT="quiet"
+
+# For AMD users
++ GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_pstate=disable amd_iommu=on pcie_acs_override=downstream,multifunction video=vesafb:off video=efifb:off"
+
+# all of them may not necessary, but I added `intel_pstate=disable pcie_acs_override=downstream,multifunction`
+# PS:
+# efifb:off disable efi-booting display devices
+# vesafb:off disable vesa-booting display devices
+```
+
+then `update-grub`
+
+`vi /etc/modules`
+
+```diff
++ vfio
++ vfio_iommu_type1
++ vfio_pci
++ vfio_virqfd
+```
+
+then reboot
 
 ### Enable ipv6
 
@@ -270,7 +298,39 @@ Edit `/etc/pve/qemu-server/<vm-id>.conf` in host, **I don't know which options a
 args: -cpu 'host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed,kvm=off,hv_vendor_id=null'
 ```
 
-## Install TrueNAS
+## Install TrueNAS Scale(Recommended)
+
+### Reference
+
+> https://www.truenasscale.com/
+
+### Create VM
+
+Let everything default except 16G disk and 8192 mem, choose iso then start VM
+
+### sata controller pass-through
+
+choose `400 Series Chipset SATA Controller` (without All Functions)
+
+### Change Web port(For accessing from internet)
+
+System Settings -> General -> GUI
+
+change http port from 80 to 8000
+
+### Add Catalog(need VPN)
+
+Apps -> Manage Catalogs -> Add Catalog
+
+Name: truecharts
+
+Repo: https://github.com/truecharts/catalog
+
+Trains: stable dependency
+
+To avoid TLS fail, use `git config --global http.sslVerify false`
+
+## Install TrueNAS Core(Not Recommended)
 
 ### Install TrueNAS
 
