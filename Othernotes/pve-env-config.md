@@ -443,6 +443,12 @@ deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted univer
 deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe
 ```
 
+### localization
+
+`sudo dpkg-reconfigure locales`
+
+<Space> to check, <Tab> then <Enter> to <Ok>
+
 ### Mount NAS
 
 Or just use sftp which need to add a new user to connect to this LXC via ssh.
