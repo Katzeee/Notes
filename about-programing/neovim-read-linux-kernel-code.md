@@ -11,7 +11,7 @@ Use `scripts/gen_compile_commands.py` to generate a file called `compile_command
 
 - Something like `Unkonwn argument: '-mno-fp-ret-in-387'`
 
-This is because you compiles the kernel code using `gcc`, but use clangd as LSP, there are two workarounds.
+This is because you compiles the kernel code using `gcc`, but you are using clangd as LSP, there are two workarounds.
 
   - Change the compiler
 
