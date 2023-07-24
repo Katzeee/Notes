@@ -140,17 +140,37 @@ $ git push -u origin <本地分支名>
 
 ## Push conflit after local rebase
 
-    ```bash
-    $ git push -f # cover all information of the remote, use local history instead
-    $ git push --force-with-lease # Only if no conflit, cover the remote repo history
-    ```
+```bash
+$ git push -f # cover all information of the remote, use local history instead
+$ git push --force-with-lease # Only if no conflit, cover the remote repo history
+```
 
 ## Use git stash to stash your current changes
 
-    ```bash
-    $ git stash # stash only stash files which are tracked, so use add first
-    $ git stash list
-    $ git stash pop 
-    $ git stash apply [--index]
-    $ git stash drop
-    ```
+```bash
+$ git stash # stash only stash files which are tracked, so use add first
+$ git stash list
+$ git stash pop 
+$ git stash apply [--index]
+$ git stash drop
+```
+
+2023.07.24
+---
+
+## checkout to remote branch and track it locally(i.e. create a local branch)
+
+```bash
+$ git checkout --track origin/games104/homework01-build 
+```
+
+or 
+
+```bash
+$ git switch games104/homework01-build
+```
+
+lazygit
+
+- `c` for checkout by name
+- you now have a detached HEAD. Press `n` to create a new branch here
