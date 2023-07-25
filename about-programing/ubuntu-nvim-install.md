@@ -76,3 +76,4 @@ find "$fonts_dir" -name '*Windows Compatible*' -delete
 fc-cache -fv
 ```
 
+use `fc-list` to show all fonts installed.
