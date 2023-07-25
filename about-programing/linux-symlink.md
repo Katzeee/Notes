@@ -2,4 +2,4 @@
 
 ## symlink
 
-If you use a relative path in symlink, the path is started at where the symlink is, not at where the command runs. So use absolute path in making symlink.
+If you use a relative path in symlink, the path deduction starts at where you call the symlink, not at where the `ln` command ran. So use absolute path in making symlink.
