@@ -1,5 +1,5 @@
-2023.01.31
----
+#cg 
+## 2023.01.31
 
 ##  shader graph 中的颜色
 
@@ -73,7 +73,7 @@ shader graph中所有展现出来的图片都是一个三通道的颜色，颜�
 
   - 很多结点都可以控制溶解的强度，比如pow，subtract，也可以结合来使用，用来对溶解贴图做更细致的效果呈现
 
-    ![pow结点控制强度](./images/dissolvestrength.png)
+    ![pow结点控制强度](../images/dissolvestrength.png)
 
   - 溶解动画
 
@@ -83,7 +83,7 @@ shader graph中所有展现出来的图片都是一个三通道的颜色，颜�
 
       lerp结点在这里就可以起到效果，输入T的0-1范围正好可以控制溶解进度
 
-      ![alt](./images/dissolve-progress.gif)
+      ![alt](../images/dissolve-progress.gif)
 
     - 溶解进度2
 
@@ -91,7 +91,7 @@ shader graph中所有展现出来的图片都是一个三通道的颜色，颜�
 
       目标是从完全没有溶解，经过我们规定的溶解纹理进行平滑溶解直到完全消失
 
-      ![alt](./images/dissolve-progress-smoothstep-solid-upper.gif)
+      ![alt](../images/dissolve-progress-smoothstep-solid-upper.gif)
 
       原理：当slider不断变大时，首先slider作为一个阈值存在，不大于slider的像素都为0，控制整体的进度，表现在图像上就是亮度高的点会逐渐出现。其次slider继续变大的过程可以平滑使该像素变为完全可见（该像素完全变白）。
       
@@ -105,7 +105,7 @@ shader graph中所有展现出来的图片都是一个三通道的颜色，颜�
 
       此时又有了新的需求，就是需要生硬的过渡，需要突变的效果，那我们可以让上面加的1变成一个可控的数值DissolveSmooth，调整该数值即可控制过渡的平滑与生硬。
 
-      ![alt](./images/dissolve-progress-smoothstep.gif)
+      ![alt](../images/dissolve-progress-smoothstep.gif)
 
       要注意smoothstep的第三个输入，最小值应该为两张Edge的最小值相等，最大值应该为两张Edge的最大值相等，这正好表达了一个像素平滑出现并变亮的过程。
 
@@ -121,15 +121,15 @@ shader graph中所有展现出来的图片都是一个三通道的颜色，颜�
 
   首先要知道uv本身是一个四通道的数据，而只有前两个分量用得上，为了让图显示的更加直观，我只引出前两个通道。如果直接对uv4通道进行处理，zw分量也会受到影响，而我们只输出xy通道，这样看的不够清楚。
 
-  ![alt](./images/uv-xy.png)
+  ![alt](../images/uv-xy.png)
 
   如简单的上下左右颠倒变换（如果只想颠倒一边，那就单独处理一个分量）：
 
-  ![alt](./images/uv-xy-flip.png)
+  ![alt](../images/uv-xy-flip.png)
 
   还有基础的位移和缩放：（gif图片采样率不够导致颜色失真）
 
-  ![alt](./images/uv-tiling-and-offset.gif)
+  ![alt](../images/uv-tiling-and-offset.gif)
 
   记住uv颜色和tex对于的位置（黑色左下，黄色左上等等），这样看到uv的颜色就知道最终的sample结果是什么样的了。
 
@@ -147,7 +147,7 @@ shader graph中所有展现出来的图片都是一个三通道的颜色，颜�
 
     此时lerp的第三个输入控制扰动的强度，获得一个介于正常uv和完全扰动之间的图作为uv。该操作不会导致图像的整体偏移，正好能达成我们想要的扰动的效果。
 
-    ![alt](./images/uv-distortion.gif)
+    ![alt](../images/uv-distortion.gif)
 
     当扰动强度过大时该扰动就没有什么意义了，因为此时的uv基本就是这个噪声决定的。
   
@@ -159,7 +159,7 @@ shader graph中所有展现出来的图片都是一个三通道的颜色，颜�
 
     如果只想让贴图的某一部分扰动要怎么做？同样是采用lerp结点，此时使用uv结点的xy分量并进行一定的运算可以做到控制某些部分在扰动中保持不变。
 
-    ![alt](./images/uv-partial-distortion.gif)
+    ![alt](../images/uv-partial-distortion.gif)
 
 ## 效果的分解
 

@@ -1,5 +1,5 @@
-2022.10.26
----
+#c-cpp #software-design 
+## 2022.10.26
 
 ## Example
 

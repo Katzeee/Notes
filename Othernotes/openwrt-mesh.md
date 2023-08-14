@@ -1,4 +1,5 @@
-# 2022.4.12
+#pve #network
+## 2022.4.12
 
 租的房子没有接网线，只有弱电箱的位置能放路由器，但由于手上有设备只能接有线，想在房间里接有线就得组mesh
 
@@ -10,25 +11,16 @@
 
 
 在配置wifi时选择WPA2-PSK加密，算法AES
-<p align="left">
-  <img src="../images/MESH1.png">
-</p>
+![](../images/MESH1.png)
 
 打开kvr，生成本地生成PMK
 
-<p align="left">
-  <img src="../images/MESH2.png">
-</p>
+![](../images/MESH2.png)
 
-<p align="left">
-  <img src="../images/MESH3.png">
-</p>
-
+![](../images/MESH3.png)
 
 选择简单MESH，注意选择5g频段进行mesh
-<p align="left">
-  <img src="../images/MESH4.png">
-</p>
+![](../images/MESH4.png)
 
 ### 副路由
 
@@ -47,20 +39,12 @@
 都打开以后就好了，测试连接副路由的mesh wifi能不能上网
 
 这时可以注意到mesh连接上了
-<p align="left">
-  <img src="../images/MESH5.png">
-</p>
-<p align="left">
-  <img src="../images/MESH6.png">
-</p>
-
+![](../images/MESH5.png)
+![](../images/MESH6.png)
 
 ### 有线部分
 
 但是此时连接有线是上不了网的，因为easymesh没有把你的真实lan口添加到他的虚拟lan口里面，打开主副路由的接口，把所有没有打上勾的lan口都添加到br-lan里面去就可以了
-<p align="left">
-  <img src="../images/MESH7.png">
-</p>
-
+![](../images/MESH7.png)
 
 我还将副路由的两个WAN口禁用了

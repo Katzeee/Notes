@@ -1,5 +1,5 @@
-2022.5.25
----
+#code-env/input-method #linux #windows 
+## 2022.5.25
 
 # Windows
 
@@ -9,8 +9,7 @@ Press <kbd>win + R</kbd>, input `regedit` to open register table, find key `计�
 
 Then you can set `小鹤双拼` as the defualt method in Microsoft shuangpin.
 
-2023.07.21
----
+## 2023.07.21
 
 # Linux
 

@@ -1,5 +1,5 @@
-2022.09.07
----
+#c-cpp #gdb 
+## 2022.09.07
 
 ## Memory leak
 
@@ -27,8 +27,7 @@ I allocated 4 bytes to buffer, but `recv` too much data in buffer which caused t
 **PS: `debuginfod` can be used to step into function in `libc` when debugging via `gdb`**
 
 ---
-2022.10.26
----
+## 2022.10.26
 
 ## sanitizer
 

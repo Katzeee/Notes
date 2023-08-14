@@ -1,5 +1,5 @@
-2022.07.14
----
+#code-env/vscode #git #windows 
+## 2022.07.14
 
 Vscode cannot recognize the `.git` file in the folder. It says "the folder currently open doesn't have a git folder" (but it does have).
 

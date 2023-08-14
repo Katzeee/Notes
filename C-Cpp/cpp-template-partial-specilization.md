@@ -1,5 +1,6 @@
-2022.06.18
----
+#c-cpp 
+## 2022.06.18
+
 > https://stackoverflow.com/questions/27687389/how-does-void-t-work
 >
 > Walter Brown states that the default argument has to be the exact same type as the one used in `void_t` for it to work.

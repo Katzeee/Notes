@@ -1,5 +1,5 @@
-2023.02.11
----
+#git 
+## 2023.02.11
 
 ## Why
 
@@ -69,3 +69,10 @@ Then conflicts are different based on the operations in local and remote. It can
 - `both modified` (lg `UU`)
 
   edit the conflict files to solve
+  
+## Push conflit after local rebase
+
+```bash
+$ git push -f # cover all information of the remote, use local history instead
+$ git push --force-with-lease # Only if no conflit, cover the remote repo history
+```

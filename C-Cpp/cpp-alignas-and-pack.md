@@ -1,9 +1,9 @@
-2023.03.04
----
+#c-cpp 
+## 2023.03.04
 
 ## Memory alignment
 
-Memory are seen as mutiple bytes. But CPU reads data as `words`, for 32-bits CPU, it always start to read from the addresses where can be divided by 4(bytes), like 0x0, 0x4.
+Memory are seen as multiple bytes. But CPU reads data as `words`, for 32-bits CPU, it always start to read from the addresses where can be divided by 4(bytes), like 0x0, 0x4.
 
 If an interger stores at 0x3, CPU needs to read 0x0 to 0x3 at first time, 0x4 to 0x7 for the second time, then concat them to get that interger.
 

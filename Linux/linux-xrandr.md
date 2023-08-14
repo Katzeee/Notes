@@ -1,5 +1,5 @@
-2023.07.24
----
+#linux/tool #linux/arch 
+## 2023.07.24
 
 > https://askubuntu.com/questions/1195244/difficulty-to-setup-two-monitors-with-different-resolution-and-scale
 

@@ -1,4 +1,5 @@
-# 2022.5.7
+#linux/tool #compile #c-cpp 
+## 2022.5.7
 
 I met a undefined symbol error when I was running a c project.
 
@@ -6,7 +7,7 @@ I met a undefined symbol error when I was running a c project.
 ../bin/test: symbol lookup error: ../bin/test: undefined symbol: g_thread_proxy
 ```
 
-To find out the reason, use `ldd ../bin/test`, you can see which libs are linked to `test`, it will be easily find if there is a link error.
+To find out the reason, use `ldd ../bin/test`, you can see which libs are linked to `test`, it will be easily find whether there is a link error.
 
 ```bash
 ~/rhs/YoloV5-LibTorch$ ldd ./bin/test 

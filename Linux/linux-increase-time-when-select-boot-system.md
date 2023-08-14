@@ -1,4 +1,5 @@
-# 2022.5.9
+#linux
+## 2022.5.9
 
 > https://askubuntu.com/questions/711062/how-to-modify-waiting-time-of-the-dual-boot-menu
 

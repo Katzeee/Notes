@@ -1,5 +1,6 @@
-2022.06.21
----
+#c-cpp 
+## 2022.06.21
+
 ## `concept` and `requires`
 
 There are two type of `requires`.

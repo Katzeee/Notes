@@ -1,6 +1,7 @@
-# 2022.6.8
+#c-cpp 
+## 2022.6.8
 
-## Using `shard_from_this` in template classes
+## Use `shard_from_this` in template classes
 
 > https://stackoverflow.com/questions/17853212/using-shared-from-this-in-templated-classes
 

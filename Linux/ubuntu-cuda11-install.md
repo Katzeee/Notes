@@ -1,8 +1,9 @@
-# 2022.4.24
+#linux/ubuntu #machine-learning #c-cpp #code-env/lib 
+## 2022.4.24
 
 运行pytorch程序提示3050显卡当前cuda版本不支持，因此需要更新cuda与torch
 
-See [install via vcpkg](./ubuntu-cuda-install-vcpkg.md), easier than this.
+See [[ubuntu-vcpkg-install-cuda-cudnn]], easier than this.
 
 ## 安装cuda
 

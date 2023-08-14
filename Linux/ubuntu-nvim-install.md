@@ -1,5 +1,5 @@
-2023.07.24
----
+#code-env/neovim #linux/ubuntu 
+## 2023.07.24
 
 # Install neovim(through ppa)
 

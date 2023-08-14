@@ -1,5 +1,5 @@
-2023.08.09
----
+#c-cpp #software-design 
+## 2023.08.09
 
 Set compile flags as follow:
 

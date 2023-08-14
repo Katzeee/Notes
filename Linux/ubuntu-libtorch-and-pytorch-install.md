@@ -1,10 +1,11 @@
-# 2022.5.7
+#linux/ubuntu #code-env/lib  #machine-learning #c-cpp 
+## 2022.5.7
 
 Install libtorch in ubuntu with a small project for testing it.
 
 Make sure you have installed cuda and cudnn already, or the test code may do not work for you.
 
-You can install cuda/cudnn by the instruction here [via vcpkg](./ubuntu-cuda-install-vcpkg.md) or [without vcpkg](./ubuntu-cuda11-torch-install.md)
+You can install cuda/cudnn by the instruction here [[ubuntu-vcpkg-install-cuda-cudnn]] or [[ubuntu-cuda11-install]]
 
 ## Download and install libtorch
 
@@ -55,7 +56,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 '1.11.0+cu113'
 ```
 
-Then, test libtorch, the whole project is in [libtorch](./test-codes/torchtest/)
+Then, test libtorch, the whole project is in [torch-test](../test-codes/torch-test)
 
 ```cpp
 // main.cpp

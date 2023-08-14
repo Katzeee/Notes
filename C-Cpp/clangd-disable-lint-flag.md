@@ -1,5 +1,5 @@
-2023.03.19
----
+#c-cpp #clangd #compile 
+## 2023.03.19
 
 > https://stackoverflow.com/questions/70819007/can-not-use-clangd-to-read-linux-kernel-code
 

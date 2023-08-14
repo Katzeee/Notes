@@ -1,4 +1,5 @@
-# 2022.4.18
+#code-env/vscode 
+## 2022.4.18
 
 在vscode中为md文件配置自定义代码块
 
@@ -22,7 +23,7 @@
 
 到此刻才可以进行代码补全
 
-# 2022.4.19
+## 2022.4.19
 
 ## hotkeys binding
 
@@ -30,7 +31,3 @@
 代码补全快捷键原本<kbd>ctrl+space</kbd>，搜索trigger suggestion将其改为<kbd>alt+x</kbd>即可
 
 不想用<kbd>enter</kbd>补全代码，在acceptsuggestion有一个绑定了enter，将其删除
-
-# 2022.5.9
-
-Changed a lot in settings.json and keybindings.json

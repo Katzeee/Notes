@@ -1,5 +1,5 @@
-2022.10.10
----
+#c-cpp #software-design
+## 2022.10.10
 
 ## tuple can store reference
 
@@ -15,7 +15,7 @@ however, `make_tuple` can't do this.
 std::tupe<int&> t = std::make_tuple<int&>(a); // fail, can't covert std::tuple<int> to std::tuple<int&>
 ```
 
-## expand tuple and pass to next caller
+## expand tuple and pass to the next caller
 
 For c++17, we have:
 ```cpp

@@ -1,7 +1,11 @@
-2022.09.13
----
+#linux/arch #database/mysql
+## 2023.0814
 
-# INSTALL MYSQL ON ARCH LINUX
+# [Update]RECOMMEND TO USE DOCKER !!
+
+## 2022.09.13
+
+## INSTALL MYSQL ON ARCH LINUX
 
 ## Install
 

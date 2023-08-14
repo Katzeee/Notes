@@ -1,9 +1,5 @@
-# 2022.1.20
-## wsl解决vi黑屏问题
-
-```bash
-$ export TERM=xterm-color #可以将其添加到.bashrc的最后
-```
+#windows/wsl #code-env/lib  #linux/ubuntu #c-cpp 
+## 2022.1.20
 
 ## 换源
 

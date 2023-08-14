@@ -1,5 +1,5 @@
-2023.03.01
----
+#c-cpp 
+## 2023.03.01
 
 References:
 > https://blog.csdn.net/tian_20032242/article/details/88793258
@@ -74,7 +74,7 @@ int *const p = &c;  // modifies int *, so p can't change
 
   - T &&x
 
-  x is a universal reference of argument, so can be passed a rvalue. Refer to [perfect forword](./cpp-perfect-forwarding.md)
+  x is a universal reference of argument, so can be passed a rvalue. Refer to [[cpp-perfect-forwarding]]
 
   ```cpp
   foo(int) -> T is int &

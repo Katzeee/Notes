@@ -1,4 +1,6 @@
-# 2021.3.29
+#linux 
+## 2021.3.29
+
 ## linux命令
 
 ```bash
@@ -6,7 +8,7 @@ cd .. #返回上级目录，注意有空格
 touch <文件名> #创建文件
 mkdir <文件夹名> #创建文件夹
 ```
-# 2021.5.15
+## 2021.5.15
 
 ## 如何在ubuntu中获取管理员权限
 
@@ -21,10 +23,12 @@ mkdir <文件夹名> #创建文件夹
 >在Ubuntu 下切换到超级用户需要使用其他方法，主要有两种：
 >
 >1.    利用sudo -i命令  输入sudo -i ,提示输入当前用户密码，输入后即可获得root权限，这并不需要root的密码。但是它也有很多限制，在默认的情况下，只能在 5 分钟之内使用 root 权限。
->
+>	
 >2.    如果想一直使用 root 权限，可使用sudo passwd root 命令重新设置一下root的密码。之后就可以自由使用su命令自由的切换了。
+>
+>3. sudo su
 
-# 2021.12.28
+## 2021.12.28
 
 ## Linux运行文件时报错：bash: $'\r': command not found
 
@@ -36,11 +40,9 @@ vim aaa.sh
 # 保存文件
 :wq
 ```
-# 2022.4.14
+## 2022.4.14
 
-## **[Ubuntu]**
-
-## 查找依赖so在哪个包里
+## 查找依赖so在哪个包里(Ubuntu)
 
 在使用apt install安装库的时候，经常会出现找不到依赖包的情况，这时候就可以使用apt-file去查找所需要的依赖包在哪个lib里，再进行下载安装
 
@@ -50,16 +52,3 @@ $ sudo apt-file update
 $ apt-file search libXmu.so.6
 ```
 
-# 2022.5.8
-
-## `LIBRARY_PATH` and `LD_LIBRARY_PATH`
-
-开发时，设置LIBRARY_PATH，以便gcc能够找到编译时需要的动态链接库。
-
-发布时，设置LD_LIBRARY_PATH，以便程序加载运行时能够自动找到需要的动态链接库。
-
-When building a project, `LIBRARY_PATH` for `gcc` finding the dynamic link library or you will get a build error.
-
-When running a program, `LD_LIBRARY_PATH` for loading the dynamic link library.
-
-Another way to solve runtime error `fatal: libgcc_s.so.1: open failed: No such file or directory` is to set `-R<path>` when you are building the project to set runtime path.

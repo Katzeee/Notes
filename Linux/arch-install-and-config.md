@@ -1,9 +1,10 @@
-# 2022.5.16
+#linux/arch #pve 
+## 2022.5.16
 
 References:
 > [Arch Linux + Windows 双系统安装教程](https://blog.linioi.com/posts/18/)
 >
-> [gentoo linux配置intel和nvidia双显卡电脑，使用prime方案](https://www.jianshu.com/p/515a1f39b438)
+> [gentoo linux配置intel和NVIDIA双显卡电脑，使用prime方案](https://www.jianshu.com/p/515a1f39b438)
 
 ## Check the boot mode
 
@@ -13,7 +14,7 @@ Press <kbd>win+r</kbd> and input `msinfo32` to check whether `bios mode` is `UEF
 
 This article only intends for `UEFI` boot mode
 
-## Prepare for a bootable usb
+## Prepare for a bootable USB
 
 Download [Rufus](http://rufus.ie/en/)
 
@@ -37,10 +38,7 @@ $ reg add "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\TimeZoneInformati
 ## Start installation
 
 First, boot your computer from the usb, select the first option
-
-<p align="center">
-  <img src="../images/boot-select.png">
-</p>
+![alt](../images/boot-select.png)
 
 Connect to network and synchronize time.
 

@@ -1,4 +1,5 @@
-# 2022.5.4
+#linux #proxy
+## 2022.5.4
 
 ## **[ubuntu]**
 
@@ -32,6 +33,6 @@ This is caused by high version of python, `arch` is installed with python3.10, i
 
 change the 44th line in `"/home/xac/.config/electron-ssr/shadowsocksr/shadowsocks/../shadowsocks/lru_cache.py" ` from `collections.MutableMapping` to `collections.abc.MutableMapping`
 
-# 2022.5.16
+## 2022.5.16
 
 **Double-click** the node!!!

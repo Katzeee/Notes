@@ -1,4 +1,6 @@
-# 2022.4.14
+#c-cpp #compile 
+## 2022.4.14
+
 平时学习c的时候只写过很简单的程序，那么用gcc编译就只需要一句话即可，有时候都不用-o指定编译出来的文件
 ```bash
 $ gcc main.c -o main
@@ -24,3 +26,17 @@ $ gcc main.c -o main
   ```bash
   $ gcc mian.c -L/usr/local/ffmpeg/lib -lavutil -o main
   ```
+  
+## 2022.5.8
+  
+## `LIBRARY_PATH` and `LD_LIBRARY_PATH`
+
+开发时，设置LIBRARY_PATH，以便gcc能够找到编译时需要的动态链接库。
+
+发布时，设置LD_LIBRARY_PATH，以便程序加载运行时能够自动找到需要的动态链接库。
+
+When building a project, `LIBRARY_PATH` for `gcc` finding the dynamic link library or you will get a build error.
+
+When running a program, `LD_LIBRARY_PATH` for loading the dynamic link library.
+
+Another way to solve runtime error `fatal: libgcc_s.so.1: open failed: No such file or directory` is to set `-R<path>` when you are building the project to set runtime path.

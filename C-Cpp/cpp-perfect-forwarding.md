@@ -1,5 +1,6 @@
-2022.06.23
----
+#c-cpp 
+## 2022.06.23
+
 ## Reference Collapsing Rules
 
 - `T& & -> T&`

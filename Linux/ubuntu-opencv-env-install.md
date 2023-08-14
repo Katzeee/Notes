@@ -1,4 +1,13 @@
-# 2022.4.18
+#c-cpp #code-env/vcpkg #linux/ubuntu #code-env/lib 
+## 2023.08.14
+
+RECOMMEND `apt install libopencv-dev`
+ 
+## 2022.5.8
+
+You can install opencv4 just by `vcpkg install opencv4`, and install opencv3 by `vcpkg install opencv3`.
+
+## 2022.4.18
 
 ## **[ubuntu]**
 
@@ -31,7 +40,7 @@ $ sudo cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local -D O
 # OPENCV_GENERATE_PKGCONFIG=ON为了生成pkgconfig的配置文件，便于多版本opencv切换
 ```
 
-做完这一步之后要确保在输出信息里ffmpeg为YES
+做完这一步之后要确保在输出信息里ffmpeg为YES[[ubuntu-ffmpeg-env-install]]
 
 ```
 --   Video I/O:
@@ -112,6 +121,3 @@ find_package(OpenCV 4.5.5 REQUIRED) # 使用opencv4
 # set(${OpenCV_LIBS}  "/usr/local/opencv-4.5.5/lib/")
 ```
 
-# 2022.5.8
-
-You can install opencv4 just by `vcpkg install opencv4`, and install opencv3 by `vcpkg install opencv3`.

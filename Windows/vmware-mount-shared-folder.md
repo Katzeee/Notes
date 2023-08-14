@@ -1,5 +1,5 @@
-2022.08.29
----
+#windows #code-env 
+## 2022.08.29
 
 Mounting VMware shared folders in Arch linux via command line:
 

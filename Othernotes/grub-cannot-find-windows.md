@@ -1,5 +1,6 @@
-2022.06.07
----
+#code-env/dual-system 
+## 2022.06.07
+
 After I disabled the bitlocker, my grub cannot find the Windows booter.
 
 Solution:

@@ -1,4 +1,5 @@
-# 2022.6.7
+#c-cpp 
+## 2022.6.7
 
 When I learn to write the `sylar`, I want to let config variable to inform the config manager once the value is set.
 

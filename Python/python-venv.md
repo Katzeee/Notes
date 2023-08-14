@@ -1,5 +1,6 @@
-2022.11.07
----
+#code-env #python 
+## 2022.11.07
+
 ## setup a virtual env
 
 ```bash

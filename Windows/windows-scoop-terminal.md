@@ -1,5 +1,5 @@
-2022.10.15
----
+#windows/scoop #windows/tool
+## 2022.10.15
 
 ## install scoop
 

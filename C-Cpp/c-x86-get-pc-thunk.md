@@ -1,5 +1,5 @@
-2022.03.10
----
+#c-cpp #compile  
+## 2022.03.10
 
 Reference:
 > https://stackoverflow.com/questions/50105581/how-do-i-get-rid-of-call-x86-get-pc-thunk-ax

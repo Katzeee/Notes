@@ -1,4 +1,5 @@
-# 2022.5.6
+#c-cpp #linux/ubuntu #machine-learning #code-env/vcpkg  #code-env/lib 
+## 2022.5.6
 
 I looked up many websites trying to config cuda and libtorch via vcpkg.
 

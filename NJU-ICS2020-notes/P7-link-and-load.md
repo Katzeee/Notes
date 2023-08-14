@@ -1,3 +1,5 @@
+#lecture #linux/tool 
+
 > Static link and load
 
 - Use `-fno-pic` compile and `-static` link

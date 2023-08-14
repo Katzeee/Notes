@@ -1,5 +1,5 @@
-2022.12.16
----
+#pve 
+## 2022.12.16
 
 ## Bios setting(important for pass-through)
 
@@ -202,7 +202,7 @@ $ reboot
   $ sudo route del default
   ```
 
-## Install Arch
+## Install Arch [[arch-install-and-config]]
 
 ### Download iso file
 

@@ -1,5 +1,5 @@
-2021.5.14
----
+#c-cpp #code-env/vcpkg
+## 2021.5.14
 
 - tutorial
 
@@ -9,8 +9,7 @@
 
 > https://github.com/microsoft/vcpkg
 
-2022.5.5
----
+## 2022.5.5
 
 ## using vcpkg on ubuntu
 
@@ -61,8 +60,7 @@ adding the following to the `c_cpp_properties.json`
 - **DELETE THE CMAKECHACHE AND BUILD AGAIN!!**
 - **REOPEN VSCODE AND BUILD AGAIN!!**
 
-2023.02.13
----
+## 2023.02.13
 
 ## using vcpkg on windows
 
