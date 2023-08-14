@@ -1,7 +1,7 @@
 2023.08.09
 ---
 
-Consider the situation under
+Set compile flags as follow:
 
 ```cmake
 option(ZENO_MULTIPROCESS "Enable multiprocessing for ZENO" OFF)
@@ -27,6 +27,8 @@ struct Session {
 ```
 
 ## Create Node
+
+Serialize the graph from ui model then deserialize it to the real nodes.
 
 ## Run graph
 

@@ -36,7 +36,7 @@ struct C : A, B { };
 
 int main() { 
   C c; 
-  c.f(1);    // ambiguous ? yes!
+  c.f(1);    // ambiguous? yes!
 }
 ```
 
