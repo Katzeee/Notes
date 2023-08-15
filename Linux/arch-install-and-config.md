@@ -343,7 +343,7 @@ Install the system
   
   For sync to your github account, you need to install following packages:
 
-  > [settings sync not working on arch linux #113157](https://github.com/microsoft/vscode/issues/113157)
+  > [settings sync not working on arch linux \#113157](https://github.com/microsoft/vscode/issues/113157)
   
   ```bash
   $ yay -S xdg-utils gnome-keyring libsecret

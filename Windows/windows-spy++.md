@@ -52,7 +52,7 @@ fwKeys:0000 是第三个参数了，那它之后的就是第四个参数。
 > VS2005 我在MFC单文档程序里，想获取View窗体的上下左右四个坐标值，于是使用GetClientRect(**LPRECT** lp)来获取，可是出了问题，问题如下：
 > **LPRECT** lp; GetClientRect(lp);
 > long viewLength = lp->right-lp->left; long viewHeight = lp->bottom-lp->top;
-> 首先，我看GetClientRect方法里带的参数是**LPRECT** lp指针，于是想当然的在前面定义了一个，编译的时候并没有报错，可是在运行的时候报错Run-Time Check Failure #3 - The variable 'lp' is being used without being defined.
+> 首先，我看GetClientRect方法里带的参数是**LPRECT** lp指针，于是想当然的在前面定义了一个，编译的时候并没有报错，可是在运行的时候报错Run-Time Check Failure # 3 - The variable 'lp' is being used without being defined.
 > CRect rc; GetClientRect(&rc);
 > long viewLength = rc.right-rc.left; long viewHeight = rc.bottom-rc.top;
 > 这是后来修改用的方法 定义一个CRect rc类 把rc的地址作为GetClientRect方法的参数，这样就可以正确的运行了。
