@@ -202,7 +202,7 @@ $ reboot
   $ sudo route del default
   ```
 
-## Install Arch [[arch-install-and-config]]
+## Install Arch [[arch-install-and-config.md]]
 
 ### Download iso file
 

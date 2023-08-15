@@ -3,7 +3,7 @@
 
 ### spy++消息查看
 
-![](../images/201708221503403013143025.jpg)
+![](../.images/201708221503403013143025.jpg)
 
 - 第一条：<00001> 00130042 S WM_SETCURSOR hwnd:00130042 nHittest:HTCLIENT wMouseMsg:WM_MOUSEMOVE
 

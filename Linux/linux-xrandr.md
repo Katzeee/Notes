@@ -17,4 +17,4 @@ $ xrandr --output HDMI-1 --fb 4992x1728 --mode 3840x2160 --scale 0.8x0.8 --pos 0
 
 - --pos XxY position monitors inside the frame buffer. A position of the primary monitor is 0x0, while a position of the secondary monitor is 3072, a dimension of the first monitor after scaling. If I used an original 3840, the pointer would disappear when moving between monitors because there would be a gap (see the lower screenshot). As a side note, in case of dimension 3840 is used, X at --fb XxY would need to be changed to 5760, as well.
 
-![alt](../images/xrandr-screen.png)
+![alt](../.images/xrandr-screen.png)

@@ -81,7 +81,7 @@
 
 - 辐射度量学
 
-  ![](../images/radiometry-notation.png)
+  ![](../.images/radiometry-notation.png)
 
 - 渲染方程
 
@@ -89,9 +89,9 @@
 
   入射考虑的是irradiance，出射考虑的是radians
 
-  ![](../images/brdf.png)
+  ![](../.images/brdf.png)
 
-  ![](../images/rendering-equation.png)
+  ![](../.images/rendering-equation.png)
 
 - 光线追踪模型
 
@@ -157,7 +157,7 @@
 
   拆分V项考虑阴影构成
 
-  ![](../images/rendering-equation-split-visibility.png)
+  ![](../.images/rendering-equation-split-visibility.png)
 
   - PCF(Percentage Closer Filtering)
 
@@ -165,11 +165,11 @@
 
       slope bias根据斜率决定bias大小
 
-      ![](../images/shadow-bias.png)
+      ![](../.images/shadow-bias.png)
 
     - 可见处为1，因为V表示可见程度
 
-      ![](../images/pcf-in-equation.png)
+      ![](../.images/pcf-in-equation.png)
 
 
   - PCSS(Percentage Closer Soft Shadow)
@@ -202,7 +202,7 @@
 
     用于获得每次移动的距离，以及在该点的可视角度（用于估计V）
 
-    ![](../images/dfss-angle.png)
+    ![](../.images/dfss-angle.png)
 
     k越大越硬
 
@@ -234,7 +234,7 @@
 
   避免采样，解析解。没有阴影因为没有考虑V项
 
-  ![](../images/rendering-equation-split-lighting.png)
+  ![](../.images/rendering-equation-split-lighting.png)
 
   For BRDF glossy(small support) or diffuse(smooth)
 
@@ -242,7 +242,7 @@
 
   2. Right: Precompute
 
-    ![](../images/ibl-brdf.png)
+    ![](../.images/ibl-brdf.png)
 
     转化成关于$cos \theta$和roughness的函数，texture保存
 
@@ -256,9 +256,9 @@
 
   - Diffuse
 
-    ![](../images/prt-diffuse.png)
+    ![](../.images/prt-diffuse.png)
 
-    ![](../images/prt-light-transport.png)
+    ![](../.images/prt-light-transport.png)
     
     Light transport 可以看作球谐函数基函数直接做光照
 
@@ -266,7 +266,7 @@
 
     Light transport 作为一个与观察方向o相关的一个函数，即一个Matrix
 
-    ![](../images/prt-glossy.png)
+    ![](../.images/prt-glossy.png)
 
   - Interreflections and Caustics
 
@@ -342,7 +342,7 @@
 
   假设来自各个方向的间接光是相同的，但考虑每一点的V是不同的，diffuse
 
-  ![](../images/ssao-rendering-equation.png)
+  ![](../.images/ssao-rendering-equation.png)
 
   - kA的计算方法
 
@@ -368,7 +368,7 @@
 
 - SSDO(Directional Occlusion)
 
-  ![](../images/ssao-vs-ssdo.png)
+  ![](../.images/ssao-vs-ssdo.png)
 
   AO考虑被挡住了就没法被外部照到了，由远处给我打光
 
@@ -460,13 +460,13 @@
       
       Light is equally reflected in each output direction
 
-      ![](../images/lambert-brdf.png)
+      ![](../.images/lambert-brdf.png)
 
     - 基于物理型
 
   - Specular(Microfacet Cook-Torrance BRDF)
 
-    ![](../images/specular-BRDF.png)
+    ![](../.images/specular-BRDF.png)
 
     分母中与v的夹角是因为要计算radians，4是因为计算过程中有$\mathrm{d}\omega_i$和$\mathrm{d}\omega_o$的比值，通过半程向量的对应关系计算之后有一个4，G项携带了与l的夹角
 
@@ -480,11 +480,11 @@
 
       - Fresnel Equation
 
-        ![](../images/fresnel-equation.png)
+        ![](../.images/fresnel-equation.png)
 
       - Schlick 
 
-        ![](../images/schlick.png)
+        ![](../.images/schlick.png)
 
     - D
 
@@ -494,11 +494,11 @@
 
       - 投影到宏观平面积分结果为1（若观察方向为法线方向，则其积分可以归一化。即v = n时）
 
-        ![](../images/ndf-project-to-nm.png)
+        ![](../.images/ndf-project-to-nm.png)
 
       - 投影到垂直于观察方向的平面进行积分等于该宏观平面的大小（任何方向上微观表面投影面积始终与宏观表面投影面积相同）
 
-        ![](../images/ndf-project-to-vm.png)
+        ![](../.images/ndf-project-to-vm.png)
 
       - 常用分布函数
 
@@ -508,11 +508,11 @@
 
         - Beckmann分布(Cook-Torrance)
 
-          ![](../images/beckmann.png)
+          ![](../.images/beckmann.png)
 
         - GGX（Trowbridge-Reitz）分布
 
-          ![](../images/ggx.png)
+          ![](../.images/ggx.png)
 
         - Generalized-Trowbridge-Reitz（GTR）分布
 
@@ -532,7 +532,7 @@
 
         - Smith
 
-          ![](../images/g2-smith.png)
+          ![](../.images/g2-smith.png)
 
           $\Lambda$表示微表面斜率上的积分，有形状不变性的D能推出解析式
 
@@ -567,7 +567,7 @@
 
   1. 第一个pass渲染G-buffer
 
-  ![](../images/g-buffer.jpg)
+  ![](../.images/g-buffer.jpg)
 
   2. 第二个pass计算光照
 

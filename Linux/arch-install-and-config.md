@@ -38,7 +38,7 @@ $ reg add "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\TimeZoneInformati
 ## Start installation
 
 First, boot your computer from the usb, select the first option
-![alt](../images/boot-select.png)
+![alt](../.images/boot-select.png)
 
 Connect to network and synchronize time.
 
