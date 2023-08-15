@@ -1,4 +1,11 @@
 #git 
+## 2023.08.15
+
+```bash
+$ git fetch
+$ git checkout games104/homework01-build
+```
+
 ## 2023.07.24
 
 ## checkout to remote branch and track it locally(i.e. create a local branch)

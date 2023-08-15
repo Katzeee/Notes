@@ -69,10 +69,16 @@ Then conflicts are different based on the operations in local and remote. It can
 - `both modified` (lg `UU`)
 
   edit the conflict files to solve
+
+  `HEAD` indicates the remote branch's change while another means the local change.
   
 ## Push conflit after local rebase
 
-```bash
-$ git push -f # cover all information of the remote, use local history instead
-$ git push --force-with-lease # Only if no conflit, cover the remote repo history
-```
+- Force push
+
+  ```bash
+  $ git push -f # cover all information of the remote, use local history instead
+  $ git push --force-with-lease # Only if no conflit, cover the remote repo history
+  ```
+
+- Push to another branch
