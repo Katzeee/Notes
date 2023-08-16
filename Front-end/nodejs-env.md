@@ -1,4 +1,4 @@
-#code-env #linux #front-end/nodejs
+#code-env #linux #nodejs
 ## 2023.08.16
 
 ## What is node, npm?
