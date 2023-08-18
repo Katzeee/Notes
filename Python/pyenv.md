@@ -51,4 +51,9 @@ $ pyenv local 2.7.18  # Set the Python version for the current directory
 $ python --version
 ```
 
+!!! Hint Mirror source
+
+    Use this command to download from mirror.  
+    `$ v=3.9.6; wget https://npm.taobao.org/mirrors/python/$v/Python-$v.tar.xz -P ~/.pyenv/cache/; pyenv install $v`
+
 With `pyenv`, you can easily switch between different Python versions and manage them for different projects or system-wide.
