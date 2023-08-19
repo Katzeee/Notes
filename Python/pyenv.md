@@ -5,24 +5,26 @@
 
 To manage multiple versions of Python on Ubuntu, you can use `pyenv`. Here's how you can install and use it:
 
-**1. Install dependencies:**
+**1. Installation:**
 
 ```bash
-$ sudo apt update
-$ sudo apt install -y build-essential libssl-dev zlib1g-dev libbz2-dev \
-libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev \
-xz-utils tk-dev libffi-dev liblzma-dev python-openssl git
-
+$ curl https://pyenv.run | bash
 ```
 
-**2. Clone and install pyenv:**
+Add to `~/.bashrc` or other `~/.profile`
 
 ```bash
-$ git clone https://github.com/pyenv/pyenv.git ~/.local/.pyenv
-$ echo 'export PYENV_ROOT="$HOME/.local/.pyenv"' >> ~/.bashrc
-$ echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-$ echo 'eval "$(pyenv init --path)"' >> ~/.bashrc
-$ source ~/.bashrc
+$ export PYENV_ROOT="$HOME/.pyenv"
+$ command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+$ eval "$(pyenv init -)"
+```
+
+**2. Set up build env:**
+
+```bash
+$ sudo apt update; sudo apt install build-essential libssl-dev zlib1g-dev \
+libbz2-dev libreadline-dev libsqlite3-dev curl \
+libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
 ```
 
 **3. Verify installation:**
@@ -38,6 +40,11 @@ $ pyenv install 3.9.6
 $ pyenv install 2.7.18
 ```
 
+!!! Hint Mirror source
+
+    Use this command to download from mirror.  
+    `$ v=3.9.6; wget https://npm.taobao.org/mirrors/python/$v/Python-$v.tar.xz -P ~/.pyenv/cache/; pyenv install $v`
+
 **5. Set global or local Python version:**
 
 ```bash
@@ -50,10 +57,5 @@ $ pyenv local 2.7.18  # Set the Python version for the current directory
 ```bash
 $ python --version
 ```
-
-!!! Hint Mirror source
-
-    Use this command to download from mirror.  
-    `$ v=3.9.6; wget https://npm.taobao.org/mirrors/python/$v/Python-$v.tar.xz -P ~/.pyenv/cache/; pyenv install $v`
 
 With `pyenv`, you can easily switch between different Python versions and manage them for different projects or system-wide.
