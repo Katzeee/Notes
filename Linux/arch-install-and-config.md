@@ -201,6 +201,14 @@ Install the system
   $ echo LANG=en_US.UTF-8 > /etc/locale.conf # set system language to English
   $ ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime # change timezone
   ```
+
+  !!! Note Difference of Debian-based systems
+
+      ```bash
+      $ echo LANG=en_US.UTF-8 > /etc/default/locale # debian
+      $ echo LANG=en_US.UTF-8 > /etc/locale.conf # others
+      ```
+
 - Set up network
   ```bash
   $ pacman -S networkmanager
