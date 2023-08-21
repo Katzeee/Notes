@@ -1,4 +1,4 @@
-#c-cpp/c++11 #c-cpp/c++14
+#c-cpp/cpp11 #c-cpp/cpp14
 ## 2023.08.21
 
 ## No-Throw Guarantee: `noexcept` 
