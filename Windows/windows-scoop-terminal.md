@@ -28,3 +28,5 @@ Put these into
 
 $ oh-my-posh init pwsh --config "$(scoop prefix oh-my-posh)\themes\amro.omp.json" | Invoke-Expression
 
+!!! Remember to choose the font in terminal settings after installing a nerd font.
+
