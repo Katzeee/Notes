@@ -381,3 +381,11 @@ Install the system
   ...
   exce dwm
   ```
+
+- RDP client
+
+  [Remmina]()
+
+  ```bash
+  $ yay -S remmina
+  ```
