@@ -1,4 +1,4 @@
-#c-cpp #cmake #code-env/vscode #code-env 
+#c-cpp/cmake #code-env/vscode #code-env 
 ## 2022.5.4
 
 ## 下载msys2
