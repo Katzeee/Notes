@@ -79,7 +79,7 @@ $ git push -u origin <本地分支名>
 
 
 
-## Use git stash to stash your current changes
+### Use git stash to stash your current changes
 
 ```bash
 $ git stash # stash only stash files which are tracked, so use add first
@@ -89,3 +89,13 @@ $ git stash apply [--index]
 $ git stash drop
 ```
 
+## 2023.09.09
+
+### git clone with proxy
+
+> https://gist.github.com/evantoli/f8c23a37eb3558ab8765
+
+```bash
+$ git config --global http.proxy http://proxyUsername:proxyPassword@proxy.server.com:port
+$ git config --global --unset http.proxy
+```
