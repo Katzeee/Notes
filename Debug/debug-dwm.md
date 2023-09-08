@@ -1,4 +1,4 @@
-#gdb #c-cpp #window-manager/dwm 
+#c-cpp/debug #window-manager/dwm 
 ## 2022.5.23
 
 It is hard to debug dwm, because it is a window manager which is the fundamental of the GUI programs.

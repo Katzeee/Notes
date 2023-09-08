@@ -1,4 +1,4 @@
-#c-cpp #gdb 
+#c-cpp/debug
 ## 2022.09.07
 
 ## Memory leak

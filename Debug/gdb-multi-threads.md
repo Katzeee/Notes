@@ -1,4 +1,4 @@
-#c-cpp #gdb 
+#c-cpp/debug
 ## 2023.08.09
 
 > https://ftp.gnu.org/old-gnu/Manuals/gdb-5.1.1/html_node/gdb_39.html
