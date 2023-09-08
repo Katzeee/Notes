@@ -389,3 +389,19 @@ Install the system
   ```bash
   $ yay -S remmina
   ```
+
+- Gif recording
+
+  **arch**
+
+  ```bash
+  $ yay -S peek
+  ```
+
+  **Ubuntu**
+
+  ```bash
+  $ sudo add-apt-repository ppa:peek-developers/stable
+  $ sudo apt-get update
+  $ sudo apt-get install peek
+  ```
