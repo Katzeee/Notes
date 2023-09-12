@@ -50,7 +50,7 @@ void RoBoCat::Write(OutputMemoryStream& inStream) const {
 
 ## Endianness
 
-One method to realize byte swap function.
+One method to implement byte swap function.
 
 ```cpp
 inline uint16_t ByteSwap2(uint16_t inData) {
