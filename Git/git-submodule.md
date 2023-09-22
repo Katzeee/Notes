@@ -12,6 +12,11 @@ $ cd <submodule-worspace>
 $ git submodule add <url-to-submodule>
 ```
 
+**Pull all submodule**
+```bash
+$ git submodule update --init --recursive
+```
+
 **Remove a submodule**
 
 For newer version:
