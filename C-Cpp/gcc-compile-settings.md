@@ -20,7 +20,7 @@ $ gcc main.c -o main
 
 - `l`和`L`
   
-  `-l`指定链接的库的名字，去掉lib和.so，比如动态链接库叫libavutil.so，写`-l`参数时写成-lavutil，不加-l参数但是用到了该库中的函数会导致链接失败
+  `-l`指定链接的库的名字，去掉lib和.so，比如动态链接库叫libavutil.so，写`-l`参数时写成`-lavutil` or `-l:libavutil.so`，不加-l参数但是用到了该库中的函数会导致链接失败
   
   `-L`指定动态链接库去哪里找，默认从/usr/lib和/usr/local/lib找，只加`-l`，不加`-L`没法使用不在前两个目录下的库，这种情况下即使你加了-`l`也会链接失败
   ```bash
@@ -39,4 +39,8 @@ When building a project, `LIBRARY_PATH` for `gcc` finding the dynamic link libra
 
 When running a program, `LD_LIBRARY_PATH` for loading the dynamic link library.
 
-Another way to solve runtime error `fatal: libgcc_s.so.1: open failed: No such file or directory` is to set `-R<path>` when you are building the project to set runtime path.
+Another way to solve runtime error `fatal: libgcc_s.so.1: open failed: No such file or directory` is to use `-Wl,-rpath,${lib/folder}` when you are building the project to set runtime path.
+
+```bash
+$ g++ -std=c++20 -g -Wall -Wextra main.cpp -Iinclude -Lbin/Linux -l:libclang.so.12 -Wl,-rpath,bin/Linux
+```
