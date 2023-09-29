@@ -270,6 +270,12 @@ Network: virtIO
 
 Change boot sequential, then install windows as usual, **need install virtio driver from iso file.**
 
+`qemu-ga` is also installed from the cd. 
+
+### Change resolution of screen
+
+Change Hardware->Display to SPICE, then install qxl driver in windows
+
 ### setup Remote desktop
 
 - static ip
