@@ -274,7 +274,7 @@ Change boot sequential, then install windows as usual, **need install virtio dri
 
 ### Change resolution of screen
 
-Change Hardware->Display to SPICE, then install qxl driver in windows
+Change `Hardware->Display` to `SPICE`, then install qxl driver in windows(in the cd). However, this may cause the cursor position of VM not matching with the real position, add `tablet: yes` in host `/etc/pve/qemu-server/<vm-id>.conf` can solve.
 
 ### setup Remote desktop
 
