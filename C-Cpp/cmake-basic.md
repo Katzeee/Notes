@@ -431,3 +431,55 @@ set(MYVAR ON PARENT_SCOPE)
 ```
 
 
+2023.03.22
+---
+
+### `add_compile_options`
+
+### `add_link_options`
+
+### `find_program`
+
+Find an executable
+
+```cmake
+# find `clang-format` or `clang-format-12` store in varible ${CLANG_FORMAT_BIN}
+find_program(CLANG_FORMAT_BIN
+        NAMES clang-format clang-format-12
+        HINTS ${BUSTUB_CLANG_SEARCH_PATH})
+```
+
+### `include_directories`
+
+Specify the include directories
+
+### `string`
+
+Provides some useful string commands
+
+```cmake
+string(CONCAT ...)
+string(REPLACE ...)
+```
+
+### `add_custom_target`
+
+Add targets for `make ...` or `ninja ...`
+
+### `add_dependencies`
+
+Specify the order of target being compiled 
+
+```cmake
+# Must build gtest and bustub before checking 
+add_dependencies(check-clang-tidy gtest bustub)    # needs gtest headers, compile_commands.json
+```
+
+### `include`
+
+Use to include a module, like `GoogleTest`, `FetchContent`([`FetchContent` CMake module](https://cmake.org/cmake/help/latest/module/FetchContent.html).)
+
+```cmake
+include(FetchContent)
+include(GoogleTest)
+```
