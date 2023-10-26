@@ -359,7 +359,7 @@ Let everything default except 16G disk and 8192 mem, choose iso then start VM
 
 ### sata controller pass-through
 
-choose `400 Series Chipset SATA Controller` (without All Functions)
+choose `400 Series Chipset SATA Controller` **(without All Functions)**
 
 ### Change Web port(For accessing from internet)
 
@@ -378,6 +378,18 @@ Repo: https://github.com/truecharts/catalog
 Trains: stable dependency
 
 To avoid TLS fail, use `git config --global http.sslVerify false`
+
+### Import to pve host
+
+- TrueNAS:
+
+  Add dataset to NFS share, allow network `192.168.2.0/24` or host ip access, also remember to set acl to 777 or you will get a permission denied error.
+
+- PVE:
+
+  Datacenter->Storage->New->NFS
+
+  ID: name, Server: truenas ip, Export: path to dataset on truenas(just select)
 
 ## Install TrueNAS Core(Not Recommended)
 
