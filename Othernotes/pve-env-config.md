@@ -202,6 +202,49 @@ $ reboot
   $ sudo route del default
   ```
 
+### Setup virtual LAN via zerotier
+
+> https://opclash.com/article/198.html  
+> https://www.right.com.cn/forum/thread-476177-1-1.html
+
+- Create a net on zerotier
+
+  Just login [zerotier](https://my.zerotier.com/), click `Create A Network` button. Then you will find a Network ID.
+
+- Add openwrt into LAN
+
+  ![Alt text](../.images/openwrt-join-zerotier.png)
+
+  Type in the network id you get last step then click `save&apply`. Allow NAT.
+
+- Setup router on zerotier
+
+  You will first find the openwrt IP at the members section, check the `Auth` box, then you will get the IP.
+
+  Add a new route under `Advanced->Managed Routes` section,  `Destination` should be the openwrt LAN IP in home, `Via` should be the IP got from zerotier.
+  
+- Setup network interface in openwrt
+
+  1. Create a new interface
+
+    ![Alt text](../.images/openwrt-create-zerotier-interface.png)
+
+  2. Setup firewall
+
+    ![Alt text](../.images/openwrt-zerotier-firewall1.png)
+
+    ![Alt text](../.images/openwrt-zerotier-firewall2.png)
+
+  3. Firewall custom rules
+
+    Under `Network->Firewall->Custom rule`, add following commands, remember to substitute `ztqu3pfdod` to your interface name.
+
+    ```
+    iptables -I FORWARD -i ztqu3pfdod -j ACCEPT
+    iptables -I FORWARD -o ztqu3pfdod -j ACCEPT
+    iptables -t nat -I POSTROUTING -o ztqu3pfdod -j MASQUERADE
+    ```
+
 ## Install Arch [[arch-install-and-config.md]]
 
 ### Download iso file
