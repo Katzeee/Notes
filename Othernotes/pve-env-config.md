@@ -544,6 +544,8 @@ Then reboot, you will find your smb folder
   $ curl -sSL https://get.daocloud.io/docker | sh
   ```
 
+  Or use the script in my dot-files.
+
 - Portainer
 
   ```bash
@@ -562,6 +564,15 @@ local->Stack->Add stack
 - Docker cmd line
 
 local->Container->Add container 
+
+### Resize the disk of LXC
+
+```bash
+$ pct df <vmid>
+$ pct resize <vmid> rootfs 40G
+```
+
+!!! Note You can only expand it, can't shrink it.
 
 ## Install homeassitant
 
