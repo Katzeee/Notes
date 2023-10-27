@@ -383,7 +383,9 @@ To avoid TLS fail, use `git config --global http.sslVerify false`
 
 - TrueNAS:
 
-  Add dataset to NFS share, allow network `192.168.2.0/24` or host ip access, also remember to set acl to 777 or you will get a permission denied error.
+  Add dataset to NFS share, allow network `192.168.2.0/24` or host ip access. 
+
+  !!! Warning Remember to set acl to 777 or you will get a permission denied error.
 
 - PVE:
 
@@ -515,7 +517,7 @@ deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted univers
 Or just use sftp which need to add a new user to connect to this LXC via ssh.
 
 ```bash
-$ apt install cifs-utils
+$ apt install cifs-utils nfs-common
 $ mkdir /mnt/<folder-name>
 $ vi ~/.smbcredentials # password
 ```
@@ -531,6 +533,7 @@ Then `vi /etc/fstab`
 
 ```bash
 //$smb_server/share /mnt/nas_share cifs credentials=/root/.smbcredentials,iocharset=utf8 0 0
+$nfs_server:$<full-path-to-folder>(/mnt/master/pve/database) /mnt/database nfs defaults 0 0
 ```
 
 Then reboot, you will find your smb folder
@@ -624,3 +627,14 @@ $ bash -c "$(wget -qLO - https://github.com/tteck/Proxmox/raw/main/vm/haos-vm-v4
 - integrate to HomeKit
 
   add `HomeKit` integration, scan the QR code at notification panel to finish setting
+
+### Set up Photoprism
+
+!!! Warning If use nfs to mount database, you must change the `Maproot user` in nfs server, or the container will not get the root privilage causing database initialize failed.
+
+Just follow one of the following step.
+
+> https://docs.photoprism.app/getting-started/docker-compose/  
+> https://docs.photoprism.app/getting-started/portainer/
+
+!!! Note Maybe you should mount `/photoprism/storage` to `/mnt/...`, seems it's very large.
