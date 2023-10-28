@@ -520,6 +520,7 @@ Or just use sftp which need to add a new user to connect to this LXC via ssh.
 $ apt install cifs-utils nfs-common
 $ mkdir /mnt/<folder-name>
 $ vi ~/.smbcredentials # password
+$ chmod .smbcredentials 600
 ```
 
 type in things like 
@@ -532,11 +533,13 @@ password=<password>
 Then `vi /etc/fstab`
 
 ```bash
-//$smb_server/share /mnt/nas_share cifs credentials=/root/.smbcredentials,iocharset=utf8 0 0
+//$smb_server/$<share> /mnt/<folder-name> cifs credentials=~/.smbcredentials,iocharset=utf8 0 0
 $nfs_server:$<full-path-to-folder>(/mnt/master/pve/database) /mnt/database nfs defaults 0 0
 ```
 
-Then reboot, you will find your smb folder
+Substitute `$<share>` with the smb folder name, not the path to the dataset.
+
+Then `sudo mount -a`, you will find your smb folder
 
 ### Install docker
 
