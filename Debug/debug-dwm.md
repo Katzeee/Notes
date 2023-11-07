@@ -11,6 +11,8 @@ So we can do like this:
 $ Xephyr -ac -screen 1920x1080 -br -reset -terminate 2> /dev/null :1 &
 ```
 
+!!! Note `Xephyr :5 & sleep 1 ; DISPLAY=:5 awesome` debug awesome
+
 Then we can launch a terminal by:
 
 ```bash
