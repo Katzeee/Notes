@@ -1,7 +1,9 @@
 #code-env #python
 ## 2023.08.18
 
-## Install pyenv on Ubuntu
+!!! Warning Always use virtual env(`pyenv virtualenv`), `pyenv` is only use to control the python version
+
+## Install `pyenv` on Ubuntu
 
 To manage multiple versions of Python on Ubuntu, you can use `pyenv`. Here's how you can install and use it:
 
@@ -64,19 +66,30 @@ With `pyenv`, you can easily switch between different Python versions and manage
 
 ## Use with virtual envs
 
-!!! Note 
-
 **1. Create a virtual env**
 
 ```bash
-$ pyenv virtualenv [3.6.2] my_env # version can be ignored
+$ pyenv virtualenv [3.6.2] my_env # version 3.6.2 can be ignored, then use current version to create venv
 ```
 
-**2. (De)Activate virtual env**
+**1.5. Init pyenv in rc file**
+
+Add following to `.bashrc` like file to init `pyenv`: 
+
+```bash
+export PYENV_ROOT="$HOME/.pyenv"
+if command -v pyenv 1>/dev/null 2>&1; then
+  eval "$(pyenv init -)"
+  eval "$(pyenv virtualenv-init -)"
+fi
+```
+
+**2. (De)Activate/Uninstall virtual env**
 
 ```bash
 $ pyenv activate my_env
 $ pyenv deactivate my_env
+$ pyenv uninstall my_env
 ```
 
 **3. Check versions**
