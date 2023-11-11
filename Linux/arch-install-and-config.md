@@ -116,6 +116,7 @@ Install the system
   
   Try
   ```bash
+  $ pacman-key --init
   $ pacman -Sy archlinux-keyring
   ```
   
