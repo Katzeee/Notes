@@ -251,6 +251,14 @@ Install the system
 
   Use `brightnessctl` or directly run `sudo vim /sys/class/backlight/intel_backlight/brightness` to edit the brightness of the screen.
 
+  Use `xset` to set the screen timeout, like for `awesomewm`: 
+
+  ```bash
+  xset s off # disable screen saver 
+  xset -dpms # disable Display Power Management Signaling (DPMS) which controls display sleep
+  xset s noblank # disable screen cleanup (sometimes xserver will auto clean the screen)
+  ```
+
 - Dwm
   
   dependency-lib: `yay -S libxft libxinerama xclip`(xclip is using for patch pipe)
