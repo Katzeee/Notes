@@ -67,6 +67,12 @@ NPM(Node Package Manager) is the default package manager for Node.js.
   $ npm list --global --depth={{0}}
   ```
 
+- Set mirror
+
+  ```bash
+  $ npm config set registry https://registry.npmmirror.com
+  ```
+
 ## Node version control
 
 Use nvm(Node Version Manager) to control the version of node.
