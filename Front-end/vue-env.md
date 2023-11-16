@@ -9,3 +9,16 @@
 ```bash
 $ npm init vue@latest
 ```
+
+## Install extra packages
+
+[dependency]
+
+- @vueuse/core: utilities, like request  
+- element-plus: widgets  
+- pinia: global store  
+- vue-i18n: localization  
+- vue-router: router  
+
+[dev-dependency]
+- sass: scss processing
