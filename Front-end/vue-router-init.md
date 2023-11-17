@@ -37,3 +37,15 @@ export const router = () => {
 ```
 
 !!! Error You must declare the `routerInner` outside the `router` function.
+
+## Route doesn't work
+
+```ts
+  {
+    path: '/diary',
+    component: AboutView,
+    children: [{ path: 'list', component: DiaryListView }]
+  },
+```
+
+If you define your route like this, therr must be a `<router-view>` in `AboutView` or you won't get `DiaryListView` rendered.
