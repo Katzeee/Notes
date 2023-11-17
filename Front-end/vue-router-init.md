@@ -49,3 +49,16 @@ export const router = () => {
 ```
 
 If you define your route like this, therr must be a `<router-view>` in `AboutView` or you won't get `DiaryListView` rendered.
+
+## Use `route` in codes
+
+```ts
+import { useRoute, useRouter } from "vue-router";
+const route = useRoute()
+const router = useRouter()
+
+route.params...
+router.push(...)
+```
+
+A route describes where you currently are (the state of the current route), while a router provides methods to change the location (to navigate between routes).
