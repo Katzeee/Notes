@@ -51,3 +51,24 @@ export default defineConfig({
   ...
 })
 ```
+
+## `v-overlay`
+
+If you specified `activator`, that `activator` will be automatically implented `@click`, so you are not supposed to set it again.
+
+If you want to use `location` and `origin` attributes, you should set `location-strategy` to `connected`.
+
+```html
+<v-overlay
+    scroll-strategy="close"
+    location="bottom start"
+    origin="top start"
+    activator="parent"
+    transition="scale-transition"
+    location-strategy="connected"
+    scrim="transparent"
+    :max-width="rightWidth"
+  >
+      <slot name="overlay"></slot>
+</v-overlay>
+```
