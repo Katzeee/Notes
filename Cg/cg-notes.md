@@ -87,11 +87,24 @@
 
   Describes how much light is reflected into each outgoing direction
 
-  入射考虑的是irradiance，出射考虑的是radians
+  入射考虑的是irradiance，出射考虑的是radians 
+
+  入射光通常用辐射率来描述。这是因为我们通常关心的是单位面积上接收到多少光能量，并且假设这些光是均匀地分布在半球形的方向上的。对于出射光，我们则使用辐射亮度，因为我们需要知道从表面某一点沿着特定观察方向的光线强度有多大。
 
   ![](../.images/brdf.png)
 
+  辐射亮度（Radiance）和辐射率（Irradiance）之间的转换依赖于表面的几何特性以及观察或入射光线的方向。辐射率是从所有可能方向上入射光的辐射亮度的累积。
+
+  以下是从辐射亮度到辐射率的基本公式：
+  $ E = \int_{\Omega} L(\omega) \cos(\theta) d\omega $
+
   ![](../.images/rendering-equation.png)
+
+  $L_o(p, \omega_o) = L_e(p, \omega_o) + \int_{\Omega} f_r(p, \omega_i, \omega_o) L_i(p, \omega_i) (\omega_i \cdot n) d\omega_i$  
+  $(ω_i · n)$：入射方向和表面法线 $n$ 的点积，表示入射光线与表面的夹角余弦，是几何项的一部分，用于调整光线与表面交互的影响。
+
+  实际上就是把brdf的分母消掉了，计算的是p点往半球方向发射的radians总和，但是在模拟时候brdf是由真实物理模拟得到的固定函数，$L_i$是由半球面上其他光源（或间接光源给出的）
+
 
 - 光线追踪模型
 
@@ -458,9 +471,17 @@
 
     - Lambert（传统型）
       
-      Light is equally reflected in each output direction
+      Supoose light is equally reflected in each output direction
 
       ![](../.images/lambert-brdf.png)
+
+      出射光均匀分布在半球面上，所以单方向出射等于总出射除以半球积分，而总出射由能量守恒等于反射率乘p点辐照度
+
+      $$ L_o = \frac{P_{reflected}}{\pi} = \frac{\rho E}{\pi} $$
+
+      而根据BRDF的定义
+
+      $$ L_o = f_r(\omega_i, \omega_o) E $$
 
     - 基于物理型
 
