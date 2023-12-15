@@ -261,6 +261,8 @@
 
   - 分成Diffuse和Specular分别考虑
 
+  !!! 对于Diffuse可以有 $$L_o(p,\omega_o)=k_d\frac{c}{\pi}\int_{\Omega}{L_i(p,\omega_i)n\cdot \omega_i \textrm{d}\omega_i}$$
+
     diffuse 项中kd与视线角度有关，通过近似将其提出，得到预计算部分仅与法线，光线方向相关，预计算cubemap(irradians map)
 
 - PRT(Precomputed Radiance Transfer)(Shading and **Shadowing**)
@@ -483,6 +485,8 @@
 
       $$ L_o = f_r(\omega_i, \omega_o) E $$
 
+      !!! $\rho$ 即为 albedo
+
     - 基于物理型
 
   - Specular(Microfacet Cook-Torrance BRDF)
@@ -507,9 +511,23 @@
 
         ![](../.images/schlick.png)
 
+        Fresnel项F可以直接用于Ks，而1-Ks即为Kd
+
+        clamp避免产生黑点
+
+        ```glsl
+        vec3 fresnelSchlick(float cosTheta, vec3 F0) { 
+          return F0 + (1 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5); 
+        }
+        ```
+        ![without clamp](../.images/pbr-f-without-clamp.png)
+
     - D
 
-      给定以h为中心的无穷小立体角$\mathrm{d} \omega$和无穷小宏观平面$\mathrm{dA}$，$D(m)\mathrm{d}\omega\mathrm{dA}$是相应微表面部分总面积，即描述了有多面基会往该方向反射。
+      !!! D项需要计算出在特定的半程向量H下，有多少比例的微观凸起的法线与H对齐，因为只有当微观凸起的法线与H对齐时，光线才会被反射到观察者的眼中。因此，D项是一个概率密度函数，表示在给定的H方向上，法线分布的密集程度。
+
+      给定以h为中心的无穷小立体角$\mathrm{d} \omega$和无穷小宏观平面$\mathrm{dA}$，$D(m)\mathrm{d}\omega\mathrm{dA}$是相应微表面部分总面积，即描述了有多面少面积会往该方向反射。
+
 
       - 在法线方向积分D即面积（微表面的总面积始终不小于宏观表面总面积）
 
@@ -523,7 +541,7 @@
 
       - 常用分布函数
 
-        一般考虑半程向量与法线的夹角
+        一般考虑半程向量(此处为m)与法线的夹角
 
         - Blinn-Phong分布
 
@@ -535,6 +553,19 @@
 
           ![](../.images/ggx.png)
 
+          !!! $\alpha = roughness^2$
+
+          ```glsl
+          float DistributionGGX(vec3 N, vec3 H, float roughness) {
+            float a = roughness * roughness;
+            float a_square = a * a;
+            float nh = dot(N, H);
+            float denom = (nh * nh) * (a_square - 1) + 1;
+            denom = PI * (denom * denom);
+            return a_square / denom;
+          }
+          ```
+
         - Generalized-Trowbridge-Reitz（GTR）分布
 
       - 形状不变性（shape-invariant）是一个合格的法线分布函数需要具备的重要性质。具有形状不变性（shape-invariant）的法线分布函数，可以用于推导该函数的归一化的各向异性版本，并且可以很方便地推导出对应的遮蔽阴影项G。(Beckmann GGX)
@@ -545,6 +576,9 @@
       
       Shadow-mask，G2(微平面BRDF一般就是G2)还考虑光照的可见性。
 
+      1.  **遮蔽（Shadowing）**：描述了微表面凸起如何阻挡从光源传来的光。当光源位于表面平面之下时，这种遮蔽现象更为显著。(NdotL)
+      2.  **掩蔽（Masking）**：描述了微表面凸起如何阻挡从观察者方向出发的光线。当观察者的视线位于表面平面之下时，掩蔽现象更为显著。(NdotV)
+
       几何函数的解析形式的确认依赖于法线分布函数以及几何函数的模型（即微表面轮廓）。
 
       - 常用G函数
@@ -553,9 +587,19 @@
 
         - Smith
 
+          GeometrySmith通常通过两个独立的函数来估计遮蔽和掩蔽效应：一个是与光线方向相关的G1(L)，另一个是与视线方向相关的G1(V)。最终的几何项G可以通过结合这两个单独的函数来得到，往往是以乘法形式：
+          
+           $$ G(N, V, L, \alpha) = G1(N, V, \alpha) \cdot G1(N, L, \alpha) $$
+
           ![](../.images/g2-smith.png)
 
-          $\Lambda$表示微表面斜率上的积分，有形状不变性的D能推出解析式
+          $\Lambda$ 表示微表面斜率上的积分，有形状不变性的D能推出解析式
+
+          可计算：
+          
+          $$ G1_{SchlickGGX}(n,v,k)=\frac{n \cdot v}{(n \cdot v)(1 - k) + k} \\ $$
+          $$ k_{direct}=\frac{(\alpha + 1) ^ 2}{8} \\ $$
+          $$ k_{direct}=\frac{\alpha ^ 2}{2} $$
 
       - 分离的遮蔽阴影函数
 
@@ -587,6 +631,11 @@
 - 流程
 
   1. 第一个pass渲染G-buffer
+
+  Postion xyza,
+  Normal xyza,
+  Albedo xyz
+  Specular a
 
   ![](../.images/g-buffer.jpg)
 
