@@ -251,19 +251,133 @@
 
   For BRDF glossy(small support) or diffuse(smooth)
 
-  1. Left: 对光源的平均即是对环境光贴图做模糊后直接取样
+  !!! Hint 我们遍历立方体贴图上所有可能的入射光方向，采用每个方向local_pos为基础(作为法线)，存储在贴图内，采样时以反射向量R作为方向采样。
+
+  1. Left: 对光源的平均即是对环境光贴图做模糊后直接取样，注意这里不是简单的对Cubemap做Mipmap，因为积分域是和粗糙度相关的，所以每一层Mipmap应该保存不同粗糙度程度下的Prefilter map
+
+    通过ImportanceSampleGGX只可以获得以local_pos为中心的H，也就是半程向量，为了符合物理性质，需要根据H计算出L光照方向，在L方向上进行采样。虽然最终算出来的L和H都是一个lobe，**但是拿H去算是没有物理意义的**
+
+    ```glsl
+    #version 450 core
+    
+    in vec3 uv;
+    uniform samplerCube tex;
+    uniform float roughness;
+    const float PI = 3.14159265359;
+    out vec4 FragColor;
+    
+    float RadicalInverse_VdC(uint bits) {
+      bits = (bits << 16u) | (bits >> 16u);
+      bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+      bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+      bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+      bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+      return float(bits) * 2.3283064365386963e-10;  // / 0x100000000
+    }
+    // 低差异序列
+    vec2 Hammersley(uint i, uint N) { return vec2(float(i) / float(N), RadicalInverse_VdC(i)); }
+    
+    // GGX重要性采样
+    vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness) {
+      float a = roughness * roughness;
+    
+      float phi = 2.0 * PI * Xi.x;
+      float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a * a - 1.0) * Xi.y));
+      float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+    
+      // from spherical coordinates to cartesian coordinates
+      vec3 H;
+      H.x = cos(phi) * sinTheta;
+      H.y = sin(phi) * sinTheta;
+      H.z = cosTheta;
+    
+      // from tangent-space vector to world-space sample vector
+      vec3 up = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+      vec3 tangent = normalize(cross(up, N));
+      vec3 bitangent = cross(N, tangent);
+    
+      vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
+      return normalize(sampleVec);
+    }
+    
+    void main() {
+      vec3 N = normalize(uv);
+      vec3 V = N;
+      const uint sample_count = 1024;
+      vec3 color = vec3(0.0);
+      float weight = 0;
+      for (uint i = 0; i < sample_count; i++) {
+        vec2 Xi = Hammersley(i, sample_count);
+        vec3 H = ImportanceSampleGGX(Xi, N, roughness);
+        vec3 L = normalize(dot(V, H) * 2 * H - V);
+        float nl = max(dot(N, L), 0.0);
+        // semi sphere, doesn't count light from bottom
+        if (nl > 0) {
+          color += texture(tex, L).rgb * nl;
+          weight += nl;
+        }
+      }
+      color /= weight;
+      FragColor = vec4(color, 1.0);
+    }
+    ```
+
+    ![Alt text](../.images/ibl-specular-prefilter-corner.png)
+
+    因为生成的prefilter map精度不够，因此会有接缝现象，而OpenGL默认不会在cubemap采样跨面时进行插值。可以使用`glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);`开启。
 
   2. Right: Precompute
 
     ![](../.images/ibl-brdf.png)
 
-    转化成关于$cos \theta$和roughness的函数，texture保存
+    !!! Note 出射角与半程向量，入射角与法线等等夹角可以近似相等，F与R0（基础反射率），alpha（roughness）相关，G与D项都是与alpha和theta相关，也就是这个积分的结果是R0，alpha，theta的一个三维函数。而将R0提出后，可以看作加号左边和右边都是只与theta，alpha相关的二维函数，可以把这两个函数的运算结果分别存在一张贴图的r和g通道中，使用texture保存
+
+    对于某一类的brdf都是通用同一张LUT的（因为brdf也就是GDF的公式没有变），比如微表面模型下的brdf
 
   - 分成Diffuse和Specular分别考虑
 
-  !!! 对于Diffuse可以有 $$L_o(p,\omega_o)=k_d\frac{c}{\pi}\int_{\Omega}{L_i(p,\omega_i)n\cdot \omega_i \textrm{d}\omega_i}$$
+  !!! 对于Diffuse可以有 $$L_o(p,\omega_o)=k_d\frac{c}{\pi}\int_{\Omega}{L_i(p,\omega_i)n\cdot \omega_i \textrm{d}\omega_i}$$  此处预计算的积分含有$cos(\theta)$项，因此不是简单的Mipmap
 
     diffuse 项中kd与视线角度有关，通过近似将其提出，得到预计算部分仅与法线，光线方向相关，预计算cubemap(irradians map)
+
+    ```glsl
+    #version 450 core
+    
+    // sample normal, i.e. localPos
+    in vec3 uv;
+    const float PI = 3.14159265359;
+    
+    uniform samplerCube tex;
+    out vec4 FragColor;
+    
+    void main() {
+      vec3 color = vec3(0.0);
+      // 这里只需要构造出任意一个切线空间即可，因为不需要映射纹理
+      vec3 up = vec3(0, 1, 0);
+      vec3 N = normalize(uv);
+      // bitangent
+      vec3 right = normalize(cross(up, N));
+      // tangent
+      up = normalize(cross(N, right));
+      int sample_count = 200;
+      vec3 irradiance = vec3(0.0);
+      for (int i = 0; i < sample_count; i++) {
+        float theta = (PI / 2) * (float(i) / float(sample_count));
+        for (int j = 0; j < sample_count; j++) {
+          float phi = (2 * PI) * (float(j) / float(sample_count));
+          // in tangent space
+          vec3 dir = vec3(cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
+          // in world space
+          vec3 sample_dir = dir.x * right + dir.y * up + dir.z * N;
+          irradiance += texture(tex, sample_dir).rgb * cos(theta) * sin(theta);
+        }
+      }
+      irradiance *= PI;
+      irradiance /= sample_count * sample_count;
+    
+      FragColor = vec4(irradiance, 1.0);
+    }
+    ```
 
 - PRT(Precomputed Radiance Transfer)(Shading and **Shadowing**)
 
@@ -524,7 +638,9 @@
 
     - D
 
-      !!! D项需要计算出在特定的半程向量H下，有多少比例的微观凸起的法线与H对齐，因为只有当微观凸起的法线与H对齐时，光线才会被反射到观察者的眼中。因此，D项是一个概率密度函数，表示在给定的H方向上，法线分布的密集程度。
+      !!! D项是一个概率密度函数，表示在给定的H方向上，表达的是在宏观法线为N的情况下，粗糙度roughness的表面上，微观表面法线与 H 向量对齐的概率。
+
+      D项需要计算出在特定的半程向量H下，有多少比例的微观凸起的法线与H对齐，因为只有当微观凸起的法线与H对齐时，光线才会被反射到观察者的眼中。
 
       给定以h为中心的无穷小立体角$\mathrm{d} \omega$和无穷小宏观平面$\mathrm{dA}$，$D(m)\mathrm{d}\omega\mathrm{dA}$是相应微表面部分总面积，即描述了有多面少面积会往该方向反射。
 
