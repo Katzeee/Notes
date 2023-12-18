@@ -40,6 +40,7 @@ C++对象在内存中的布局可以细分为以下几个区域：
 - **数据段（Data Segment）**：存放初始化的全局变量和静态变量。
 - **BSS段（Block Started by Symbol）**：存放未初始化的全局变量和静态变量。
 - **堆（Heap）**：用于动态内存分配，通过`new`、`malloc`等操作进行分配和收回。
+- **rodata**: 字符串字面量和常量。
 - **栈（Stack）**：存放函数的参数值、局部变量等。
 
 ### enable_shared_from_this
@@ -51,6 +52,42 @@ C++对象在内存中的布局可以细分为以下几个区域：
 使用 `std::make_shared` 创建 `shared_ptr` 时，只会进行一次动态内存分配。也就是计数块与对象分配在一起。
 
 `std::make_shared` 无法指定自定义删除器。
+
+### `static`函数与`inline`函数的链接
+
+声明为内联链接，链接时只保留一个副本
+
+使用nm
+
+```obj
+0000000000000000 T _Z1av // non static
+```
+```obj
+0000000000000000 t _ZL1av // static
+```
+```obj
+0000000000000000 W _Z1av // inline
+```
+
+使用readelf -a
+
+```obj
+Symbol table '.symtab' contains 5 entries:
+   Num:    Value          Size Type    Bind   Vis      Ndx Name
+     3: 0000000000000000    15 FUNC    GLOBAL DEFAULT    1 _Z1av // non static
+```
+
+```obj
+Symbol table '.symtab' contains 5 entries:
+   Num:    Value          Size Type    Bind   Vis      Ndx Name
+     3: 0000000000000000    15 FUNC    LOCAL  DEFAULT    1 _ZL1av // static
+```
+
+```obj
+Symbol table '.symtab' contains 6 entries:
+   Num:    Value          Size Type    Bind   Vis      Ndx Name
+     4: 0000000000000000    15 FUNC    WEAK   DEFAULT    6 _Z1av // inline
+```
 
 ## 图形学
 
