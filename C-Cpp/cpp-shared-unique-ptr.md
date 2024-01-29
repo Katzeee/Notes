@@ -63,6 +63,12 @@ template <typename _Tp, typename _Dp = default_delete<_Tp>>
   }
 ```
 
+Example:
+
+```cpp
+std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+```
+
 !!! Danger `sizeof(_Dp)` may be 0 if it doesn't contain any attributes. Thus, `sizeof(_M_t) == sizeof(pointer)`
 
 ### `std::shared_ptr`
