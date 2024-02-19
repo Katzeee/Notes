@@ -319,7 +319,7 @@ Change boot sequential, then install windows as usual, **need install virtio dri
 
 Change `Hardware->Display` to `SPICE`, then install qxl driver in windows(in the cd). However, this may cause the cursor position of VM not matching with the real position, add `tablet: yes` in host `/etc/pve/qemu-server/<vm-id>.conf` can solve.
 
-### setup Remote desktop
+### Setup remote desktop(WIN 10)
 
 - static ip
 
@@ -341,11 +341,13 @@ Change `Hardware->Display` to `SPICE`, then install qxl driver in windows(in the
 
 ### Hide vm from guest
 
-Edit `/etc/pve/qemu-server/<vm-id>.conf` in host, **I don't know which options are unnecessary**, but it works.
+Edit `/etc/pve/qemu-server/<vm-id>.conf` in pve host.
 
 ```
 args: -cpu 'host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_vapic,hv_time,hv_reset,hv_vpindex,hv_runtime,hv_relaxed,kvm=off,hv_vendor_id=null'
 ```
+
+!!! I don't know which options are unnecessary, but it works.
 
 ## Install TrueNAS Scale(Recommended)
 
@@ -361,7 +363,7 @@ Let everything default except 16G disk and 8192 mem, choose iso then start VM
 
 choose `400 Series Chipset SATA Controller` **(without All Functions)**
 
-### Change Web port(For accessing from internet)
+### Change Web port(For accessing from Internet)
 
 System Settings -> General -> GUI
 
@@ -378,6 +380,22 @@ Repo: https://github.com/truecharts/catalog
 Trains: stable dependency
 
 To avoid TLS fail, use `git config --global http.sslVerify false`
+
+### Apps
+
+Search `ddns-go` and `webdav` in Apps.
+
+![alt text](../.images/truenas-apps.png)
+
+- ddns-go
+
+- webdav
+
+  To enable ipv6, you should check this option.
+  
+  ![alt text](../.images/truenas-webdav.png)
+
+  Then you can access the webdav at `http://truenas.xx.xx:30034/webdav` where `webdav` is the share name you set. 
 
 ### Import to pve host
 
@@ -578,7 +596,7 @@ $ pct df <vmid>
 $ pct resize <vmid> rootfs 40G
 ```
 
-!!! Note You can only expand it, can't shrink it.
+!!! Note You can only expand it, not shrink.
 
 ## Install homeassitant
 
