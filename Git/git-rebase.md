@@ -3,10 +3,8 @@
 
 Reference:
 
-> https://stackoverflow.com/questions/23207791/git-rebase-conflict-who-is-head
->
-> https://git-scm.com/docs/git-rebase
->
+> https://stackoverflow.com/questions/23207791/git-rebase-conflict-who-is-head  
+> https://git-scm.com/docs/git-rebase  
 > https://git-scm.com/docs/git-merge
 
 ## Explaination of commands
