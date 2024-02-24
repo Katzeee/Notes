@@ -361,13 +361,85 @@ Let everything default except 16G disk and 8192 mem, choose iso then start VM
 
 ### sata controller pass-through
 
-choose `400 Series Chipset SATA Controller` **(without All Functions)**
+msi B450 gaming motherboard: choose `400 Series Chipset SATA Controller` **(without All Functions)**
 
-### Change Web port(For accessing from Internet)
+### Change Web port(For accessing from Browser)
 
 System Settings -> General -> GUI
 
-change http port from 80 to 8000
+change http port from 80 to 8000 because 80 port is defaultly banned by service provider
+
+### SSL certificate from certbot
+
+Reference:
+> https://github.com/acmesh-official/acme.sh/wiki  
+> https://u.sb/acme-sh-ssl/  
+> https://zhuanlan.zhihu.com/p/347064501  
+> https://www.youtube.com/watch?v=BYkBJ11gDIM
+
+**0. Change user to root**
+
+```bash
+$ sudo su
+```
+
+**1. Install acme.sh**
+
+```bash
+# If you can curl `raw.githubusercontent.com`
+$ curl https://get.acme.sh | sh -s email=username@example.com 
+# If you cannot
+$ git clone https://gitee.com/neilpang/acme.sh.git
+$ cd acme.sh
+$ ./acme.sh --install -m my@example.com
+```
+
+```bash
+$ source `~/.bashrc` # or reopen the shell
+```
+
+**2. Choose default CA**
+
+```bash
+$ acme.sh --set-default-ca --server letsencrypt
+```
+
+**3. Issue SSL certificates**[[acme.sh-issue-ssl-cert.md]]
+
+Get the `Id` and `Token` from `DNSPod`
+
+```bash
+$ export DP_Id="1234"
+$ export DP_Key="sADDsdasdgdsf" # API token for DP
+$ acme.sh --issue --dns dns_dp -d www.example.com --keylength ec-256
+```
+
+**4. Install certificate for TrueNAS**
+
+Click your avatar at the top right of the website, choose API key, create a new key.
+
+```bash
+$ git clone https://github.com/danb35/deploy-freenas
+$ cd deploy-freenas
+$ cp deploy_config.example deploy_config
+$ vim deploy_config
+```
+
+Edit it 
+
+```
+[deploy]
+api_key = 1-sjfoijopa
+```
+
+```bash
+$ acme.sh --install-cert -d www.example.com --reloadcmd "~/deploy-freenas/deploy_freenas.py"
+```
+
+!!! You may also need to edit `deploy_freenas.py` to change the cert location or the truenas http service port
+
+Then the certificates are now available in the certificate tab.
+
 
 ### Add Catalog(need VPN)
 

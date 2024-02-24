@@ -1,0 +1,90 @@
+#pve
+2024.02.24
+
+## Adding SSL verification to a domain name
+
+**0. Change user to root**
+
+```bash
+$ sudo su
+```
+
+**1. Install acme.sh**
+
+```bash
+# If you can curl `raw.githubusercontent.com`
+$ curl https://get.acme.sh | sh -s email=username@example.com 
+# If you cannot
+$ git clone https://gitee.com/neilpang/acme.sh.git
+$ cd acme.sh
+$ ./acme.sh --install -m my@example.com
+```
+
+```bash
+$ source `~/.bashrc` # or reopen the shell
+```
+
+**2. Choose default CA**
+
+```bash
+$ acme.sh --set-default-ca --server letsencrypt # If there are no special requirements, recommended
+$ acme.sh --set-default-ca --server buypass
+$ acme.sh --set-default-ca --server zerossl # default
+$ acme.sh --set-default-ca --server ssl.com
+$ acme.sh --set-default-ca --server google
+```
+
+**3. Issue SSL certificates**
+
+It's necessary to verify the domain ownership before issue you a certificate. Typically, there are two methods: HTTP, DNS.
+
+**HTTP verification** requires the website can be accessible on the public Internet.
+
+- Webroot mode
+
+    The website is accessible on the public Internet, and its root directory is `/home/wwwroot/example.com`
+
+    ```bash
+    $ acme.sh  --issue  -d example.com  -w /home/wwwroot/example.com
+    ```
+
+- Apache / Nginx mode
+
+    ```bash
+    $ acme.sh  --issue  -d example.com  --apache  # Apache
+    $ acme.sh  --issue  -d example.com  --nginx   # Nginx
+    ```
+    ```bash
+    $ acme.sh  --issue  -d example.com  --nginx /etc/nginx/nginx.conf  # specify conf of nginx
+    $ acme.sh  --issue  -d example.com  --nginx /etc/nginx/conf.d/example.com.conf
+    ```
+
+- Standalone mode
+
+    acme.sh will create a server running on 80 port then verify through it
+    ```bash
+    $ acme.sh  --issue  -d example.com  --standalone   
+    ```
+
+
+**DNS verification** requires the validation of DNS resolution records with a dns resolver provider, such as Cloudflare, DNSPod.
+
+- DNS API mode
+
+    Use dns resolver provider to verify
+
+    ```bash
+    # DNSPod
+    $ export DP_Id="1234"
+    $ export DP_Key="sADDsdasdgdsf" # API token for DP
+    $ acme.sh --issue --dns dns_dp -d www.example.com
+    ```
+
+**4. Install certificate**
+
+**5. Check cron job for auto-refresh the cert**
+
+```bash
+$ crontab -l
+43 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
+```
