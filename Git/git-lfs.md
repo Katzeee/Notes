@@ -36,3 +36,32 @@ But this will not affect any previous commit or other branches.
 If you want change the tracking mode in previous commit, you should checkout to that commit then use `git lfs migrate`.
 
 !!! Warning This operation will affect the history of your repo.
+
+## Untrack your files
+
+> https://stackoverflow.com/questions/48699293/how-do-i-disable-git-lfs
+
+ 
+ **1. Update current commit only**
+
+If you want to move off LFS, but are not so worried about fixing the entire git history, you can do the following;
+
+```bash
+$ git lfs uninstall
+$ touch **/* # ** requires extended glob support enabled (shopt -s globstar)
+$ git commit -a
+```
+
+**2. Update entire history**
+
+```bash
+# make sure lfs is installed or you will fail to execute `lfs checkout`
+git filter-branch -f --prune-empty --tree-filter '
+  git lfs checkout
+  git lfs ls-files | cut -d " " -f 3 | xargs touch
+  git rm -f .gitattributes
+  git lfs ls-files | cut -d " " -f 3 | xargs git add
+' --tag-name-filter cat -- --all
+```
+
+`git lfs checkout` to download all lfs files from local lfs storage, then `touch` them, `remove .gitattributes`, and at last `add them` again.
