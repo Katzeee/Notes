@@ -5,9 +5,15 @@
 
 ### Data-based
 
+More focus on Systems, manipulate components through Systems.
+
 ### Component-based
 
+More focus on the relation between Entities and Components, add or delete Components on Entities.
+
 ### Archetype-based
+
+Seen all Entities with the same kind of Components as one Archetype, is a combination of the two above, always update Entities with the same Archetype.
 
 ## How does a ecs been composed
 
