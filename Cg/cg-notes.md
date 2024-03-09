@@ -746,16 +746,20 @@
 
 - 流程
 
-  1. 第一个pass渲染G-buffer
+  1. 第一个pass渲染G-buffer(一个FBO里面有3个Attchment，还有一个Depth buffer)
 
-  Postion xyza,
-  Normal xyza,
-  Albedo xyz
-  Specular a
+      Postion xyza,  
+      Normal xyza,  
+      Albedo xyz,  
+      Specular a  
 
   ![](../.images/g-buffer.jpg)
 
   2. 第二个pass计算光照
+
+  3. 考虑再渲染光源立方体时没有深度信息了
+
+      需要把在第一阶段里的depth buffer拷贝到当前阶段
 
 - 解决问题
 
