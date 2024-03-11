@@ -1,5 +1,9 @@
-#c-cpp/debug
-## 2022.09.07
+---
+title: Gdb Memory Leak
+date: 2022.09.07
+categories: [Debug]
+tags: [c-cpp/debug]
+---
 
 ## Memory leak
 

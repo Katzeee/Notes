@@ -1,0 +1,24 @@
+---
+title: Linux Ssh Without Password
+date: 2023.08.19
+categories: [Linux]
+tags: [code-env, linux/tool]
+---
+
+## ssh login without password
+
+1. Create ssh key for both computer
+
+    ```bash
+    $ ssh-keygen -t rsa # press enter thrice
+    ```
+
+2. Add self to known_hosts 
+
+    ```bash
+    $ ssh-copy-id <username>@<ip-addr>
+    ```
+
+    !!! Danger If you want login B without password on host A, you should run this command on A!
+
+
