@@ -1,0 +1,11 @@
+- highlighter = document.attr 'source-highlighter'
+- if style == 'source'
+  - code_class = "language-#{attributes['language']}"
+  - case highlighter
+  - when 'rouge'
+    div class=[code_class, "highlighter-#{highlighter}"]
+      div class=['highlight']
+        pre class=['highlight']
+          code =content
+- else
+  pre class=nowrap? =content

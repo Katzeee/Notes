@@ -15,6 +15,12 @@ platforms :mingw, :x64_mingw, :mswin, :jruby do
   gem "tzinfo-data"
 end
 
+gem 'slim', '~> 3.0.7'
+gem 'thread_safe', '~> 0.3.5'
+group :jekyll_plugins do
+  gem "jekyll-asciidoc"
+end
+
 # Performance-booster for watching directories on Windows
 gem "wdm", "~> 0.1.1", :platforms => [:mingw, :x64_mingw, :mswin]
 
