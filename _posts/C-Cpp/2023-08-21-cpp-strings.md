@@ -27,7 +27,7 @@ cout << s3 << '\n';     // unimatrix
 
 !!! Try `to_string`, `contains`
 
-![Alt text](../.images/hackingcpp-string.png)
+![Alt text](/assets/images/hackingcpp-string.png)
 
 ## Raw String Literals  `R"(...)"` Raw
 
@@ -60,6 +60,6 @@ int dist = edit_distance("abc", input);
 -   avoids expensive temporary strings when string literals are passed to functions
 -   can speed up accesses by avoiding a level of indirection:
     
-    ![Alt text](../.images/string_view_indirection.png)
+    ![Alt text](/assets/images/string_view_indirection.png)
 
 We will learn more about `string_view` and other view types later.

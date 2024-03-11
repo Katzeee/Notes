@@ -15,16 +15,16 @@ tags: [pve, network]
 
 
 在配置wifi时选择WPA2-PSK加密，算法AES
-![](../.images/MESH1.png)
+![](/assets/images/MESH1.png)
 
 打开kvr，生成本地生成PMK
 
-![](../.images/MESH2.png)
+![](/assets/images/MESH2.png)
 
-![](../.images/MESH3.png)
+![](/assets/images/MESH3.png)
 
 选择简单MESH，注意选择5g频段进行mesh
-![](../.images/MESH4.png)
+![](/assets/images/MESH4.png)
 
 ### 副路由
 
@@ -43,12 +43,12 @@ tags: [pve, network]
 都打开以后就好了，测试连接副路由的mesh wifi能不能上网
 
 这时可以注意到mesh连接上了
-![](../.images/MESH5.png)
-![](../.images/MESH6.png)
+![](/assets/images/MESH5.png)
+![](/assets/images/MESH6.png)
 
 ### 有线部分
 
 但是此时连接有线是上不了网的，因为easymesh没有把你的真实lan口添加到他的虚拟lan口里面，打开主副路由的接口，把所有没有打上勾的lan口都添加到br-lan里面去就可以了
-![](../.images/MESH7.png)
+![](/assets/images/MESH7.png)
 
 我还将副路由的两个WAN口禁用了

@@ -217,7 +217,7 @@ $ reboot
 
 - Add openwrt into LAN
 
-  ![Alt text](../.images/openwrt-join-zerotier.png)
+  ![Alt text](/assets/images/openwrt-join-zerotier.png)
 
   Type in the network id you get last step then click `save&apply`. Allow NAT.
 
@@ -231,13 +231,13 @@ $ reboot
 
   1. Create a new interface
 
-    ![Alt text](../.images/openwrt-create-zerotier-interface.png)
+    ![Alt text](/assets/images/openwrt-create-zerotier-interface.png)
 
   2. Setup firewall
 
-    ![Alt text](../.images/openwrt-zerotier-firewall1.png)
+    ![Alt text](/assets/images/openwrt-zerotier-firewall1.png)
 
-    ![Alt text](../.images/openwrt-zerotier-firewall2.png)
+    ![Alt text](/assets/images/openwrt-zerotier-firewall2.png)
 
   3. Firewall custom rules
 
@@ -461,7 +461,7 @@ To avoid TLS fail, use `git config --global http.sslVerify false`
 
 Search `ddns-go` and `webdav` in Apps.
 
-![alt text](../.images/truenas-apps.png)
+![alt text](/assets/images/truenas-apps.png)
 
 - ddns-go
 
@@ -469,7 +469,7 @@ Search `ddns-go` and `webdav` in Apps.
 
   To enable ipv6, you should check this option.
   
-  ![alt text](../.images/truenas-webdav.png)
+  ![alt text](/assets/images/truenas-webdav.png)
 
   Then you can access the webdav at `http://truenas.xx.xx:30034/webdav` where `webdav` is the share name you set. 
 

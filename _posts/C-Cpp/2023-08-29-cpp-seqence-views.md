@@ -63,7 +63,7 @@ std::cout << literal_view;
     std::string_view sv2 {"std::string Literal"s};
     cout << sv2; //  string object already destroyed!
     ```
-![Alt text](../.images/string_view.png)
+![Alt text](/assets/images/string_view.png)
 
 ## `span` (cpp20)
 
@@ -107,6 +107,6 @@ std::span sw {w};
 bool memory_same = sv.data() == sw.data();  // false
 bool values_same = std::ranges::equal(sv,sw);  // true
 ```
-![Alt text](../.images/span_indirection.png)
+![Alt text](/assets/images/span_indirection.png)
 
-![Alt text](../.images/span_crop.png)
+![Alt text](/assets/images/span_crop.png)

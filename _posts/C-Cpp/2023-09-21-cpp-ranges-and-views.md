@@ -275,7 +275,7 @@ auto v1 = vec | std::views::take(3);
 auto v2 = v1 | std::views::transform(std::negate{});
 ```
 
-![Alt text](../.images/cpp-views-operate.png)
+![Alt text](/assets/images/cpp-views-operate.png)
 
 **Only provides cheap member functions**
 
@@ -339,7 +339,7 @@ Basic views interface use concept to decide whether to provide these functions o
 
 !!! Warning To speed up the expensive function calls, views will **cache** the result of the first calling. But also makes lots of unexpected error.
 
-![Alt text](../.images/cpp-views-cache.png)
+![Alt text](/assets/images/cpp-views-cache.png)
 
 It will cause a compile time error because `print` receives a const reference. However, to cache value must modify the view which means the views should be mutable.
 
@@ -525,7 +525,7 @@ print(vec); // compile time error
 print(vec | std::view::drop(3)); // oops, modify the view
 ```
 
-![Alt text](../.images/cpp-ref-view-and-owning-view.png)
+![Alt text](/assets/images/cpp-ref-view-and-owning-view.png)
 
 !!! Warning std::ranges::ref_view does ==not== propagate const,std::ranges::owning_view propagate const
 
@@ -579,7 +579,7 @@ printParis(std::views::zip(v1, v2));
 
 ## Some const Fixes for views
 
-![Alt text](../.images/cpp23-const-fixes-for-views.png)
+![Alt text](/assets/images/cpp23-const-fixes-for-views.png)
 
 ## Belleviews implementation of views
 

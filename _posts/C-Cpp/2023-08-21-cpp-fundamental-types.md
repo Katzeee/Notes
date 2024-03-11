@@ -48,4 +48,4 @@ int k {f}; // COMPILER WARNING: float → int
 
 !!! Danger Caution: Unexpected promotion when using `uint16_t`
         
-![Alt text](../.images/usual_arithmetic_conversions.png)
+![Alt text](/assets/images/usual_arithmetic_conversions.png)

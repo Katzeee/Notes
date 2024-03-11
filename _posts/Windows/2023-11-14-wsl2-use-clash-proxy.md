@@ -22,4 +22,4 @@ export http_proxy="http://$host_ip:7890"
 export https_proxy="http://$host_ip:7890"
 ```
 
-![Alt text](../../.images/wsl-clash.png)
+![Alt text](/assets/images/wsl-clash.png)

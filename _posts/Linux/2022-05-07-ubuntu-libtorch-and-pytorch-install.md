@@ -60,7 +60,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 '1.11.0+cu113'
 ```
 
-Then, test libtorch, the whole project is in [torch-test](../test-codes/torch-test)
+<!-- Then, test libtorch, the whole project is in [torch-test](../test-codes/torch-test) -->
 
 ```cpp
 // main.cpp

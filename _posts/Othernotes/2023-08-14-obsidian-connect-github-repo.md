@@ -5,13 +5,13 @@ categories: [Othernotes]
 tags: [productivity/obsidian]
 ---
 
-1.  Create a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic) from github ![create-pat-github.png](../.images/create-pat-github.png)
+1.  Create a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic) from github ![create-pat-github.png](/assets/images/create-pat-github.png)
 
 2.  Install the [Obsidian Git](https://github.com/denolehov/obsidian-git/wiki/Installation) community plugin
 
 3.  Create a folder to store the repository. (e.g. `remote-blog/`). Set scopes to repo & expiration to no expiration
 
-4.  Run the command (CMD/Ctrl + P): `Clone an existing remote repo` ![clone-repo-git-plugin.png](../.images/clone-repo-git-plugin.png)
+4.  Run the command (CMD/Ctrl + P): `Clone an existing remote repo` ![clone-repo-git-plugin.png](/assets/images/clone-repo-git-plugin.png)
 
 5.  Paste the URL of the forked repository in the following format
 

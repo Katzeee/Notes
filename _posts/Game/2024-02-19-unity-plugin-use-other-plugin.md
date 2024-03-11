@@ -11,4 +11,4 @@ There was an error when I tried `using UnityEditor.Formats.Fbx.Exporter;` in my 
 
 Finally, I found if you want to use another plugin in your plugin, you should add it as a reference in `.asmdef` file.
 
-![alt text](../.images/unity-plugin-asmdef-reference.png)
+![alt text](/assets/images/unity-plugin-asmdef-reference.png)

@@ -18,6 +18,6 @@ tags: [network]
 >
 >**帧（frame）：**数据链路层在分组前面加上它自己的首部形成帧，并发送该帧；
 
-<p align="left">
-  <img src="../.images/2020040109441427.png">
-</p>
+<!-- <p align="left"> -->
+  <!-- <img src="/assets/images/2020040109441427.png"> -->
+<!-- </p> -->

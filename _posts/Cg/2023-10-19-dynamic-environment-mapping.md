@@ -11,11 +11,11 @@ The sky map is rendered at the outside of the cube model, but we watch it inside
 
 **Texture to be loaded(back, -z)**
 
-![](../.images/cubemap-back.png)
+![](/assets/images/cubemap-back.png)
 
 **Camera in Game**
 
-![](../.images/cubemap-back-in-game.png)
+![](/assets/images/cubemap-back-in-game.png)
 
 Thus, if you want to sample front face from your captrue, you should filp x axis in sampling.
 
@@ -27,11 +27,11 @@ It's quite imaginable, suppose you filpped x axis for front, then you want to ca
 
 When rendering sky box:
 
-![](../.images/cube-map-store-in-game.png)
+![](/assets/images/cube-map-store-in-game.png)
 
 When rendering your box:
 
-![](../.images/cube-map-capture-in-game.png)
+![](/assets/images/cube-map-capture-in-game.png)
 
 ## Dynamic environment mapping
 

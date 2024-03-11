@@ -53,7 +53,7 @@ Deleter is **part of the type** and you don't need to store anything additional 
 1.  Its size is identical to the size of a raw pointer on the underlying architecture.
 2.  All calls to the deleter can be inlined.
 
-One possible implemention which makes use of the empty base optimization is to store the wrapped pointer together with the deleter in a [_compressed pair_](http://www.boost.org/doc/libs/1_61_0/libs/utility/doc/html/compressed_pair.html). The obvious disadvantage of making the custom deleter part of the type is that two `std::unique_ptr`s with different custom deleters are of different type, even if they wrap the same pointer type.
+One possible implemention which makes use of the empty base optimization is to store the wrapped pointer together with the deleter in a [_compressed pair_](https://www.boost.org/doc/libs/1_61_0/libs/utility/doc/html/compressed_pair.html). The obvious disadvantage of making the custom deleter part of the type is that two `std::unique_ptr`s with different custom deleters are of different type, even if they wrap the same pointer type.
 
 ```cpp
 template <typename _Tp, typename _Dp>

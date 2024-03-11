@@ -19,4 +19,4 @@ tags: [c-cpp]
 -   The move constructor is auto-generated if there is **no user-declared copy constructor, copy assignment operator or destructor, and if the generated move constructor is valid** (§12.8/10).
 -   The move assignment operator is auto-generated if there is no user-declared copy constructor, copy assignment operator or destructor, and if the generated move assignment operator is valid (e.g. if it wouldn't need to assign constant members) (§12.8/21).
 
-![Alt text](../.images/CVtPu.jpg)
+![Alt text](/assets/images/CVtPu.jpg)

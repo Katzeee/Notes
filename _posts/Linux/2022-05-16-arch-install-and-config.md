@@ -20,7 +20,7 @@ This article only intends for `UEFI` boot mode
 
 ## Prepare for a bootable USB
 
-Download [Rufus](http://rufus.ie/en/)
+Download [Rufus](https://rufus.ie/en/)
 
 Select the Device that you want to burn program in, the iso file at boot selection. Remain default at `Persistent partition size`.
 
@@ -42,7 +42,7 @@ $ reg add "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\TimeZoneInformati
 ## Start installation
 
 First, boot your computer from the usb, select the first option
-![alt](../.images/boot-select.png)
+![alt](/assets/images/boot-select.png)
 
 Connect to network and synchronize time.
 
@@ -397,7 +397,7 @@ Install the system
 
 - RDP client
 
-  [Remmina]()
+  [Remmina](https://remmina.org/)
 
   ```bash
   $ yay -S remmina
