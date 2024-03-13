@@ -145,6 +145,7 @@ asciidoctor:
   template_dir: _templates
   attributes:
     source-highlighter: rouge
+    source-linenums-option: true
 
 collections:
   tabs:
