@@ -3,4 +3,223 @@
 :page-category: Othernotes
 :page-tags: [code-env]
 
-== Jekyll
+References:
+
+[quote]
+____
+https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow
+
+https://jekyllrb.com/docs/
+____
+
+== Host your Jekyll blog via Github action
+
+[quote]
+There are three types of GitHub Pages sites: project, user, and organization. Project sites are connected to a specific project hosted on GitHub, such as a JavaScript library or a recipe collection. User and organization sites are connected to a specific account on GitHub.com.
+
+* Repo named `<username>.github.io` is your user page. 
+* Every github repo can have its own page, like `https://github.com/Katzeee/Notes => https://katzeee.github.io/Notes/`
+
+NOTE: If your homepage `https://github.com/Katzeee`, then `Katezeee` is your username.
+
+
+*1. Enable pages for your repo*
+
+Under your repository name, click `Settings`. In the `Code and automation` section of the sidebar, click `Pages`. Set `Source` to `Github Actions`
+
+*1.5 Local Jekyll environment for futher custom and debugging(Optional)*
+
+Just follow the instructions below:
+
+> https://jekyllrb.com/docs/
+
+*2. Config Jekyll*
+
+Choose your favorite theme in `https://jekyllrb.com/docs/themes/`.
+
+Generally, every theme-repo's README will give you a detailed instruction about how to use it. I will just give you some key points when using a theme.
+
+I found that you always can use a theme via *1. Fork the repo*, *2. Utilize Gem package(or called starter)*.
+
+* The first method is always easier than the second, you can just copy all the files to your repo, then you can start to create your new posts. *But it becomes increasingly bothersome when themes update, even though they are infrequent.*
+
+[quote]
+Jekyll can only read files in the folders `_data`, `_layouts`, `_includes`, `_sass` and `assets`, as well as a small part of options of the `_config.yml` file from the theme's gem.
+
+* For the second method, the most important files you should focus on maybe 
+
+```text
+.
+├── .github/workflows   // describes how the repo is built
+├── _config.yml         // all your jekyll and theme settings
+└── Gemfile             // jekyll dependencies and plugins
+```
+
+It's recommanded to start from a starter repo of the theme.
+
+
+*2.5 Host the blog locally(Optional)*
+
+```bash
+$ bundle config path vendor # install your gem package in ./vendor
+$ bundle install
+$ bundle exec jekll s
+```
+
+bundle add webrick
+
+You can debug your blog locally.
+
+*3. Host the blog remotely*
+
+If you are successful to host your blog locally, and you get the `github action` file correct, then you only need to push it to github, all others things will be done automatically.
+
+== Advanced Jekyll
+
+=== Directory Structure
+
+> https://jekyllrb.com/docs/structure/ 
+
+[source, text]
+....
+.
+├── _config.yml         // settings and datas can be read in templates
+├── _data               // datas can be read in templates
+├── _drafts             // draft posts
+├── _includes           // Reusable templates
+├── _layouts            // <1>
+├── _posts              // real posts of your site
+├── _sass               // styles of your site
+├── _site               // generated local site, put in .gitignore
+├── _plugins            // custom plugins, both themes' and yours <2>
+├── assets              // static data, like image, icon, both themes and yours <2>
+├── .jekyll-cache       // put in .gitignore
+├── .jekyll-metadata    // put in .gitignore
+└── index.html          // can also be an 'index.md' with valid front matter <3>
+....
+<1> These are the templates that wrap posts. You can specify the render template for every post(generally it's `post.html`).
+<2> Theme specific.
+<3> Collect `front matter` section data then display it. You can also specify a layout to render it.
+
+NOTE: `front matter` is the metadata of a post, like the yaml header block of markdown post.
+
+*Not all files will in your repo, some of them will in your themes' gem package folder.*
+
+TIP: If you don't want to change the `_sass`, `_layouts` or something else in that theme, *(maybe)* there is no need to copy those folders to your repo, I think it's based on the implementation of each theme?
+
+
+=== Layout(Page rendering)
+
+Layouts are templates that wrap around your content. 
+
+Your post content will first be converted to an HTML string by parser such as link:{https://kramdown.gettalong.org/}[`kramdown`] for Markdown or link:{https://asciidoctor.org/}[`asciidoctor`] for AsciiDoc. This HTML string will then be assigned to a variable named `content` in `Liquid` which is utilized by the templates to parse and edit, resulting in the final HTML displayed on the site.
+
+== Use AsciiDoc with the theme 
+
+NOTE: Some of the theme support AsciiDoc from the initial, but some not. You should have a try first.
+
+*1. Install asciidoc plugin*
+
+.Gemfile
+[source, gemfile]
+----
+group :jekyll_plugins do
+  gem "jekyll-asciidoc"
+end
+----
+
+*2. Config asciidoctor*
+
+> https://github.com/asciidoctor/jekyll-asciidoc
+
+._config.yml
+[source, yml]
+----
+asciidoctor:
+  attributes:
+    source-highlighter: rouge
+    source-linenums-option: true
+----
+
+As the doc above says, the metadata of the `.adoc` file should like:
+
+```adoc
+= Title
+:revdate: 2024-03-13
+:page-category: Othernotes
+:page-tags: [code-env]
+```
+
+You can customize the word before `-` by set key `page_attribute_prefix` under `asciidoctor`.
+
+Then it works!
+
+=== Customize the asciidoctor
+
+> https://github.com/asciidoctor/jekyll-asciidoc?tab=readme-ov-file#customizing-the-generated-html
+>
+> https://docs.asciidoctor.org/asciidoctor/latest/convert/templates/#debugging
+
+
+As I was mentioned before, the converted HTML string will be parsed and edited again be templates, but the theme may only support one of the Markdown's. We need to customize the generated HTML by asciidoctor to fit the theme. 
+
+.Gemfile
+[source, gemfile]
+----
+gem 'slim', '~> 3.0.7'
+gem 'thread_safe', '~> 0.3.5'
+----
+
+._config.yml
+[source, yml]
+----
+asciidoctor:
+  template_dir: _templates
+  attributes: ...
+----
+
+Then you can write your own converter, like:
+
+._templates/block_listing.html.slim
+[source, slim]
+----
+- highlighter = document.attr 'source-highlighter'
+- if style == 'source'
+  - code_class = "language-#{attributes['language']}"
+  - case highlighter
+  - when 'rouge'
+    em =title
+    div class=[code_class, "highlighter-#{highlighter}"]
+      div class=['highlight']
+        pre class=['highlight']
+          code =content
+- else
+  pre class=nowrap? =content
+----
+
+TIP: If you don't know the local variables you can use, just make an error, then the intepreter will tell you.
+
+=== Customize template
+
+Copy the themes template then put at the same position at your repo, then the Jekyll will use yours. 
+
+=== Customize plugin
+
+Sometimes you have to add some other data for templates to use like metadata, at that time you need to use plugins.
+
+._plugins/generator.rb
+[source, ruby]
+----
+module Jekyll
+  class CustomGenerator < ::Jekyll::Generator
+    def generate site
+      site.posts.docs.each do |post|
+        # do something here <1>
+        # site.data in ruby => site.data in Liquid
+        # post.data['author'] in ruby => page.author in Liquid
+      end
+    end
+  end
+end
+----
+<1> site data is the whole repos data, you can access `_data` by `site.data`, or `_config` like `site.config['asciidoc']`, `post.data` is the metadata of this page. All these data can be used by Liquid templates.
