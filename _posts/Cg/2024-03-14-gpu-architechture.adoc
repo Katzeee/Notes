@@ -1,0 +1,68 @@
+= GPU Architecture
+:revdate: 2024-03-14
+:page-category: CG
+:page-tags: [cg, gpu]
+
+== GPU Composition
+
+* TPC: Texture Processor Cluster
+* SM: Streaming Multiprocessor
+* SP: Streaming Processor
+* ALU
+* FPU
+* SFU: Special Function Unit
+* ROP: Render Output Unit
+* Warp Scheduler
+* LD/ST: Load/Store Unit
+* GPC: Graphic Processor Cluster
+* Cuda Core: uniform computation arch
+* RT Core
+* Tensor Core: for tensor, matrix computation
+
+== How do shader codes run on `Fermi` architecture
+
+*1. From CPU to GPU*
+
+The program send `Grapics API drawcalls` to GPU drivers, then drivers store them in `Push buffer`. After some time or call `flush` explicitly, GPU will receive these the commands from `Host Interface` and excute them in `Front End`.
+
+The work will be distributed by `Primitive Distributor`: batch the vertices in `Index buffer` and send them to ``GPC``s.
+
+*2. Geometry step*
+
+In `Vertex Fetch` step, `Poly Morph Engine` in `SM` will retrive the vertices data. Afterwards, the data will be divided into warps which is composed by *32* threads(SIMT). `Warp Scheduler` will distribute the commands as the order of GPU receiving. 
+
+The command excution will be `lock-step` in one single warp, which means the 32 threads will be excuting the same instruction at the same time.
+
+NOTE: `lock-step` will result in the lower excution speed of `if-else` in shader. Because some of the threads' data go the `if true` and some are `false`, then the 32 threads must wait other thread to finish all the branch. (Another brnach will be masked out for one thread)
+
+One warp may excute many times to finish(store the intermediate result then load it again), especially for those time-consuming instructions like read texture.
+
+*3. Rasterizer*
+
+Clip and transform in `Viewport Transform` module, then resterize the triangles to pixels.
+
+NOTE: Data comunication between vertex shader and pixel shader is via L1 and L2 Cache.
+
+Then the pixel data will be distributed to `GPC`s again, this distribution is decided by the aera of which tile does the pixel at.
+
+*4. Pixel Step*
+
+`Raster Engine` works for generating the interpolated data and culling(back culling and early-Z).
+
+`Atribute Setup` on `SM` ensure that the data from vertex shader is readable by pixel shader(interpolated).
+
+32 threads group as a warp or we say 8 `2x2 pixel tile` is the smallest work group for pixel shader.
+
+TIP: `2x2 pixel tile` is designed to get the `ddx` and `ddy` of one pixel, for calculating the mipmap level of it.
+
+Finally, the data will passed to `ROP` for depth test, blend or something.
+
+NOTE: The manipulate of the depth and color data must be atomic.
+
+== GPU Context in Core
+
+One GPU Core can be abstrcted to a `Fetch/Decode Module`, some ``ALU``s, and some ``Context``s. ``ALU``s are responsible for excuting the commands and ``Context``s are the context of the ``ALU``s.
+
+One instruction is excuted by one `ALU` in one `Context`.
+
+If there is a time-consuming instruction, the scheduler can let the `ALU` to excute in another context to avoid blocking.
