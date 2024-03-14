@@ -7,8 +7,7 @@ References:
 
 [quote]
 ____
-https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow
-
+https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow +
 https://jekyllrb.com/docs/
 ____
 
@@ -112,7 +111,7 @@ TIP: If you don't want to change the `_sass`, `_layouts` or something else in th
 
 Layouts are templates that wrap around your content. 
 
-Your post content will first be converted to an HTML string by parser such as link:{https://kramdown.gettalong.org/}[`kramdown`] for Markdown or link:{https://asciidoctor.org/}[`asciidoctor`] for AsciiDoc. This HTML string will then be assigned to a variable named `content` in `Liquid` which is utilized by the templates to parse and edit, resulting in the final HTML displayed on the site.
+Your post content will first be converted to an HTML string by parser such as https://kramdown.gettalong.org/[`kramdown`^] for Markdown or https://asciidoctor.org/[`asciidoctor`^] for AsciiDoc. This HTML string will then be assigned to a variable named `content` in `Liquid` which is utilized by the templates to parse and edit, resulting in the final HTML displayed on the site.
 
 == Use AsciiDoc with the theme 
 
@@ -156,8 +155,7 @@ Then it works!
 
 === Customize the asciidoctor
 
-> https://github.com/asciidoctor/jekyll-asciidoc?tab=readme-ov-file#customizing-the-generated-html
->
+> https://github.com/asciidoctor/jekyll-asciidoc?tab=readme-ov-file#customizing-the-generated-html +
 > https://docs.asciidoctor.org/asciidoctor/latest/convert/templates/#debugging
 
 
