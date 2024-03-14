@@ -1,0 +1,9 @@
+- attr_name = ''
+- case (attr :name)
+- when 'note'
+  - attr_name = 'info'
+- when 'important'
+  - attr_name = 'danger'
+- attr_name = (attr :name) if attr_name == ''
+blockquote class=["prompt-#{attr_name}"]
+  p =content
