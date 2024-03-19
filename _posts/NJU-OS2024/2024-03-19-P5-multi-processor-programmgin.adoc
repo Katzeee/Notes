@@ -1,0 +1,103 @@
+= Multi-processor Programming
+:revdate: 2024-03-19
+:page-category: Lecture
+:page-tag: [lecture, linux]
+
+== 入门
+
+* 多线程模型
+
+多线程的模型可以理解为对于每一个核，在同一时刻只能选择一个程序与共享内存执行一步。程序便是由一个个程序独享的寄存器们所定义。
+
+* 证明多线程独享堆栈
+
+取局部变量地址
+
+* 求得堆栈大小
+
+递归耗尽堆栈，取局部变量地址(UB)
+
+* 如何增加堆栈大小
+
+```bash
+$ man pthreads
+```
+
+== 放弃：状态迁移原子性的假设
+
+*任何时候 load 读到的值都可能是别的线程写入的*
+
+```c
+void T_sum() {
+    for (int i = 0; i < 3; i++) {
+        int t = load(sum);
+        t += 1;
+        store(sum, t);
+    }
+}
+```
+
+同时执行3个T_sum, sum 的最小值是2，需要某一个线程在前两次store被别人覆盖，在第三次load获得1（注意这里不可能load到0，因为如果load到了自己的前一次循环结果，load到的最小是1，load到了别的线程store的结果，最小也只能是1）
+
+== 放弃：程序顺序执行的假设
+
+```c
+void T_sum() {
+    for (int i = 0; i < N; i++) {
+        // sum++;
+        asm volatile(
+            "incq %0" : "+m"(sum)
+        );
+    }
+}
+```
+
+就算只有一条指令，**多**处理器多线程sum++时也不会得到正确的结果
+
+考虑两个线程的情况，正确答案为2N，编译器对指令的原子性做了一定的假设：
+
+* 无优化会得到很多结果，甚至小于N
+
+* -O1 会得到 sum=N
+
+* -O2 会得到 sum=2N
+
+== 控制执行顺序
+
+NOTE: volatile 涉及的是编译器的行为，对c代码到汇编代码进行约束
+
+* 插入“不可优化”代码
+
+`ams volatile ("" ::: "memory");` 告诉编译器其他线程可能写入内存
+
+* 标记变量 load/store 不可优化
+
+```c
+int volatile flag;
+while (!flag); // 防止优化成不循环或者死循环
+```
+
+
+== 放弃：存在全局指令执行顺序的假设
+
+*处理器也是编译器*: 处理器指令乱序
+
+Load(x); Store(y)：当 x 不等于 y 时，两条指令执行的先后顺序就无所谓。比如Load时遇到了 cache miss，store就可以先执行。
+
+```c
+int x = 0, y = 0;
+
+void T1() {
+  x = 1; int t = y; // Store(x); Load(y)
+  __sync_synchronize();
+  printf("%d", t);
+}
+
+void T2() {
+  y = 1; int t = x; // Store(y); Load(x)
+  __sync_synchronize();
+  printf("%d", t);
+}
+```
+
+WARNING: 这个代码可能会出现 0 0
