@@ -40,7 +40,7 @@ In `Vertex Fetch` step, `Poly Morph Engine` in `SM` will retrive the vertices da
 
 The command excution will be `lock-step` in one single warp, which means the 32 threads will be excuting the same instruction at the same time.
 
-NOTE: `lock-step` will result in the lower excution speed of `if-else` in shader. Because some of the threads' data go the `if true` and some are `false`, then the 32 threads must wait other thread to finish all the branch. (Another brnach will be masked out for one thread)
+NOTE: `lock-step` will result in the low excution speed of `if-else` in shader. Because some of the threads' data run on the `true` branch and some on `false`, then the 32 threads must wait for other threads to finish all the branch. (Another brnach will be masked out for one thread)
 
 One warp may excute many times to finish(store the intermediate result then load it again), especially for those time-consuming instructions like read texture.
 
