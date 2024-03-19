@@ -1,7 +1,7 @@
 = Multi-processor Programming
 :revdate: 2024-03-19
 :page-category: Lecture
-:page-tag: [lecture, linux]
+:page-tags: [lecture, linux]
 
 == 入门
 
