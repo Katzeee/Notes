@@ -54,18 +54,19 @@ $ apt update && apt -y install git && git clone https://github.com/ivanhao/pveto
 
 ### IOMMU and hardware pass-through
 
+> https://zhuanlan.zhihu.com/p/438793914
+
 `vi /etc/default/grub`
 ```diff
 - GRUB_CMDLINE_LINUX_DEFAULT="quiet"
 
 # For AMD users
-+ GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_pstate=disable amd_iommu=on pcie_acs_override=downstream,multifunction video=vesafb:off video=efifb:off"
-
-# all of them may not necessary, but I added `intel_pstate=disable pcie_acs_override=downstream,multifunction`
-# PS:
-# efifb:off disable efi-booting display devices
-# vesafb:off disable vesa-booting display devices
++ GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on pcie_acs_override=downstream,multifunction video=vesafb:off video=efifb:off"
 ```
+Some of them may not necessary, but I added `pcie_acs_override=downstream,multifunction`
+
+NOTE: efifb:off disable efi-booting display devices
+vesafb:off disable vesa-booting display devices
 
 then `update-grub`
 
