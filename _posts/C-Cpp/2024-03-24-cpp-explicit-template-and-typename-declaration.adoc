@@ -1,0 +1,20 @@
+= Cpp Explicit template and typename Declaration
+:revdate: 2024-03-24
+:page-category: Cpp
+:page-tags: [cpp]
+
+*Compilers may hard to tell the real meaning without explicit declaration*
+
+Misunderstanding by compiler:
+
+```cpp
+void func() {
+    result.emplace<0>(something); // <1>
+    std::decay<T>::type *a; // <2>
+
+    result.template emplace<0>(something); 
+    typename std::decay<T>::type *a; 
+}
+<1> the result of whether `result.emplace` is less than 0 compare with `something`
+<2> `std::decay<T>::type` is a value then times `a`
+```
