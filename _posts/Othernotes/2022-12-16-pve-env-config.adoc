@@ -411,7 +411,7 @@ $ source `~/.bashrc` # or reopen the shell
 $ acme.sh --set-default-ca --server letsencrypt
 ```
 
-*3. Issue SSL certificates*[[acme.sh-issue-ssl-cert.md]]
+*3. link:../acme.sh-issue-ssl-cert[Issue SSL certificates^]*
 
 Get the `Id` and `Token` from `DNSPod`
 
