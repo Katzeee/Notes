@@ -15,6 +15,6 @@ void func() {
     result.template emplace<0>(something); 
     typename std::decay<T>::type *a; 
 }
+```
 <1> the result of whether `result.emplace` is less than 0 compare with `something`
 <2> `std::decay<T>::type` is a value then times `a`
-```
