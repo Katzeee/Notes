@@ -1,5 +1,6 @@
 - highlighter = document.attr 'source-highlighter'
-- if style == 'source'
+/ for block codes
+- if style == 'source' 
   - code_class = "language-#{attributes['language']}"
   - case highlighter
   - when 'rouge'

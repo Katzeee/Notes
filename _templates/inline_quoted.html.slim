@@ -5,7 +5,8 @@
   em class=role =text
 - when :strong
   strong class=role =text
-- when :monospaced
+/ for inline codes
+- when :monospaced 
   - highlighter = document.attr 'source-highlighter'
   code class=["language-#{attributes['language'] or 'plaintext'}", "highlighter-#{highlighter}"] =text
 - when :superscript
@@ -22,9 +23,6 @@
     |&#8216;#{text}&#8217;
 - when :asciimath, :latexmath
   =delimit_stem text, type
-- when :unquoted
-  - if attributes['role'] == 'line-through'
-    del =text
 - else
   = html_tag_if role?, :span, class: role
     =text
