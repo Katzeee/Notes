@@ -1,0 +1,15 @@
+= Imgui Link Error On Windows
+:revdate: 2024-03-25
+:page-category: C-Cpp
+:page-tags: [cpp, windows]
+
+When compiling nanoR, I got an error on Windows: *unresolved external symbol "bool __cdecl ImGui_ImplGlfw_InitForOpenGL(class GLFWwindow *,bool)*
+
+```text
+[build] context.cpp.obj : error LNK2019: unresolved external symbol "public: void __cdecl xac::ImguiLayer::Init(struct GLFWwindow *)" (?Init@ImguiLayer@xac@@QEAAXPEAUGLFWwindow@@@Z) referenced in function "public: void __cdecl xac::GlobalContext::Init(void)" (?Init@GlobalContext@xac@@QEAAXXZ)
+[build] imgui_layer.cpp.obj : error LNK2019: unresolved external symbol "bool __cdecl ImGui_ImplGlfw_InitForOpenGL(class GLFWwindow *,bool)" (?ImGui_ImplGlfw_InitForOpenGL@@YA_NPEAVGLFWwindow@@_N@Z) referenced in function "public: void __cdecl xac::ImguiLayer::Init(class GLFWwindow *)" (?Init@ImguiLayer@xac@@QEAAXPEAVGLFWwindow@@@Z)
+[build]   Hint on symbols that are defined and could potentially match:
+[build]     "bool __cdecl ImGui_ImplGlfw_InitForOpenGL(struct GLFWwindow *,bool)" (?ImGui_ImplGlfw_InitForOpenGL@@YA_NPEAUGLFWwindow@@_N@Z)
+```
+
+It occurs because I declared `GLFWwindow` as `class` not `struct` in header file.
