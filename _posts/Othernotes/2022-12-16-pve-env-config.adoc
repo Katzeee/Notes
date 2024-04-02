@@ -6,10 +6,10 @@
 
 == Bios Setting(important for hardware pass-through)
 
-* IOMMU: enable
-* SVM mode
-* VT-D(intel), AMD-V(AMD)
-* SCM disable(UEFI boot)
+* Enable IOMMU: for IO divide
+* SVM mode: virtualize
+* SCM disable(UEFI boot): proxmox boot mode
+* VT-D(intel), AMD-V(AMD) # maybe not necessary
 
 == Install PVE
 
@@ -17,7 +17,7 @@
 
 Download pve-iso from https://proxmox.com/en/downloads/category/iso-images-pve[pve-download^].
 
-Use `rufus` to create a bootable USB drive(GPT+DD).
+Use `rufus` to create a bootable USB drive(GPT then DD).
 
 Boot from your usb device and just press continue, maybe to set your dns server address as `8.8.8.8` instead of your gateway address will be more robust.
 
@@ -316,7 +316,7 @@ Host github.com
 * Disk: SCSI
 * Network: virtIO
 
-Change boot sequential, then install windows as usual, *need install virtio driver from iso file.*
+Change boot sequential, then install windows as usual, *need install link:https://pve.proxmox.com/wiki/Windows_VirtIO_Drivers[virtio driver^] from iso file.*
 
 `qemu-ga` is also installed from the cd. 
 
