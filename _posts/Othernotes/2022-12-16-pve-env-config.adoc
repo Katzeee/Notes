@@ -316,7 +316,7 @@ Host github.com
 * Disk: SCSI
 * Network: virtIO
 
-Change boot sequential, then install windows as usual, *need install link:https://pve.proxmox.com/wiki/Windows_VirtIO_Drivers[virtio driver^] from iso file.*
+Change boot sequential, then install windows as usual, *need install https://pve.proxmox.com/wiki/Windows_VirtIO_Drivers[virtio driver^] from iso file.*
 
 `qemu-ga` is also installed from the cd. 
 
