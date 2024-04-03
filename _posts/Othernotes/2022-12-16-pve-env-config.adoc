@@ -461,11 +461,19 @@ To avoid TLS fail, use `git config --global http.sslVerify false`
 
 === Apps
 
+NOTE: `Host network` option is important, which ensures that the docker is running in host network.
+
 Search `ddns-go` and `webdav` in Apps.
 
 image::/assets/images/truenas-apps.png[]
 
 * ddns-go
++
+--
+image::/assets/images/2024-04-03-truenas-ddns-go-1.png[]
+
+image::/assets/images/2024-04-03-truenas-ddns-go-2.png[]
+--
 
 * webdav
 +
