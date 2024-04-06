@@ -142,6 +142,24 @@ port: 9876
 // TODO: update images
 create API, set up API and domain
 
+=== SSL certificate
+
+Step 1 and 2 is the same as the following section menu:Install TrueNAS Scale[SSL certificate from certbot]
+
+*3. Issue SSL certificates*
+
+```bash
+$ export DP_Id="1234"
+$ export DP_Key="sADDsdasdgdsf" # API token for DP
+$ acme.sh --debug --issue --dns dns_dp -d www.example.com --force
+```
+
+*4. Install certificate for PVE*
+
+```bash
+$ acme.sh --debug --installcert -d host.xacpve.fun --keypath /etc/pve/local/pve-ssl.key --fullchainpath /etc/pve/local/pve-ssl.pem --reloadcmd "systemctl restart pveproxy"
+```
+
 === ssh
 
 ./etc/ssh/sshd_config
@@ -155,6 +173,22 @@ If Use `WindTerm` as terminal
 Generate ssh key in both host and client, then copy `<client>/.ssh/id_rsa.pub` to host as `<host>/.ssh/authorized_keys`, then client can ssh to host without password
 
 In WindTerm, also set the sessions' authentication identity file as `<client>/.ssh/id_rsa` such that windterm to login host without password
+
+=== Customize
+
+Customize the `Summary` view of node. You can add your own widget in this function.
+
+./usr/share/pve-manager/js/pvemanagerlib.js
+[source, js]
+--
+Ext.define('PVE.node.StatusView', {
+    extend: 'Proxmox.panel.StatusView',
+    alias: 'widget.pveNodeStatus',
+    ...
+})
+--
+
+Excute `systemctl restart pveproxy` to restart the service.
 
 == Install Openwrt
 
