@@ -645,7 +645,7 @@ Then `vi /etc/fstab`
 
 ./etc/fstab
 ```bash
-//$smb_server/$<share> /mnt/<folder-name> cifs credentials=~/.smbcredentials,iocharset=utf8 0 0
+//$smb_server/$<share> /mnt/<folder-name> cifs credentials=~/.smbcredentials,iocharset=utf8,uid=1000,gid=1000 0 0
 $nfs_server:$<full-path-to-folder>(/mnt/master/pve/database) /mnt/database nfs defaults 0 0
 ```
 
@@ -671,7 +671,7 @@ $ docker volume create portainer_data
 $ docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
 ```
 
-Then go to <docker-CT-IP>:9000 to set up portainer.
+Then go to `http://<docker-ct-ip>:9000` to set up portainer.
 
 === Install docker containers
 
@@ -682,6 +682,73 @@ menu:local[Stack > Add stack]
 - Docker cmd line
 +
 menu:local[Container >Add container]
+
+=== Applications
+
+* Photoprism
++
+--
+WARNING: If use nfs to mount database, you must change the `Maproot user` in nfs server, or the container will not get the root privilage causing database initialize failed.
+
+Just follow one of the following step.
+
+> https://docs.photoprism.app/getting-started/docker-compose/ +
+> https://docs.photoprism.app/getting-started/portainer/
+
+NOTE: Maybe you should mount `/photoprism/storage` to `/mnt/...`, seems it's very large. 
+--
+
+* icloudpd
++
+--
+> https://github.com/boredazfcuk/docker-icloudpd
+
+```yaml
+version: "3.8"
+
+volumes:
+   config:
+
+services:
+   icloudpd:
+      hostname: icloudpd
+      environment:
+         - TZ=Asia/Shanghai
+      image: boredazfcuk/icloudpd
+      healthcheck:
+         test: /usr/local/bin/healthcheck.sh
+         start_period: 30s
+      restart: always
+      volumes:
+         - config:/config
+         - /mnt/xac/Photos/iCloud/:/var/iCloud/
+      env_file:
+        - stack.env
+```
+
+```env
+# need same as the mount directory on host
+user=xac
+user_id=1000
+group=xac
+group_id=1000
+apple_id=326578901@qq.com
+authentication_type=MFA
+skip_check=true
+delete_empty_directories=true
+set_exif_datetime=true
+# auto_delete=true
+delete_after_download=true
+icloud_china=true
+auth_china=true
+download_path=/var/iCloud
+folder_structure={:%Y/%m}
+```
+
+Enter docker then execute `sync-icloud.sh --Initialise`, type in your password, choose `yes`, then type in the 2FA code.
+--
+
+
 
 === Resize the disk of LXC
 
@@ -749,13 +816,3 @@ Then add `Xiaomi MIoT` integration, now you can see all your devices, rename the
 +
 Add `HomeKit` integration, scan the QR code at notification panel to finish setting
 
-=== Set up Photoprism
-
-WARNING: If use nfs to mount database, you must change the `Maproot user` in nfs server, or the container will not get the root privilage causing database initialize failed.
-
-Just follow one of the following step.
-
-> https://docs.photoprism.app/getting-started/docker-compose/ +
-> https://docs.photoprism.app/getting-started/portainer/
-
-NOTE: Maybe you should mount `/photoprism/storage` to `/mnt/...`, seems it's very large. 
