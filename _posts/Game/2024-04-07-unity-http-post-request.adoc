@@ -1,0 +1,39 @@
+= Unity Send HTTP Post Request
+:revdate: 2024-04-07
+:page-category: Game
+:page-tags: [unity]   
+
+> https://forum.unity.com/threads/posting-json-through-unitywebrequest.476254/
+
+Unity provides you a `Post` method to send a post request, but it has some limitations.
+
+```cs
+WWWForm form;
+UnityWebRequest request = UnityWebRequest.Post(URL, form);
+```
+
+* `form.header` is read only
+
+* Can't change the `Content-Type` by manipulate `request`
++
+--
+I've tried to change the `Content-Type` like this, but it doesn't work
+
+```cs
+request.SetRequestHeader("Content-Type", "application/json");
+```
+--
+
+What you can do is to create a raw http request then fill it yourself.
+
+```cs
+Dictionary<string, string> form = new Dictionary<string, string>();
+form["name"] = taskName;
+UnityWebRequest request = new UnityWebRequest(MeshyGlobalConfig.T2M_URL, "POST");
+request.SetRequestHeader("Authorization", EditorPrefs.GetString(API_KEY_FIELD));
+request.SetRequestHeader("Content-Type", "application/json");
+request.downloadHandler = new DownloadHandlerBuffer();
+byte[] body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(form));
+request.uploadHandler = new UploadHandlerRaw(body);
+request.SendWebRequest().completed += OnSubmited;
+```

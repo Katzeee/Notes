@@ -537,6 +537,12 @@ menu:Datacenter[Storage > New > NFS]
 ID: name, Server: truenas ip, Export: path to dataset on truenas(just select)
 --
 
+=== RAID Degraded
+
+> https://www.bilibili.com/read/cv21112435/
+
+Offline the disk -> wipe disk -> replace the disk
+
 == [line-through]#Install TrueNAS Core#(Not Recommended)
 
 === Install TrueNAS
