@@ -1,0 +1,41 @@
+= Linux Service
+:revdate: 2024-04-07
+:page-category: Linux
+:page-tags: [linux, pve]
+
+References:
+
+> https://linuxhandbook.com/create-systemd-services/ +
+> https://wiki.archlinux.org/title/Systemd
+
+*1. Create a file named `$<something>.service` at /etc/systemd/system*
+
+*2. Customize your service*
+
+This is an example:
+
+```service
+[Unit]
+Description=
+ConditionFileIsExecutable=/root/ddns-go/ddns-go
+
+[Service]
+StartLimitInterval=5
+StartLimitBurst=10
+ExecStart=/root/ddns-go/ddns-go "-l" ":9876" "-f" "300" "-c" "/root/.ddns_go_config.yaml"
+Restart=always
+RestartSec=120
+EnvironmentFile=-/etc/sysconfig/ddns-go
+
+[Install]
+WantedBy=multi-user.target # <1>
+```
+<1> targets serve a similar purpose as runlevels.
+
+*3. Start and auto-boot the service*
+
+```bash
+$ sudo systemctl start $<something>
+$ sudo systemctl enable $<something>
+```
+
