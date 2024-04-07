@@ -1,0 +1,122 @@
+= Vue Comunication Between Parents and Children Component
+:revdate: 2024-04-07
+:page-category: Front-end
+:page-tags: [vue]
+
+== Props and Emit
+
+* Use props to pass value from parents to children
++
+--
+.Parent.vue
+```vue
+<template>
+  <Child :testString="test" />
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import Child from './Child.vue'
+const test = ref("parent")
+</script>
+
+```
+
+.Child.vue
+```vue
+<template>
+  <div>{{ testString }}</div>
+</template>
+
+<script setup lang="ts">
+const props = defineProps({
+  testString: {
+    type: String,
+    default: 'default'
+  }
+})
+</script>
+```
+--
+
+* Use emit to pass value from children to parents
++
+--
+.Parent.vue
+```vue
+<template>
+  <Child @customName="value => console.log(value)" />
+</template>
+
+<script setup lang="ts">
+import Child from './Child.vue'
+</script>
+
+```
+
+.Child.vue
+```vue
+<template>
+  <button @click='emit("customName", "customValue")'></button>
+</template>
+
+<script setup lang="ts">
+import { defineEmits } from 'vue'
+const emit = defineEmits(['customName'])
+</script>
+```
+--
+
+== Use v-model
+
+=== `v-model` will be auto expand
+
+* Use `v-model` in native component
++
+--
+```vue
+<input v-model="searchTest" />
+
+<-- Expand to -->
+<input 
+  :value="searchTest" 
+  @input="searchText = $event.target.value"
+/>
+```
+--
+
+* Use `v-model` in custom component
++
+--
+```vue
+<CustomInput v-model="searchTest" />
+
+<-- Expand to -->
+<CustomInput 
+  :modelValue="searchTest" 
+  @update:modelValue="newValue => searchText = newValue"
+/>
+```
+
+.Child.vue
+```vue
+<script setup>
+defineProps(['modelValue'])
+defineEmits(['update:modelValue'])
+</script>
+```
+--
+
+=== `v-model` with customized name
+
+```vue
+<MyComponent v-model:title="bookTitle" />
+```
+
+.Child.vue
+```vue
+<script setup>
+defineProps(['title'])
+defineEmits(['update:title'])
+</script>
+```
