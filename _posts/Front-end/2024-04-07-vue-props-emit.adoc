@@ -3,6 +3,9 @@
 :page-category: Front-end
 :page-tags: [vue]
 
+> https://vuejs.org/guide/components/props.html +
+> https://vuejs.org/guide/typescript/composition-api#typing-component-props
+
 == Props and Emit
 
 * Use props to pass value from parents to children
