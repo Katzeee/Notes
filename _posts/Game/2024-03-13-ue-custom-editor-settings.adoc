@@ -1,0 +1,100 @@
+= UE Custom Editor Settings
+:revdate: 2024-04-20
+:page-category: Game
+:page-tags: [UE]
+
+> https://www.tomlooman.com/unreal-engine-developer-settings/
+> https://blog.csdn.net/qq_25521145/article/details/127456680
+
+== Store as project config
+
+Properties:
+
+
+
+.MyPluginSettings.h
+```cpp
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Engine/DeveloperSettings.h"
+#include "MyPluginSettings.generated.h"
+
+UCLASS(Config = Editor, defaultconfig, meta = (DisplayName = "MyPlugin")) // <1> <2> <3>
+class UMyPluginSettings : public UDeveloperSettings
+{
+	GENERATED_BODY()
+
+public:
+	FName GetContainerName() const override { return TEXT("Editor"); }
+	FName GetCategoryName() const override { return TEXT("Plugins"); }
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "General") // <4> <5> <6>
+	FString APIKey;
+};
+```
+<1> Config = Editor: Store the config in `[Project]/Config/DefaultEditor.ini`
+
+<2> defaultconfig: Save object config only to Default INIs, never to local INIs. (local INIs are in your [Project]/Saved/Config folder)
+
+<3> DisplayName: Give it a better looking name in UI
+
+<4> Config: Exposes the variable to the INI file specified in the UCLASS in the top
+
+<5> EditAnywhere: Exposes it to the Project Settings window.
+
+<6> Category = "General": Categorize the config variables in UI
+
+== Store as editor config
+
+If you want to store the config in `[Engine]/Engine/Config/BaseEditor.ini` rather than project folder, you should override functions by yourself.
+
+.MyPluginSettings.h
+```cpp
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Engine/DeveloperSettings.h"
+#include "Misc/ConfigCacheIni.h"
+#include "MyPluginSettings.generated.h"
+
+UCLASS(meta = (DisplayName = "MyPlugin"))
+class UMyPluginSettings : public UDeveloperSettings
+{
+	GENERATED_BODY()
+
+public:
+	FName GetContainerName() const override { return TEXT("Editor"); }
+	FName GetCategoryName() const override { return TEXT("Plugins"); }
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "General")
+	FString APIKey;
+
+	UMyPluginSettings()
+		: Super()
+	{
+		FConfigFile CustomConfigFile;
+		FString		EngineIniFilePath = FPaths::EngineConfigDir() + FString(TEXT("BaseEditor.ini"));
+		CustomConfigFile.Read(EngineIniFilePath);
+		CustomConfigFile.GetString(TEXT("/Script/MyPlugin.MyPluginSettings"), TEXT("APIKey"), APIKey); // deserialize
+	}
+
+	void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override
+	{
+		Super::PostEditChangeProperty(PropertyChangedEvent);
+		FConfigFile CustomConfigFile;
+		FString		EngineIniFilePath = FPaths::EngineConfigDir() + FString(TEXT("BaseEditor.ini"));
+		CustomConfigFile.Read(EngineIniFilePath);
+		CustomConfigFile.FindOrAddSection(TEXT("/Script/MyPlugin.MyPluginSettings"));
+		CustomConfigFile.SetString(TEXT("/Script/MyPlugin.MyPluginSettings"), TEXT("APIKey"), *APIKey); // serialize
+		CustomConfigFile.Write(EngineIniFilePath);
+	}
+};
+```
+
+== Get the config value
+
+```cpp
+auto* MyPluginSettings = GetDefault<UMyPluginSettings>();
+(void)MyPlginSettings->APIKey;
+```
