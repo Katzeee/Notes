@@ -799,6 +799,10 @@ $ pct resize <vmid> rootfs 40G
 
 NOTE: You can only expand it, not shrink.
 
+Another approach:
+
+> https://post.smzdm.com/p/ad9dngwx/
+
 == Install homeassitant
 
 === Install
