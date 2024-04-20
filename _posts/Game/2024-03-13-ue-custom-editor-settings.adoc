@@ -1,7 +1,7 @@
 = UE Custom Editor Settings
 :revdate: 2024-04-20
 :page-category: Game
-:page-tags: [UE]
+:page-tags: [ue]
 
 > https://www.tomlooman.com/unreal-engine-developer-settings/
 > https://blog.csdn.net/qq_25521145/article/details/127456680

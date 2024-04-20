@@ -1,36 +1,26 @@
----
-title: Ue Plugin Only Display One
-date: 2024.02.21
-categories: [Game]
-tags: [game/ue]
----
+= Ue Plugin Only Display One
+:revdate: 2024-02-21
+:page-category: Game
+:page-tags: [ue]
 
-## Identical commands from different plugins display only one
+== Identical commands from different plugins display only one
 
 I have two different plugins registered like this
 
 ```cpp
-// plugin one
 UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("LevelEditor.MainMenu.Window");
 {
 	FToolMenuSection& Section = Menu->FindOrAddSection("Meshy");
-	Section.AddMenuEntryWithCommandList(FMeshyCommands::Get().OpenPluginWindow, PluginCommands);
-}
-```
-```cpp
-//plugin two
-UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("LevelEditor.MainMenu.Window");
-{
-	FToolMenuSection& Section = Menu->FindOrAddSection("Meshy");
-	Section.AddMenuEntryWithCommandList(FTestAddonCommands::Get().OpenPluginWindow, PluginCommands);
+	Section.AddMenuEntryWithCommandList(FMeshyCommands::Get().OpenPluginWindow, PluginCommands); // plugin one
+	Section.AddMenuEntryWithCommandList(FTestAddonCommands::Get().OpenPluginWindow, PluginCommands); // plugin two
 }
 ```
 
 Both plugins register an `OpenPluginWindow` command, even though they originate from different classes, UE will only display the one that is registered later.
 
-Upon debuging, I discovered that there is an attribute `Blocks` within the `Section` variable which stores all menu entries and identifies them by their `Name`. However, both plugin commands are named "OpenPluginWindow". Consequently, only one of them will be displayed.
+Upon debuging, I discovered that there is an attribute `Blocks` within the `Section` variable which stores all menu entries and *identifies* them by their `Name`. However, both plugin commands are named "OpenPluginWindow". Consequently, only one of them will be displayed.
 
-## Solution
+== Solution
 
 Knowing the reason behind this, we simply need to change the id name of the command.
 
@@ -59,4 +49,10 @@ There is another macro to register a command that can prevent this issue. With y
 ```cpp
 #define UI_COMMAND_EXT( BindingContext, OutUICommandInfo, CommandIdName, FriendlyName, InDescription, CommandType, InDefaultChord, ... ) \
 	MakeUICommand_InternalUseOnly( BindingContext, OutUICommandInfo, TEXT(LOCTEXT_NAMESPACE), TEXT(CommandIdName), TEXT(CommandIdName) TEXT("_ToolTip"), "." CommandIdName, TEXT(FriendlyName), TEXT(InDescription), CommandType, InDefaultChord, ## __VA_ARGS__ );
+```
+
+Register like this:
+
+```cpp
+UI_COMMAND_EXT(this, OpenT2TWindow, "Meshy.OpenT2TWindow", "MeshyT2T", "Bring up Meshy window", EUserInterfaceActionType::Button, FInputChord());
 ```
