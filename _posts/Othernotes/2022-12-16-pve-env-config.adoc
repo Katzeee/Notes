@@ -788,7 +788,42 @@ folder_structure={:%Y/%m}
 Enter docker then execute `sync-icloud.sh --Initialise`, type in your password, choose `yes`, then type in the 2FA code.
 --
 
+* qbittorrent
++
+--
+> https://github.com/linuxserver/docker-qbittorrent
 
+```yaml
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - WEBUI_PORT=8016
+      - TORRENTING_PORT=6881
+    volumes:
+      - /home/xac/qbittorrent/config:/config
+      - /mnt/xac/qb-downloads:/downloads
+    ports:
+      - 8016:8016
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
+```
+
+WARNING: The `WEBUI_PORT` and `TORRENTING_PORT` must be forward to the same port!
+--
+
+* nextcloud
++
+--
+> https://github.com/nextcloud/docker
+```yaml
+```
+--
 
 === Resize the disk of LXC
 
