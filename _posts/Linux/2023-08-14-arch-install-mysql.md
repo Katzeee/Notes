@@ -2,7 +2,7 @@
 title: Arch Install Mysql
 date: 2023.08.14
 categories: [Linux]
-tags: [linux/arch, database/mysql]
+tags: [arch, mysql, database]
 ---
 
 # [Update]RECOMMEND TO USE DOCKER !!

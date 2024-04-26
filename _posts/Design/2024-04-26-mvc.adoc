@@ -1,0 +1,34 @@
+= MVC
+:revdate: 2024-04-26
+:page-category: Designe
+:page-tags: [mvc, ui]
+
+Model-View-Controller(MVC) is a common architecture when designe UI systems.
+
+== Model
+
+* Manage the CRUD of the system data.
+
+    ** Get the initial data from local or server.
+
+    ** Provide the interface to query and update data.
+
+* Dispatch event when data changed.
+
+== View
+
+* Store the UI widget config data. 
+
+* Only manage the display of the system.
+
+    ** Provide the refresh UI methods.
+
+* Emit events when interact.
+
+== Controller
+
+* Manage the communication between Model and View, UI widgets evnets(like open, close).
+
+    ** Listen the events from view.
+
+    ** Update the data in Model and refresh the UI in View.
