@@ -157,7 +157,7 @@ $ acme.sh --debug --issue --dns dns_dp -d www.example.com --force
 *4. Install certificate for PVE*
 
 ```bash
-$ acme.sh --debug --installcert -d host.xacpve.fun --keypath /etc/pve/local/pve-ssl.key --fullchainpath /etc/pve/local/pve-ssl.pem --reloadcmd "systemctl restart pveproxy"
+$ acme.sh --debug --installcert -d host.example.com --keypath /etc/pve/local/pve-ssl.key --fullchainpath /etc/pve/local/pve-ssl.pem --reloadcmd "systemctl restart pveproxy"
 ```
 
 === ssh
@@ -647,14 +647,14 @@ ubuntu20.04, `vi /etc/apt/source.list`
 
 ./etc/apt/source.list
 ```config
-deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
-deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
-deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe
+deb http://mirrors.ustc.edu.cn/ubuntu/ bionic main restricted universe multiverse
+deb http://mirrors.ustc.edu.cn/ubuntu/ bionic-security main restricted universe multiverse
+deb http://mirrors.ustc.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse
+deb http://mirrors.ustc.edu.cn/ubuntu/ bionic-proposed main restricted universe multiverse
+deb http://mirrors.ustc.edu.cn/ubuntu/ bionic-backports main restricted universe multiverse
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ bionic main restricted universe multiverse
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ bionic-security main restricted universe multiverse
+deb-src http://mirrors.ustc.edu.cn/ubuntu/ bionic-updates main restricted universe
 ```
 
 === localization
@@ -708,10 +708,18 @@ Or use the script in my dot-files.
 
 ```bash
 $ docker volume create portainer_data
-$ docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
+$ docker run -d -p 9443:9443 -p 8000:8000  --restart=always --name portainer\
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /home/xac/.docker-confs/portainer/ssl:/cert \
+    -v portainer_data:/data \
+    portainer/portainer-ce\
+    --sslcert /cert/docker.example.com.cer\
+    --sslkey /cert/docker.example.com.key
 ```
 
-Then go to `http://<docker-ct-ip>:9000` to set up portainer.
+Then go to `https://<docker-ct-ip>:9443` to set up portainer.
+
+TIP: Change port 9443 to 9000 to use without ssl
 
 === Install docker containers
 
@@ -735,7 +743,94 @@ Just follow one of the following step.
 > https://docs.photoprism.app/getting-started/docker-compose/ +
 > https://docs.photoprism.app/getting-started/portainer/
 
+```yaml
+version: '3.5'
+
+## PhotoPrism Stack Configuration for Portainer
+services:
+  photoprism:
+    image: photoprism/photoprism:latest
+    ## Don't enable automatic restarts until PhotoPrism has been properly configured and tested!
+    ## If the service gets stuck in a restart loop, this points to a memory, filesystem, network, or database issue:
+    ## https://docs.photoprism.app/getting-started/troubleshooting/#fatal-server-errors
+    # restart: unless-stopped
+    stop_grace_period: 10s
+    depends_on:
+      - mariadb
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    ports:
+      - "2342:2342" # HTTP port (host:container)
+    env_file:
+      - stack.env
+    working_dir: "/photoprism" # do not change or remove
+    ## Storage Folders: "~" is a shortcut for your home directory, "." for the current directory
+    volumes:
+      - "/mnt/xac/Photos:/photoprism/originals" # Originals mount path can be changed as needed (DO NOT REMOVE)
+      - "/mnt/database/photoprism/storage:/photoprism/storage"     # *Writable* storage folder for cache, database, and sidecar files (DO NOT REMOVE)
+
+  mariadb:
+    image: mariadb:10.11
+    ## If MariaDB gets stuck in a restart loop, this points to a memory or filesystem issue:
+    ## https://docs.photoprism.app/getting-started/troubleshooting/#fatal-server-errors
+    restart: unless-stopped
+    stop_grace_period: 5s
+    security_opt: # see https://github.com/MariaDB/mariadb-docker/issues/434#issuecomment-1136151239
+      - seccomp:unconfined
+      - apparmor:unconfined
+    command: mariadbd --innodb-buffer-pool-size=512M --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120
+    ## Never store database files on an unreliable device such as a USB flash drive, an SD card, or a shared network folder:
+    volumes:
+      - "/mnt/database/photoprism:/var/lib/mysql" # DO NOT REMOVE
+    env_file:
+      - stack.env
+```
+
+```env
+MARIADB_AUTO_UPGRADE=1
+MARIADB_INITDB_SKIP_TZINFO=1
+MARIADB_DATABASE=photoprism
+MARIADB_USER=photoprism
+MARIADB_PASSWORD=insecure
+MARIADB_ROOT_PASSWORD=insecure
+PHOTOPRISM_DATABASE_DRIVER=mysql
+PHOTOPRISM_DATABASE_SERVER=mariadb:3306
+PHOTOPRISM_DATABASE_NAME=photoprism
+PHOTOPRISM_DATABASE_USER=photoprism
+PHOTOPRISM_DATABASE_PASSWORD=insecure
+PHOTOPRISM_ADMIN_USER=admin
+PHOTOPRISM_ADMIN_PASSWORD=insecure
+PHOTOPRISM_AUTH_MODE=password
+PHOTOPRISM_SITE_URL=https://docker.example.com:2342/
+PHOTOPRISM_DISABLE_TLS=false
+PHOTOPRISM_DEFAULT_TLS=true
+PHOTOPRISM_INIT=https
+PHOTOPRISM_ORIGINALS_LIMIT=5000
+PHOTOPRISM_HTTP_COMPRESSION=gzip
+PHOTOPRISM_LOG_LEVEL=info
+PHOTOPRISM_READONLY=false
+PHOTOPRISM_EXPERIMENTAL=false
+PHOTOPRISM_DISABLE_CHOWN=false
+PHOTOPRISM_DISABLE_WEBDAV=false
+PHOTOPRISM_DISABLE_SETTINGS=false
+PHOTOPRISM_DISABLE_TENSORFLOW=false
+PHOTOPRISM_DISABLE_FACES=false
+PHOTOPRISM_DISABLE_CLASSIFICATION=false
+PHOTOPRISM_DISABLE_VECTORS=false
+PHOTOPRISM_DISABLE_RAW=false
+PHOTOPRISM_RAW_PRESETS=false
+PHOTOPRISM_JPEG_QUALITY=85
+PHOTOPRISM_DETECT_NSFW=false
+PHOTOPRISM_UPLOAD_NSFW=true
+PHOTOPRISM_SITE_CAPTION=AI-Powered Photos App
+PHOTOPRISM_SITE_DESCRIPTION=
+PHOTOPRISM_SITE_AUTHOR=
+```
+
 NOTE: Maybe you should mount `/photoprism/storage` to `/mnt/...`, seems it's very large. 
+
+Put your `www.example.com.crt` and `www.example.com.key` to `storage/config/certificates`.
 --
 
 * icloudpd
@@ -805,7 +900,7 @@ services:
       - WEBUI_PORT=8016
       - TORRENTING_PORT=6881
     volumes:
-      - /home/xac/qbittorrent/config:/config
+      - /home/xac/.docker-confs/qbittorrent/config:/config
       - /mnt/xac/qb-downloads:/downloads
     ports:
       - 8016:8016
@@ -815,6 +910,104 @@ services:
 ```
 
 WARNING: The `WEBUI_PORT` and `TORRENTING_PORT` must be forward to the same port!
+
+menu:Tools[Options > Web UI > Use HTTPS]
+--
+
+* nginx
++
+--
+```yaml
+version: "3"
+
+services:
+    client:
+        image: nginx
+        ports:
+            - 8001:80
+            - 8002:443
+        volumes:
+            - /home/xac/.docker-confs/nginx/html:/usr/share/nginx/html
+            - /home/xac/.docker-confs/nginx/config/nginx.conf:/etc/nginx/nginx.conf
+            - /home/xac/.docker-confs/nginx/config/conf.d:/etc/nginx/conf.d
+            - /home/xac/.docker-confs/nginx/logs:/var/log/nginx
+            - /home/xac/.docker-confs/nginx/ssl:/ssl
+```
+
+TIP: Maybe need create `nginx.conf` first, or it will fail to create the container
+
+NOTE: If you want support https, copy `crt` and `key` to `ssl` folder
+
+.nginx.conf
+```conf
+user  nginx;
+worker_processes  1;
+
+error_log  /var/log/nginx/error.log warn;
+pid        /var/run/nginx.pid;
+
+events {
+   worker_connections  1024;
+}
+
+
+http {
+   include       /etc/nginx/mime.types;
+   default_type  application/octet-stream;
+
+   log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                     '$status $body_bytes_sent "$http_referer" '
+                     '"$http_user_agent" "$http_x_forwarded_for"';
+
+   access_log  /var/log/nginx/access.log  main;
+
+   sendfile        on;
+   #tcp_nopush     on;
+
+   keepalive_timeout  65;
+
+   #gzip  on;
+
+   include /etc/nginx/conf.d/*.conf;
+}
+```
+
+.conf.d/default.conf
+```conf
+server {
+   listen    80;       
+   listen    443 ssl;       
+   server_name  docker.example.com;             
+
+   #charset koi8-r;
+   #access_log  /var/log/nginx/host.access.log  main;
+
+   # ssl on # force https
+   ssl_certificate /ssl/server.crt;
+   ssl_certificate_key /ssl/server.key;
+
+   ssl_session_cache    shared:SSL:1m;
+   ssl_session_timeout  5m;
+
+   ssl_protocols  SSLv2 SSLv3 TLSv1.2;
+
+   ssl_ciphers  HIGH:!aNULL:!MD5;
+   ssl_prefer_server_ciphers  on;
+
+   location / {
+       root   /usr/share/nginx/html;
+       index  index.html index.htm;
+   }
+
+   #error_page  404              /404.html;
+
+   error_page   500 502 503 504  /50x.html;
+   location = /50x.html {
+       root   /usr/share/nginx/html;
+   }
+}
+```
+
 --
 
 * nextcloud
@@ -823,6 +1016,64 @@ WARNING: The `WEBUI_PORT` and `TORRENTING_PORT` must be forward to the same port
 > https://github.com/nextcloud/docker
 ```yaml
 ```
+--
+
+* jellyfin
++
+--
+> https://wp.gxnas.com/4926.html
+
+```yaml
+version: '3.5'
+services:
+  jellyfin:
+    image: nyanmisaka/jellyfin
+    container_name: jellyfin
+
+    network_mode: 'host'
+    volumes:
+      - /home/xac/.docker-confs/jellyfin/config:/config
+      - /mnt/database/jellyfin/cache:/cache
+      - /mnt/xac/qb-downloads/media:/media:ro
+    restart: 'unless-stopped'
+```
+
+Enable `ipv6` and `https` in the menu:Setting[Advanced > Networking] in WebUI.
+
+Use ``openssl pkcs12 -export -out certificate.pfx -inkey privatekey.pem -in certificate.pem
+`` to convert the pem cert to pkcs12 format.
+
+--
+
+* vaultwarden
++
+--
+> https://rs.ppgg.in/ +
+> https://github.com/vineethmn/vaultwarden-docker-compose
+
+```yaml
+version: "3"
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    ports:
+     - 9445:80
+    volumes:
+     - /mnt/database/vaultwarden:/data:rw
+     - /home/xac/.docker-confs/vaultwarden/ssl:/ssl
+    environment:
+     - ROCKET_TLS={certs="/ssl/fullchain.cer",key="/ssl/docker.example.com.key"}
+     - ADMIN_TOKEN=test_token
+     - WEBSOCKET_ENABLED=true
+     - SIGNUPS_ALLOWED=false
+     - DOMAIN=https://docker.example.com
+```
+
+Change the token to something like `openssl rand -base64 48`
+
+NOTE: Once you have signed up, you should update `SIGNUPS_ALLOWED` to false.
 --
 
 === Resize the disk of LXC
