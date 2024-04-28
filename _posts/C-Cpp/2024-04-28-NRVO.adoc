@@ -1,0 +1,78 @@
+= NRVO
+:revdate: 2024-04-28
+:page-category: C-Cpp
+:page-tags: [c-cpp]
+
+== What is NRVO
+
+When a function returns a local variable whose type is the same as the function return type, the compiler will consturct the value at the position been called.
+
+== How NRVO works
+
+```cpp
+#include <iostream>
+
+struct Noisy {
+  Noisy() { std::cout << "constructed at " << this << '\n'; }
+  Noisy(const Noisy&) { std::cout << "copy-constructed\n"; }
+  Noisy(Noisy&&) { std::cout << "move-constructed\n"; }
+  ~Noisy() { std::cout << "destructed at " << this << '\n'; }
+};
+
+Noisy f() {
+  Noisy v = Noisy();
+  return v;
+}
+void g(Noisy arg) { std::cout << "&arg = " << &arg << '\n'; }
+
+int main() {
+  Noisy v = f();
+  g(f());
+}
+```
+
+NRVO ensures the `Nosiy` will not be copy and move.
+
+```text
+constructed at 0x7fff880300ae
+constructed at 0x7fff880300af
+&arg = 0x7fff880300af
+destructed at 0x7fff880300af
+destructed at 0x7fff880300ae
+```
+
+== `std::move` may break NRVO
+
+```cpp
+Noisy f() {
+  Noisy v = Noisy();
+  return std::move(v); // bad
+}
+```
+
+```text
+constructed at 0x7ffc54006cdf
+move-constructed
+destructed at 0x7ffc54006cdf
+constructed at 0x7ffc54006cdf
+move-constructed
+destructed at 0x7ffc54006cdf
+&arg = 0x7ffc54006d0f
+destructed at 0x7ffc54006d0f
+destructed at 0x7ffc54006d0e
+```
+
+== `std::optional` may break NRVO
+
+```cpp
+std::optional<Noisy> f() {
+  Noisy v = Noisy();
+  return v; // bad
+}
+
+std::optional<Noisy> f() {
+  std::optional<Noisy> v;
+  v = Noisy();
+  return v; // good
+}
+```

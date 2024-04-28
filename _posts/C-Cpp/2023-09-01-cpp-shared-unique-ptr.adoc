@@ -1,12 +1,10 @@
----
-title: Cpp Shared Unique Ptr
-date: 2023.09.01
-categories: [C-Cpp]
-tags: [c-cpp, software-design, c-cpp/stl-code]
----
+= Cpp Shared Unique Ptr
+:revdate: 2023-09-01
+:page-category: C-Cpp
+:page-tags: [c-cpp, design]
 
-> https://www.reddit.com/r/cpp_questions/comments/gad4u2/why_is_the_deleter_part_of_the_type_for_stdunique/
-> https://geidav.wordpress.com/2017/10/29/custom-deleters-for-smart-pointers-in-modern-c/  
+> https://www.reddit.com/r/cpp_questions/comments/gad4u2/why_is_the_deleter_part_of_the_type_for_stdunique/ +
+> https://geidav.wordpress.com/2017/10/29/custom-deleters-for-smart-pointers-in-modern-c/ +
 > https://stackoverflow.com/questions/21355037/why-does-unique-ptr-take-two-template-parameters-when-shared-ptr-only-takes-one
 
 I got a incomplete type error raised by `unique_ptr` when I compile code like:
@@ -26,11 +24,11 @@ class Context {
 #include "context.hpp"
 Context::Init() {}
 ```
-## Solution
+== Solution
 
-Include `camera.hpp` in either `contex.cpp` or `context.hpp`, because `unique_ptr` must know the concrete declaration of its templete arguments.
+Include `camera.hpp` in either `contex.cpp` or `context.hpp`, because `unique_ptr` must know the detailed declaration of its templete arguments.
 
-## However
+== However
 
 **I'm surprised by finding another solution changing `unique_ptr` to `shared_ptr`.**
 
@@ -38,7 +36,9 @@ You can easily find `unique_ptr` use `static_assert` to ensure `sizeof(Tp) > 0` 
 
 Instead of wondering why it works, I'm wondering why it is designed like this.
 
-## Difference of `unique_ptr` and `shader_ptr` implemented
+== Difference of `unique_ptr` and `shader_ptr` implemented
+
+TIP: Always use `std::unique_ptr` except when async destruct or caching. Always use `std::make_shared` rather than `std::shader_ptr<T>(new T)` because the latter will allocate memory twice, one for T, one for the reference block, and these two memory block are not adjacent breaking the CPU cache.
 
 `std::unique_ptr` carries the custom deleter as part of its type (`template<class T, class Deleter> std::unique_ptr`). 
 
@@ -46,12 +46,12 @@ In contrast, the custom deleter of `std::shared_ptr` is not part of the type (`t
 
 Mostly, this difference doesn’t matter much. Though, there are use-cases, like e.g. factories returning `std::unique_ptr` with a custom deleter, were the difference does matter.
 
-### `std::unique_ptr`
+=== `std::unique_ptr`
 
 Deleter is **part of the type** and you don't need to store anything additional in the objects of this **type**(deleter) which makes it to be a _zero-overhead_ abstraction:
 
-1.  Its size is identical to the size of a raw pointer on the underlying architecture.
-2.  All calls to the deleter can be inlined.
+.  Its size is identical to the size of a raw pointer on the underlying architecture.
+.  All calls to the deleter can be inlined.
 
 One possible implemention which makes use of the empty base optimization is to store the wrapped pointer together with the deleter in a [_compressed pair_](https://www.boost.org/doc/libs/1_61_0/libs/utility/doc/html/compressed_pair.html). The obvious disadvantage of making the custom deleter part of the type is that two `std::unique_ptr`s with different custom deleters are of different type, even if they wrap the same pointer type.
 
@@ -73,9 +73,9 @@ Example:
 std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
 ```
 
-!!! Danger `sizeof(_Dp)` may be 0 if it doesn't contain any attributes. Thus, `sizeof(_M_t) == sizeof(pointer)`
+NOTE: `sizeof(_Dp)` may be 0 if it doesn't contain any attributes. Thus, `sizeof(_M_t) == sizeof(pointer)`
 
-### `std::shared_ptr`
+=== `std::shared_ptr`
 
 `std::shared_ptr` provides the convinience of a _type erased_ deleter which means the type of the custom deleter is not dragged into `std::shared_ptr`‘s type.
 
@@ -83,9 +83,9 @@ Users of shared_ptr don't have to know what type the deleter has. This has a run
 
 The rationale behind this design choice:
 
-1. `std::shared_ptr` must anyways heap allocate memory for its shared _control block_, containing the wrapped pointer and the reference counter. Additionally including the custom deleter didn’t seem like a big cost, taking the increased flexiblity into account.
+. `std::shared_ptr` must anyways heap allocate memory for its shared _control block_, containing the wrapped pointer and the reference counter. Additionally including the custom deleter didn’t seem like a big cost, taking the increased flexiblity into account.
 
-2. Shared pointers of different types can share the ownership of the same object.
+. Shared pointers of different types can share the ownership of the same object.
 
 The type erasure makes `std::shared_ptr` more flexible. For example changing the allocation strategy of a factory, and with it the custom deleter of the returned std::shared_ptrs, doesn’t break source/binary compatibility and thereby, doesn’t require any recompilation of client software.
 
@@ -168,4 +168,4 @@ The type erasure makes `std::shared_ptr` more flexible. For example changing the
     };
 ```
 
-!!! Danger However, `shader_ptr` must store the deleter in somewhere because `_Dp` is not the type of `shader_ptr`
+**However, `shader_ptr` must store the deleter in somewhere because `_Dp` is not the type of `shader_ptr`.**
