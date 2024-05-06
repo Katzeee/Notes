@@ -149,6 +149,7 @@ asciidoctor:
     source-highlighter: rouge
     source-linenums-option: true
     stem: 'latexmath'
+    experimental: true
 
 collections:
   tabs:
