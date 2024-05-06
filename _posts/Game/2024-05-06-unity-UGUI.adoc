@@ -1,0 +1,74 @@
+= UGUI
+:revdate: 2024-05-06
+:page-category: Game
+:page-tags: [design, unity]
+
+This article is based on Unity 2022.3.22f1. 
+
+UGUI source is stored in `[Engine]/Data/Resources/PackageManager/BuiltInPackages/com.unity.ugui`. You can copy it to your Project then remove the `Unity UI` and those packages which depenent on it in menu:Window[Package Manager]. (Or maybe you can directly debug it)
+
+== EventSystem
+
+These are two components on `EventSystem` game object:
+
+* EventSystem: Queries input module every frame for the player input event.
+* link:https://docs.unity3d.com/2022.2/Documentation/Manual/script-StandaloneInputModule.html[StandaloneInputModule]: Generates and processes EventData, sends events.
+
+Following is a simplified sequence diagram for `EventSystem::Update`
+
+[plantuml, format="png", alt="bad plant uml server"]
+----
+@startuml
+hide footbox
+EventSystem -> EventSystem: EventSystem::Update()
+note left: runs per frame
+activate EventSystem
+EventSystem -> EventSystem: EventSystem::TickModules
+activate EventSystem
+EventSystem -> StandaloneInputModule: StandaloneInputModule::UpdateModule()
+activate StandaloneInputModule
+deactivate StandaloneInputModule
+deactivate EventSystem
+EventSystem -> StandaloneInputModule: StandaloneInputModule::Process()
+alt EventSystem.IsFocus == true
+note right: EventSystem.IsFocus is true when Application.IsFocus
+else
+activate StandaloneInputModule
+StandaloneInputModule -> StandaloneInputModule: StandaloneInputModule::ProcessTouchEvents()
+StandaloneInputModule -> StandaloneInputModule: StandaloneInputModule::ProcessMouseEvents()
+activate StandaloneInputModule
+StandaloneInputModule -> PointerInputModule: PointerInputModule::GetMousePointerEventData()
+activate PointerInputModule
+PointerInputModule -> PointerInputModule: PointerInputModule::GetPointerData()
+note left: get(when hold) or create(when pressed) pointer\ndata object, prepare the input data from Input
+PointerInputModule -> EventSystem: EventSystem::RaycastAll()
+PointerInputModule -> PointerInputModule : Fill the pointer data using raycast result
+PointerInputModule --> StandaloneInputModule: mouseData
+deactivate PointerInputModule
+StandaloneInputModule -> StandaloneInputModule: StandaloneInputModule::ProcessMousePress()
+activate StandaloneInputModule
+alt if pressed this frame
+StandaloneInputModule -> ExecuteEvents: ExecuteEvents::ExecuteHierarchy(ExecuteEvents.pointerDownHandler)
+note over StandaloneInputModule, PointerInputModule: upward recusively excute the callback function, start from the frontest\ngame object to canvas, until find the game object listening this event
+activate ExecuteEvents
+ExecuteEvents -> ExecuteEvents: ExecuteEvents::Execute<IPointerDownHandler>
+activate ExecuteEvents
+ExecuteEvents -> ExecuteEvents: ExecuteEvents::GetEventList<IPointerDownHandler>(gameObject)
+note left: get all IPointerDownHandler handlers on this game object
+ExecuteEvents -> ExecuteEvents: ExecuteEvents::Execute(handler, event)
+note left: for every handler, excute the callback
+return Is someone handled the event
+return The game object handled the event or null
+StandaloneInputModule -> StandaloneInputModule: Fill the pointer data
+deactivate StandaloneInputModule
+else if released this frame
+StandaloneInputModule -> StandaloneInputModule: StandaloneInputModule::ReleaseMouse()
+end
+StandaloneInputModule -> StandaloneInputModule: StandaloneInputModule::ProcessMove()
+StandaloneInputModule -> StandaloneInputModule: StandaloneInputModule::ProcessDrag()
+end
+...
+@enduml
+----
+
+== Render

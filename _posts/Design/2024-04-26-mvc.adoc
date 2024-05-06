@@ -1,6 +1,6 @@
 = MVC
 :revdate: 2024-04-26
-:page-category: Designe
+:page-category: Design
 :page-tags: [mvc, ui]
 
 Model-View-Controller(MVC) is a common architecture when designe UI systems.
