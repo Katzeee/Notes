@@ -1,0 +1,82 @@
+= Coroutine
+:revdate: 2024-05-12
+:page-category: Othernotes
+:page-tags: [design, rust, unity]
+
+== What is coroutine
+
+Generally speaking, a coroutine is a lightweight thread controlled by programmer rather than os. The programmer can decide when to suspend or resume it.
+
+It always is used when there is some time-consuming but not cpu-consuming operations occur, like io, sleep. At that time, the programmer could suspend the coroutine, then let the cpu to do some other things until this operation has done.
+
+== Stackful coroutine
+
+Stackful coroutine stores its excution state in stack, copying the whole register states.
+
+It doen't need new keywords to help its implementation. A coroutine is just a function, but can be suspend or resume by the scheduler.
+
+=== Lua
+
+```lua
+function producer()
+    for i = 0, 3 do
+        print("send "..i)
+        coroutine.yield(i)
+    end
+    print("End Producer")
+end
+
+function consumer(value)
+    repeat
+        print("receive "..value)
+        value = coroutine.yield()
+    until(not value)
+    print("End Consumer")
+end
+
+producerCoroutine = coroutine.create(producer)
+consumerCoroutine = coroutine.create(consumer)
+
+repeat
+    status, product = coroutine.resume(producerCoroutine)
+    coroutine.resume(consumerCoroutine, product)
+until(not status)
+print("End Main")
+```
+
+== Stackless coroutine
+
+The stackless coroutine is seen as a state machine, it may stores its state in a compiler generated class, every time you poll this coroutine, you will get its state, like init, pending or complete. 
+
+There should be a scheduler to control the resuming of the coroutines. The scheduler will do its coresponding things depending on the coroutine's state. The coroutine should manage its state by itself.
+
+=== Unity
+
+> https://docs.unity.cn/cn/2023.2/Manual/ExecutionOrder.html
+
+In Unity, a coroutine function returns `IEnumerator`, which indicates its state.
+
+The scheduler polling this coroutines every frame.
+
+Every `yield return` will suspend the coroutine, then it will be resumed after `OnFixedUpdate` or `OnUpdate`, or still suspended waiting the timer depends on its return value.
+
+=== Rust
+
+> https://www.bilibili.com/video/BV1qh4y1f7LK/
+
+In Rust, a future also should use a variable to indicate its state, like `inner_state`.
+
+Rust `future` use `waker` in `context` to inform the scheduler when it's ready to be poll.
+
+```rust
+pub trait Future {
+    type Output;
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output>;
+}
+```
+
+`async` and `await` is a syntactic sugar for rust compiler to generate `Futuer impl` for a simple function.
+
+
+
+
