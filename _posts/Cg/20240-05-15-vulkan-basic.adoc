@@ -1,0 +1,125 @@
+= Vulkan Basic
+:revdate: 2024-05-15
+:page-category: Cg
+:page-tags: [vulkan, cg]
+
+== Terminology
+
+=== Pass and Pipeline
+
+> https://stackoverflow.com/questions/55990802/what-is-the-relationship-of-renderpass-and-pipeline-in-vulkan
+
+Pipelin: Pipeline is a GPU context. 
+
+Pass: `VkRenderPass` defines what kind of inputs (attachments) will be needed. It defines how they get loaded and stored before and after the render pass instance, respectively. 
+
+Subpass: A render pass can has subpasses. It defines synchronization between them (replaces `vkCmdPipelineBarrier`s). And defines the kind of purpose a given render pass attachment will be filling (e.g. if it is a color buffer, or a depth buffer).
+
+=== Descriptor
+
+> https://zhuanlan.zhihu.com/p/172479225
+
+* Descriptor: A descriptor represents a shader resource in GPU, like buffer, buffer view, sampler.
+
+* Descriptor Set: 
++
+--
+A collection of descriptors, the descriptor in the same set always has the same pass timing.
+For example: per frame data like camera position, view_projection_matrix in set 0, per mesh data in set 1, per metieral data in set 2.
+--
+
+* Descriptor Set Layout: A descriptor set layout decribes the descriptor sets' layout in one pipeline, a descriptor set may be used by several pipelines, descriptor set layout tells the pipeline the set number.
+
+== Cpp functions to glsl mapping
+
+=== Descriptor Set Layout
+
+```cpp
+VkDescriptorSetLayoutBinding descriptor_set_layout_binding;
+descriptor_set_layout_binding.binding = 1;
+descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+```
+
+maps to
+
+```glsl
+layout(set = ?, binding = 1) readonly buffer _buffer_name
+{
+    ...
+};
+```
+
+Use `vkCreateDescriptorSetLayout` to create.
+
+=== Descriptor Set
+
+```cpp
+VkDescriptorBufferInfo descriptor_buffer_info;
+descriptor_buffer_info.offset = 0; // buffer layout
+descriptor_buffer_info.range = sizeof(YourStructType); // buffer layout
+descriptor_buffer_info.buffer = a_VkBuffer;
+
+VkWriteDescriptorSet descriptor_set;
+descriptor_set.dstSet          = the_set_created_by_vkCreateDescriptorSetLayout;
+descriptor_set.dstBinding      = 1; // which binding you want to define
+descriptor_set.dstArrayElement = 0; // is an array?
+descriptor_set.descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC; // it's buffer type 
+descriptor_set.descriptorCount = 1; // is descriptor array?
+descriptor_set.pBufferInfo     = &descriptor_buffer_info; // buffer info
+```
+
+```cpp
+VkDescriptorImageInfo descriptor_texture_info = {};
+descriptor_texture_info.sampler     = a_VkSampler;
+descriptor_texture_info.imageView   = a_VkImageView;
+descriptor_texture_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // image layout
+
+VkWriteDescriptorSet descriptor_set;
+descriptor_set.dstSet          = the_set_created_by_vkCreateDescriptorSetLayout;
+descriptor_set.dstBinding      = 3;
+descriptor_set.dstArrayElement = 0;
+descriptor_set.descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER; // texture type
+descriptor_set.descriptorCount = 1;
+descriptor_set.pImageInfo      = &descriptor_texture_info; // texture info
+```
+
+maps to
+
+```glsl
+layout(set = ?, binding = 1) readonly buffer _buffer_name
+{
+    highp mat4       proj_view_matrix;
+    highp vec3       camera_position;
+    ...
+};
+
+layout(set = ?, binding = 3) uniform sampler2D brdf_lut;
+```
+
+Use `vkUpdateDescriptorSets` to create.
+
+=== Pipeline
+
+Use `vkCmdBindDescriptorSets` to specify set-descriptor mapping.
+
+```cpp
+vkCmdBindDescriptorSets(device->getCurrentCommendBuffer(), 
+                        VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                        pipelines[0].layout,
+                        2, // set = 2
+                        1, // set count
+                        &descriptor_set,
+                        0,
+                        NULL);
+```
+
+maps to
+
+```glsl
+layout(set = 2, binding = ?) readonly buffer _buffer_name
+{
+    ...
+}
+```
+
+

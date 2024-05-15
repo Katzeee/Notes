@@ -7,11 +7,11 @@
 
 === `char` `short` `int` `long` `long long`的长度
 
-* `char`：1 字节（按照标准，`char` 的大小是 1 字节）
-* `short`：至少 2 字节
-* `int`：至少与 `short` 一样长
-* `long`：至少 4 字节，并且至少与 `int` 一样长
-* `long long`：至少 8 字节，并且至少与 `long` 一样长
+* `char`: 1 字节（按照标准，`char` 的大小是 1 字节）
+* `short`: 至少 2 字节
+* `int`: 至少与 `short` 一样长
+* `long`: 至少 4 字节，并且至少与 `int` 一样长
+* `long long`: 至少 8 字节，并且至少与 `long` 一样长
 
 === 大端和小端的存储
 
@@ -51,9 +51,9 @@ C++对象在内存中的布局可以细分为以下几个区域：
 
 === `shared_ptr` 与 `make_shared`
 
-使用 `std::make_shared` 创建 `shared_ptr` 时，只会进行一次动态内存分配。也就是计数块与对象分配在一起。
+* 使用 `std::make_shared` 创建 `shared_ptr` 时，只会进行一次动态内存分配。也就是计数块与对象分配在一起。
 
-`std::make_shared` 无法指定自定义删除器。
+* `std::make_shared` 无法指定自定义删除器。
 
 === `static`函数与`inline`函数的链接
 
@@ -93,7 +93,7 @@ Symbol table '.symtab' contains 6 entries:
 
 === 非`virtual`析构函数的内存泄漏问题
 
-只有可能会造成子类的内存泄漏
+*只有可能会造成子类的内存泄漏*
 
 只有在基类指针指向子类对象时析构会出问题，此时因为析构函数不是虚函数，基类指针只能看到基类的析构函数，不会调用子类的析构函数
 
@@ -123,6 +123,12 @@ auto main() -> int {
 输出为 ABA
 
 == 图形学
+
+=== tone mapping 和 color grading
+
+Tone mapping 是为了解决显示器没有办法显示HDR颜色，而在渲染过程中用的都是HDR贴图的问题，将HDR颜色映射到LDR色彩空间让其在显示屏上正常显示。
+
+Color grading 是给屏幕套滤镜，LUT。
 
 === Gamma空间
 
@@ -183,7 +189,7 @@ glDepthFunc LEQUAL
 
 === shader注意事项
 
-max(dot, 0)
+max(dot, 0.0)
 
 0.0 not 0
 
