@@ -101,7 +101,7 @@
 
 - 辐射度量学
 
-  ![](/assets/images/radiometry-notation.png)
+  image::/assets/images/radiometry-notation.png[]
 
 - 渲染方程
 
@@ -111,14 +111,14 @@
 
   入射光通常用辐射率来描述。这是因为我们通常关心的是单位面积上接收到多少光能量，并且假设这些光是均匀地分布在半球形的方向上的。对于出射光，我们则使用辐射亮度，因为我们需要知道从表面某一点沿着特定观察方向的光线强度有多大。
 
-  ![](/assets/images/brdf.png)
+  image::/assets/images/brdf.png[]
 
   辐射亮度（Radiance）和辐射率（Irradiance）之间的转换依赖于表面的几何特性以及观察或入射光线的方向。辐射率是从所有可能方向上入射光的辐射亮度的累积。
 
   以下是从辐射亮度到辐射率的基本公式：
   $ E = \int_{\Omega} L(\omega) \cos(\theta) d\omega $
 
-  ![](/assets/images/rendering-equation.png)
+  image::/assets/images/rendering-equation.png[]
 
   $L_o(p, \omega_o) = L_e(p, \omega_o) + \int_{\Omega} f_r(p, \omega_i, \omega_o) L_i(p, \omega_i) (\omega_i \cdot n) d\omega_i$  
   $(ω_i · n)$：入射方向和表面法线 $n$ 的点积，表示入射光线与表面的夹角余弦，是几何项的一部分，用于调整光线与表面交互的影响。
@@ -190,7 +190,7 @@
 
   拆分V项考虑阴影构成
 
-  ![](/assets/images/rendering-equation-split-visibility.png)
+  image::/assets/images/rendering-equation-split-visibility.png[]
 
   - PCF(Percentage Closer Filtering)
 
@@ -198,11 +198,11 @@
 
       slope bias根据斜率决定bias大小
 
-      ![](/assets/images/shadow-bias.png)
+      image::/assets/images/shadow-bias.png[]
 
     - 可见处为1，因为V表示可见程度
 
-      ![](/assets/images/pcf-in-equation.png)
+      image::/assets/images/pcf-in-equation.png[]
 
 
   - PCSS(Percentage Closer Soft Shadow)
@@ -235,7 +235,7 @@
 
     用于获得每次移动的距离，以及在该点的可视角度（用于估计V）
 
-    ![](/assets/images/dfss-angle.png)
+    image::/assets/images/dfss-angle.png[]
 
     k越大越硬
 
@@ -489,57 +489,73 @@ void main() {
 
 === PRT(Precomputed Radiance Transfer)(Shading and **Shadowing**)
 
-  SH函数，可旋转
+SH函数，可旋转
 
-  - Diffuse
+* Diffuse
++
+--
+image::/assets/images/prt-diffuse.png[]
 
-    ![](/assets/images/prt-diffuse.png)
+image::/assets/images/prt-light-transport.png[]
 
-    ![](/assets/images/prt-light-transport.png)
-    
-    Light transport 可以看作球谐函数基函数直接做光照
+Light transport 可以看作球谐函数基函数直接做光照
+--
 
-  - Glossy
+* Glossy
++
+--
+Light transport 作为一个与观察方向o相关的一个函数，即一个Matrix
 
-    Light transport 作为一个与观察方向o相关的一个函数，即一个Matrix
+image::/assets/images/prt-glossy.png[]
+--
 
-    ![](/assets/images/prt-glossy.png)
+* Interreflections and Caustics
++
+--
+都是需要预计算Light transport项
+--
 
-  - Interreflections and Caustics
+* Wavelet transformation
++  
+--
+会保留高频信息
+--
 
-    都是需要预计算Light transport项
+* PRTGI
++
+--
+将光照信息使用SH保存在场景的各个probe当中
+--
 
-  - Wavelet transformation
-    
-    会保留高频信息
+** 数据结构
++
+--
+Surfel：保存自己的position，normal，albedo
 
-  - PRTGI
+Brick：保存Surfel索引
 
-    将光照信息使用SH保存在场景的各个probe当中
+Probe：保存自己位置，对自己产生影响的Brick索引，天空可见性（可解决远距离的AO）
+--
 
-    - 数据结构
+** 烘焙
++
+--
+由Probe发射光线进行求教，将数据保存到Surfel中（即预计算光线追踪的几何部份）
+--
 
-      Surfel：保存自己的position，normal，albedo
+** 在运行时通过保存的几何信息，动态计算irradiance（也可预先烘焙），再将信息编码到probe上
 
-      Brick：保存Surfel索引
+** Cons
++
+--
+一般对per object进行四面体插值（当物体过大时不准确），可通过将SH信息pack到体素上（即长方体），对于每个像素获取其周围8个进行插值
+--
 
-      Probe：保存自己位置，对自己产生影响的Brick索引，天空可见性（可解决远距离的AO）
-
-    - 烘焙
-
-      由Probe发射光线进行求教，将数据保存到Surfel中（即预计算光线追踪的几何部份）
-
-    - 在运行时通过保存的几何信息，动态计算irradiance（也可预先烘焙），再将信息编码到probe上
-
-    - Cons
-
-      一般对per object进行四面体插值（当物体过大时不准确），可通过将SH信息pack到体素上（即长方体），对于每个像素获取其周围8个进行插值
-
-    - 对于多次弹射可以复用上一帧的结果
+*** 对于多次弹射可以复用上一帧的结果
 
 == GI
 
-  one bounce indirect illumination
+one bounce indirect illumination
 
 - RSM(Reflective Shadow Maps)
 
@@ -579,7 +595,7 @@ void main() {
 
   假设来自各个方向的间接光是相同的，但考虑每一点的V是不同的，diffuse
 
-  ![](/assets/images/ssao-rendering-equation.png)
+  image::/assets/images/ssao-rendering-equation.png[]
 
   - kA的计算方法
 
@@ -605,7 +621,7 @@ void main() {
 
 - SSDO(Directional Occlusion)
 
-  ![](/assets/images/ssao-vs-ssdo.png)
+  image::/assets/images/ssao-vs-ssdo.png[]
 
   AO考虑被挡住了就没法被外部照到了，由远处给我打光
 
@@ -697,7 +713,7 @@ void main() {
       
       Supoose light is equally reflected in each output direction
 
-      ![](/assets/images/lambert-brdf.png)
+      image::/assets/images/lambert-brdf.png[]
 
       出射光均匀分布在半球面上，所以单方向出射等于总出射除以半球积分，而总出射由能量守恒等于反射率乘p点辐照度
 
@@ -713,7 +729,7 @@ void main() {
 
   - Specular(Microfacet Cook-Torrance BRDF)
 
-    ![](/assets/images/specular-BRDF.png)
+    image::/assets/images/specular-BRDF.png[]
 
     分母中与v的夹角是因为要计算radians，4是因为计算过程中有$\mathrm{d}\omega_i$和$\mathrm{d}\omega_o$的比值，通过半程向量的对应关系计算之后有一个4，G项携带了与l的夹角
 
@@ -727,11 +743,11 @@ void main() {
 
       - Fresnel Equation
 
-        ![](/assets/images/fresnel-equation.png)
+        image::/assets/images/fresnel-equation.png[]
 
       - Schlick 
 
-        ![](/assets/images/schlick.png)
+        image::/assets/images/schlick.png[]
 
         Fresnel项F可以直接用于Ks，而1-Ks即为Kd
 
@@ -757,11 +773,11 @@ void main() {
 
       - 投影到宏观平面积分结果为1（若观察方向为法线方向，则其积分可以归一化。即v = n时）
 
-        ![](/assets/images/ndf-project-to-nm.png)
+        image::/assets/images/ndf-project-to-nm.png[]
 
       - 投影到垂直于观察方向的平面进行积分等于该宏观平面的大小（任何方向上微观表面投影面积始终与宏观表面投影面积相同）
 
-        ![](/assets/images/ndf-project-to-vm.png)
+        image::/assets/images/ndf-project-to-vm.png[]
 
       - 常用分布函数
 
@@ -771,11 +787,11 @@ void main() {
 
         - Beckmann分布(Cook-Torrance)
 
-          ![](/assets/images/beckmann.png)
+          image::/assets/images/beckmann.png[]
 
         - GGX（Trowbridge-Reitz）分布
 
-          ![](/assets/images/ggx.png)
+          image::/assets/images/ggx.png[]
 
           !!! $\alpha = roughness^2$
 
@@ -815,7 +831,7 @@ void main() {
           
            $$ G(N, V, L, \alpha) = G1(N, V, \alpha) \cdot G1(N, L, \alpha) $$
 
-          ![](/assets/images/g2-smith.png)
+          image::/assets/images/g2-smith.png[]
 
           $\Lambda$ 表示微表面斜率上的积分，有形状不变性的D能推出解析式
 
@@ -861,7 +877,7 @@ void main() {
       Albedo xyz,  
       Specular a  
 
-  ![](/assets/images/g-buffer.jpg)
+  image::/assets/images/g-buffer.jpg[]
 
   2. 第二个pass计算光照
 
