@@ -5,38 +5,47 @@
 
 == Render pipline
 
-- 流程
+* 流程
++
+--
+应用阶段：
 
-  应用阶段：
+几何阶段：顶点着色器（缩放，旋转，平移），曲面细分着色器（对三角形面进行细分），几何着色器（增加或删除图元）
 
-  几何阶段：顶点着色器（缩放，旋转，平移），曲面细分着色器（对三角形面进行细分），几何着色器（增加或删除图元）
+光栅化：图元组装（裁剪，背面剔除），屏幕映射（透视除法，视口变换），三角形组装，三角形遍历，片元着色器
 
-  光栅化：图元组装（裁剪，背面剔除），屏幕映射（透视除法，视口变换），三角形组装，三角形遍历，片元着色器
+测试混合：裁剪测试，alpha测试，模板测试，深度测试，alpha混合
+--
 
-  测试混合：裁剪测试，alpha测试，模板测试，深度测试，alpha混合
+* 光照模型
+** Lambert:
++
+--
+环境光＋方向光
 
-- 光照模型
-  - Lambert:
+Diffuse * Ambient + Diffuse * LightColor * dot(N, L)
+--
+** Phong: 
++
+--
+漫反射（考虑光从哪个角度过来所能打到的面积）＋环境光＋高光项（考虑反射向量与光线方向夹角）
 
-    环境光＋方向光
+kd * (I / r^2) * max(0, dot(N, L)) + Ambient + ks * (I / r^2) * max(0, dot(L, R))
+--
 
-    Diffuse * Ambient + Diffuse * LightColor * dot(N, L)
-
-  - Phong: 
-
-    漫反射（考虑光从哪个角度过来所能打到的面积）＋环境光＋高光项（考虑反射向量与光线方向夹角）
-
-    kd * (I / r^2) * max(0, dot(N, L)) + Ambient + ks * (I / r^2) * max(0, dot(L, R))
-
-  - Blinn-Phone:
-
-    将高光项进行更改，考虑半程向量与法线进行点乘
+** Blinn-Phone:
++
+--
+将高光项进行更改，考虑半程向量与法线进行点乘
+--
 
 == AA
 
 * SSAA
-
-  超分辨率，对每一个pixel的多个sample都进行一次着色
++
+--
+超分辨率，对每一个pixel的多个sample都进行一次着色
+--
 
 * MSAA
 
@@ -61,205 +70,243 @@
 *** MSAA 依赖于三角形的几何信息，没有几何信息，使用单倍 GBuffer 来进行计算无法判定应该将该点的颜色值复制到哪几个子 sample 上，使用多倍 GBuffer 也无法获得像素中心点信息，更不可能通过4个 sample 插值获取中心点信息（试想4个 sample 来自不同三角形的情况）
 
 * TAA
++
+--
+每帧采样时，将采样的点进行偏移，Halton采样序列（改写投影矩阵）
 
-  每帧采样时，将采样的点进行偏移，Halton采样序列（改写投影矩阵）
+Motion Vector处理动，且clamp至合理范围内，如AABB包围盒内，$3\sigma$内
+--
 
-  Motion Vector处理动，且clamp至合理范围内，如AABB包围盒内，$3\sigma$内
+* FXAA(Fast Approximate Anti-aliasing)
 
-- FXAA(Fast Approximate Anti-aliasing)
-
-  - 算法过程（quality）
+** 算法过程（quality）
   
-    1. 计算对比度（周围5个点的亮度极差NEWS），对比度较小可以不进行抗锯齿
+... 计算对比度（周围5个点的亮度极差NEWS），对比度较小可以不进行抗锯齿
 
-    2. 计算混合系数，用总共周围9个点进行计算
+... 计算混合系数，用总共周围9个点进行计算
 
-    3. 计算混合方向，分别计算水平方向与垂直方向的亮度变化，再计算是上下还是左右
+... 计算混合方向，分别计算水平方向与垂直方向的亮度变化，再计算是上下还是左右
 
-    4. 按混合系数权重进行采样，也就是往变化方向大的方向偏移一点采样作为输出颜色
+... 按混合系数权重进行采样，也就是往变化方向大的方向偏移一点采样作为输出颜色
 
-  - 考虑边界并不是水平或者垂直
+** 考虑边界并不是水平或者垂直
++
+--
+延边界两侧方向查询找到边界，再计算混合系数，混合系数取最大值
 
-    延边界两侧方向查询找到边界，再计算混合系数，混合系数取最大值
-
-  - 算法过程（Console）
+算法过程（Console）
+--
     
-    - 以半像素采样斜对角线的点，然后计算边界法线方向
+*** 以半像素采样斜对角线的点，然后计算边界法线方向
 
-    - 往x和y方向分别偏移uv再平均
+*** 往x和y方向分别偏移uv再平均
 
-    - 斜向较好，水平不佳
+*** 斜向较好，水平不佳
     
-      因此可以将切线的左右点往两边拉长，即变得更水平。但要注意如果拉长后的采样到了亮度变化较大的地方需要舍弃
+因此可以将切线的左右点往两边拉长，即变得更水平。但要注意如果拉长后的采样到了亮度变化较大的地方需要舍弃
 
-  - Cons:
-
-    光照高频(颜色变化很快)的地方会不稳定，移动时会有闪烁现象
+** Cons: 光照高频(颜色变化很快)的地方会不稳定，移动时会有闪烁现象
 
 
 == Ray tracing
 
-- 辐射度量学
+* 辐射度量学
++
+--
+image::/assets/images/radiometry-notation.png[]
+--
 
-  image::/assets/images/radiometry-notation.png[]
+* 渲染方程
++
+--
+Describes how much light is reflected into each outgoing direction
 
-- 渲染方程
+入射考虑的是irradiance，出射考虑的是radians 
 
-  Describes how much light is reflected into each outgoing direction
+入射光通常用辐射率来描述。这是因为我们通常关心的是单位面积上接收到多少光能量，并且假设这些光是均匀地分布在半球形的方向上的。对于出射光，我们则使用辐射亮度，因为我们需要知道从表面某一点沿着特定观察方向的光线强度有多大。
 
-  入射考虑的是irradiance，出射考虑的是radians 
+image::/assets/images/brdf.png[]
 
-  入射光通常用辐射率来描述。这是因为我们通常关心的是单位面积上接收到多少光能量，并且假设这些光是均匀地分布在半球形的方向上的。对于出射光，我们则使用辐射亮度，因为我们需要知道从表面某一点沿着特定观察方向的光线强度有多大。
+辐射亮度（Radiance）和辐射率（Irradiance）之间的转换依赖于表面的几何特性以及观察或入射光线的方向。辐射率是从所有可能方向上入射光的辐射亮度的累积。
 
-  image::/assets/images/brdf.png[]
+以下是从辐射亮度到辐射率的基本公式：
 
-  辐射亮度（Radiance）和辐射率（Irradiance）之间的转换依赖于表面的几何特性以及观察或入射光线的方向。辐射率是从所有可能方向上入射光的辐射亮度的累积。
+[stem]
+++++
+E = \int_{\Omega} L(\omega) \cos(\theta) d\omega 
+++++
 
-  以下是从辐射亮度到辐射率的基本公式：
-  $ E = \int_{\Omega} L(\omega) \cos(\theta) d\omega $
+image::/assets/images/rendering-equation.png[]
 
-  image::/assets/images/rendering-equation.png[]
+stem:[L_o(p, \omega_o) = L_e(p, \omega_o) + \int_{\Omega} f_r(p, \omega_i, \omega_o) L_i(p, \omega_i) (\omega_i \cdot n) d\omega_i]  
 
-  $L_o(p, \omega_o) = L_e(p, \omega_o) + \int_{\Omega} f_r(p, \omega_i, \omega_o) L_i(p, \omega_i) (\omega_i \cdot n) d\omega_i$  
-  $(ω_i · n)$：入射方向和表面法线 $n$ 的点积，表示入射光线与表面的夹角余弦，是几何项的一部分，用于调整光线与表面交互的影响。
+stem:[(ω_i · n)]：入射方向和表面法线 $n$ 的点积，表示入射光线与表面的夹角余弦，是几何项的一部分，用于调整光线与表面交互的影响。
 
-  实际上就是把brdf的分母消掉了，计算的是p点往半球方向发射的radians总和，但是在模拟时候brdf是由真实物理模拟得到的固定函数，$L_i$是由半球面上其他光源（或间接光源给出的）
+实际上就是把brdf的分母消掉了，计算的是p点往半球方向发射的radians总和，但是在模拟时候brdf是由真实物理模拟得到的固定函数，$L_i$是由半球面上其他光源（或间接光源给出的）
+--
 
 
-- 光线追踪模型
+* 光线追踪模型
 
-  - **Whitted-style**
+** **Whitted-style**
++
+--
+直接光照＋反射光照＋折射光照
+--
 
-    直接光照＋反射光照＋折射光照
+** **Path tracing**（SVGF空间滤波，时序滤波）
 
-  - **Path tracing**（SVGF空间滤波，时序滤波）
+** Distributed ray tracing
 
-  - Distributed ray tracing
+** Bidirectional path tracing(BDPT)
++
+--  
+顶光（没有直接光照）
+--  
 
-  - Bidirectional path tracing(BDPT)
-  
-    顶光（没有直接光照）
+** Metropolis light transport(MLT)
++
+--
+使用MCMC获得更多临近的sample满足可以从light到view，在光路复杂时很好
+--
 
-  - Metropolis light transport(MLT)
+** Photon mapping
 
-    使用MCMC获得更多临近的sample满足可以从light到view，在光路复杂时很好
+** Vertex Connection and Merging
 
-  - Photon mapping
+** Instant Radiosity
 
-  - Vertex Connection and Merging
+* 加速结构
 
-  - Instant Radiosity
+** 八叉树
 
-- 加速结构
+** KD树（每次划分一半，按xyz三个轴的顺序进行划分）
 
-  - 八叉树
+** BSP树（多边形对齐bsp树）（Binary Space Partitioning）
 
-  - KD树（每次划分一半，按xyz三个轴的顺序进行划分）
+** BVH（Bounding Volume Hierarchies）
 
-  - BSP树（多边形对齐bsp树）（Binary Space Partitioning）
+* RTRT
 
-  - BVH（Bounding Volume Hierarchies）
+** **Denoising**
 
-- RTRT
+** Temporal Failure
++
+--
+Temporal Clamping（更愿意相信当前帧） tradeoff between noise and lagging
+--
 
-  - **Denoising**
+** Spatical filter 
++
+--
+保留高频
+--
 
-  - Temporal Failure
+*** Joint Bilateral filtering（用其他信息作为指导进行滤波）
 
-    Temporal Clamping（更愿意相信当前帧） tradeoff between noise and lagging
+**** SVGF
++
+--
+Depth：梯度
 
-  - Spatical filter 
+Normal：次方
 
-    保留高频
+Luminance：空间时间上的平均
+--
 
-    - Joint Bilateral filtering（用其他信息作为指导进行滤波）
-
-      - SVGF
-
-        Depth：梯度
-
-        Normal：次方
-
-        Luminance：空间时间上的平均
-
-      - RAE
-
-        U-Net
+**** RAE
++
+--
+U-Net
+--
 
 == Shadow
 
-  拆分V项考虑阴影构成
+拆分V项考虑阴影构成
 
-  image::/assets/images/rendering-equation-split-visibility.png[]
+image::/assets/images/rendering-equation-split-visibility.png[]
 
-  - PCF(Percentage Closer Filtering)
+* PCF(Percentage Closer Filtering)
 
-    - 为解决自阴影（以像素中心作为整个像素的深度导致精度不够）问题，可将场景深度增加一个偏移，但会导致接触处的阴影消失
+** 为解决自阴影（以像素中心作为整个像素的深度导致精度不够）问题，可将场景深度增加一个偏移，但会导致接触处的阴影消失
++
+--
+slope bias根据斜率决定bias大小
 
-      slope bias根据斜率决定bias大小
+image::/assets/images/shadow-bias.png[]
+--
 
-      image::/assets/images/shadow-bias.png[]
+** 可见处为1，因为V表示可见程度
++
+--
+image::/assets/images/pcf-in-equation.png[]
+--
 
-    - 可见处为1，因为V表示可见程度
+* PCSS(Percentage Closer Soft Shadow)
 
-      image::/assets/images/pcf-in-equation.png[]
+.. Blocker search 
 
+.. Penumbra estimation(过滤大小估计)
 
-  - PCSS(Percentage Closer Soft Shadow)
+.. Percentage Closer Filter
 
-    1. Blocker search 
+* VSSM(Variance Soft Shadow Mapping)
 
-    2. Penumbra estimation(过滤大小估计)
+** 第一步要获得当前区域中遮挡物深度均值
++
+--
+考虑使用cdf进行估计，有切比雪夫不等式，则需要知道均值和方差
 
-    3. Percentage Closer Filter
-
-  - VSSM(Variance Soft Shadow Mapping)
-
-    - 第一步要获得当前区域中遮挡物深度均值
-
-      考虑使用cdf进行估计，有切比雪夫不等式，则需要知道均值和方差
-    
-      Average and variance of Block distance(depth): 
+Average and variance of Block distance(depth): 
+--
       
-      - MIPMAP(FAST, APPROXIMATE, SQUARE)
+*** MIPMAP(FAST, APPROXIMATE, SQUARE)
 
-      - SAT
+*** SAT
     
-    - 第三步是当前区域中有多少像素深度比当前低，同样可以通过切比雪夫估计
+** 第三步是当前区域中有多少像素深度比当前低，同样可以通过切比雪夫估计
 
-    - Moment shadow mapping
-
-      使用更精确的方式表示分布函数
+** Moment shadow mapping
++
+--
+使用更精确的方式表示分布函数
+--
   
-  - DFSS(Distance Filed Soft Shadow)
+** DFSS(Distance Filed Soft Shadow)
++
+--
+用于获得每次移动的距离，以及在该点的可视角度（用于估计V）
 
-    用于获得每次移动的距离，以及在该点的可视角度（用于估计V）
+image::/assets/images/dfss-angle.png[]
 
-    image::/assets/images/dfss-angle.png[]
+k越大越硬
+--
 
-    k越大越硬
+* CSM(Cascaded shadow map)
++
+--    
+可提高shadow map精度，针对视锥体中不同位置使用不同光锥体进行渲染
 
-  - CSM(Cascaded shadow map)
-    
-    可提高shadow map精度，针对视锥体中不同位置使用不同光锥体进行渲染
-    
-    每一级的CSM阴影分辨率在投影到摄像机屏幕空间时，有相似的分辨率
+每一级的CSM阴影分辨率在投影到摄像机屏幕空间时，有相似的分辨率
+--
 
-    - 在渲染视角附近的物体时需要更高的shadow map精度
+** 在渲染视角附近的物体时需要更高的shadow map精度
 
-    - 指数分布的CSM或自指定
+** 指数分布的CSM或自指定
 
-    - 光锥体的选取：可考虑方形或球形包围盒
+** 光锥体的选取：可考虑方形或球形包围盒
 
-    - 在overlapping处进行blend(LoD的通病)
+** 在overlapping处进行blend(LoD的通病)
 
-    - Stablize CSM: 视锥体发生变化，就会造成两帧直接的阴影位置不一样，抖动现象
+** Stablize CSM: 视锥体发生变化，就会造成两帧直接的阴影位置不一样，抖动现象
++
+--
+将相机的移动分成两个部分来处理，分别是相机的旋转和平移
+--
 
-      将相机的移动分成两个部分来处理，分别是相机的旋转和平移
+*** 旋转：球形 Bounding volume 是不变的
 
-      - 旋转：球形 Bounding volume 是不变的
-
-      - 平移：偏移投影矩阵，从原点变换至shadow map坐标，进行对齐
+*** 平移：偏移投影矩阵，从原点变换至shadow map坐标，进行对齐
 
 == Physically Based Environment Lighting
 
@@ -557,151 +604,173 @@ Probe：保存自己位置，对自己产生影响的Brick索引，天空可见�
 
 one bounce indirect illumination
 
-- RSM(Reflective Shadow Maps)
+* RSM(Reflective Shadow Maps)
++
+--
+考虑直接光源照到的地方成为第二光源进行补光
 
-  考虑直接光源照到的地方成为第二光源进行补光
+假设反射源必须是diffuse，以获得均匀Li。假设以shadow map距离作为世界空间距离
+--
 
-  假设反射源必须是diffuse，以获得均匀Li。假设以shadow map距离作为世界空间距离
+** 数据需求
++
+--
+深度，世界坐标，法线，反射光功率（功率是因为便于计算，不需要除以面积或立体角）
+--
 
-  - 数据需求
+** Cons:
++
+--
+并不是每一个pixel都可以为其它地方补光（V的问题）（也就是有无意义点），考虑采样（为保证一致性预计算一个采样图案），也就是采样该像素周围的点
+--
 
-    深度，世界坐标，法线，反射光功率（功率是因为便于计算，不需要除以面积或立体角）
-
-  - Cons:
-
-    并不是每一个pixel都可以为其它地方补光（V的问题）（也就是有无意义点），考虑采样（为保证一致性预计算一个采样图案），也就是采样该像素周围的点
-
-- LPV(Light Propagation Volumes)
-
-  找第二光源 -> 划分小格记录 radiance(可使用SH函数记录) -> 演算 -> Render
+* LPV(Light Propagation Volumes)
++
+--
+找第二光源 -> 划分小格记录 radiance(可使用SH函数记录) -> 演算 -> Render
  
-  Radiance 在传输过程中不会衰减
+Radiance 在传输过程中不会衰减
+--
 
-  - Cons:
+** Cons: 小格划分问题，可能会出现 **light leaking**
 
-    小格划分问题，可能会出现 **light leaking**
-
-- VXGI(Voxel Global Illumination)
-
+* VXGI(Voxel Global Illumination)
++
+--
   基于体素，two pass
+--
 
-  - Pass1: 获取场景中的各项属性（简介光照和法线分布）
+** Pass1: 获取场景中的各项属性（简介光照和法线分布）
 
-  - Pass2: 有类似的层级保存，根据cone的大小逐层获取信息。glossy的就发一个cone，diffuse的发多个。
+** Pass2: 有类似的层级保存，根据cone的大小逐层获取信息。glossy的就发一个cone，diffuse的发多个。
 
-- SSAO(Ambient Occlusion)
+* SSAO(Ambient Occlusion)
++
+--
+AO解决的是几何上被遮挡的接收不到环境光的部分
 
-  AO解决的是几何上被遮挡的接收不到环境光的部分
+假设来自各个方向的间接光是相同的，但考虑每一点的V是不同的，diffuse
 
-  假设来自各个方向的间接光是相同的，但考虑每一点的V是不同的，diffuse
+image::/assets/images/ssao-rendering-equation.png[]
+--
 
-  image::/assets/images/ssao-rendering-equation.png[]
+** kA的计算方法
 
-  - kA的计算方法
+*** ray tracing（对室内环境是一定被遮蔽）
 
-    - ray tracing（对室内环境是一定被遮蔽）
+*** 使用z-buffer计算ka项，撒点sample然后比较
++
+--
+但在Sample时会有很大问题，球形采样情况下对于平地来说有一部分点会在几何体内部，一定是照不到光的，导致画面变暗
 
-    - 使用z-buffer计算ka项，撒点sample然后比较
+屏幕空间带来的问题，距离采样点实际很远但是屏幕空间遮挡时会有假阴影
+--
 
-      但在Sample时会有很大问题，球形采样情况下对于平地来说有一部分点会在几何体内部，一定是照不到光的，导致画面变暗
+** 优化kA计算
++
+--
+复用上一帧AO信息
 
-      屏幕空间带来的问题，距离采样点实际很远但是屏幕空间遮挡时会有假阴影
+降采样计算AO（因为最终都需要对画面进行降噪）
+--
 
-  - 优化kA计算
+* HBAO
++
+--
+找半球被遮挡面积，视角与障碍物交点
 
-    复用上一帧AO信息
+~~需要法线信息，采样更自由，可以加权采样~~
+--
 
-    降采样计算AO（因为最终都需要对画面进行降噪）
+* SSDO(Directional Occlusion)
++
+--
+image::/assets/images/ssao-vs-ssdo.png[]
 
-- HBAO
+AO考虑被挡住了就没法被外部照到了，由远处给我打光
 
-  找半球被遮挡面积，视角与障碍物交点
+DO考虑远处的点打不到我这点光，由近处的点给我打光
 
-  ~~需要法线信息，采样更自由，可以加权采样~~
+indir来自对周围点Sample做光照
+--
 
-- SSDO(Directional Occlusion)
+** Cons: 远处的光就照不到了
 
-  image::/assets/images/ssao-vs-ssdo.png[]
+* [SSR](https://blog.csdn.net/ZJU_fish1996/article/details/89007236)
 
-  AO考虑被挡住了就没法被外部照到了，由远处给我打光
+** 算法过程
 
-  DO考虑远处的点打不到我这点光，由近处的点给我打光
-
-  indir来自对周围点Sample做光照
+... 在屏幕空间中找到对应的反射点
   
-  - Cons
+**** Hierarchy ray tracing
+  
+**** Depth buffer Min pooling
+  
+... shading
++
+--  
+反射物（次级光源）是 diffuse 的
+  
+有反射点信息作为Li，只需要按照渲染方程直接计算即可，glossy的需多采样
+  
+重要性采样，时空复用，预过滤（做模糊，单次查询）
+--
     
-    远处的光就照不到了
+** 可以做各种反射，不止specular，因为可以做ray tracing
+  
+** 实现问题
++
+--
+只有屏幕空间信息（其他部分使用RTRT）
 
-- [SSR](https://blog.csdn.net/ZJU_fish1996/article/details/89007236)
+比较域值过大，会导致冗余反射
 
-  - 算法过程
+步长过大，带状的反射
+--
 
-    1. 在屏幕空间中找到对应的反射点
-  
-      - Hierarchy ray tracing
-  
-      - Depth buffer Min pooling
-  
-    . shading
-  
-      反射物（次级光源）是 diffuse 的
-  
-      有反射点信息作为Li，只需要按照渲染方程直接计算即可，glossy的需多采样
-  
-      重要性采样，时空复用，预过滤（做模糊，单次查询）
+* DDGI(Dynamic Diffuse GI)基于Light Probe
+
+** 数据结构
+
+... 球面上的diffuse irradiance(E)
+
+... 球面距离
+
+... 球面各点到最近几何体的距离平方
+
+** 由Probe发出光线并记录，使用八面体映射存放在一张texture内
+
+** 基于RTRT：通过级联不同大小的Probe Volume在摄像机上
+
+** 烘焙Probe
+
+*** 当前帧进行若干光线的直接光照计算（延迟渲染，先记录到G-buffer）
+
+*** 用上一帧的DDGI Volume来计算交点的间接光照，获取到的是L，通过蒙特卡洛算E（因为我们要记录E）
+
+*** 从Position texture中更新depth
+
+*** 每次更新时并不需要更新所有的Probe，通过状态来查询哪些Probe需要被更新
+
+** Shading
++
+--
+只计算Diffuse，根据渲染方程可得只需要E，则可以插值获得
+
+Probe权重由三线性插值，法线与方向，遮挡物（切比雪夫不等式）决定
+--
+
+** Probe漏光问题
+
+*** 标记法
+
+*** 法线与像素和probe连线夹角解决
     
-  - 可以做各种反射，不止specular，因为可以做ray tracing
-  
-  - 实现问题
+*** 存储 E(x) 和 E^2(x) 然后做切比雪夫的
 
-    只有屏幕空间信息（其他部分使用RTRT）
-
-    比较域值过大，会导致冗余反射
-
-    步长过大，带状的反射
-
-- DDGI(Dynamic Diffuse GI)基于Light Probe
-
-  - 数据结构
-
-    1. 球面上的diffuse irradiance(E)
-
-    2. 球面距离
-
-    3. 球面各点到最近几何体的距离平方
-
-  - 由Probe发出光线并记录，使用八面体映射存放在一张texture内
-
-  - 基于RTRT：通过级联不同大小的Probe Volume在摄像机上
-
-  - 烘焙Probe
-
-    - 当前帧进行若干光线的直接光照计算（延迟渲染，先记录到G-buffer）
-
-    - 用上一帧的DDGI Volume来计算交点的间接光照，获取到的是L，通过蒙特卡洛算E（因为我们要记录E）
-
-    - 从Position texture中更新depth
-
-    - 每次更新时并不需要更新所有的Probe，通过状态来查询哪些Probe需要被更新
-
-  - Shading
-
-    只计算Diffuse，根据渲染方程可得只需要E，则可以插值获得
-
-    Probe权重由三线性插值，法线与方向，遮挡物（切比雪夫不等式）决定
-
-  - Probe漏光问题
-
-    - 标记法
-
-    - 法线与像素和probe连线夹角解决
+*** 存储探针可见性 z buffer 的
     
-    - 存储 E(x) 和 E^2(x) 然后做切比雪夫的
-
-    - 存储探针可见性 z buffer 的
-    
-    - 直接打光线判断可见性
+*** 直接打光线判断可见性
 
 ## PBR
 
