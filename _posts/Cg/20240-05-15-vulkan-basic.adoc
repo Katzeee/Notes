@@ -53,6 +53,8 @@ Use `vkCreateDescriptorSetLayout` to create.
 
 === Descriptor Set
 
+> https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VkDescriptorType.html
+
 ```cpp
 VkDescriptorBufferInfo descriptor_buffer_info;
 descriptor_buffer_info.offset = 0; // buffer layout
