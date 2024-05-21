@@ -49,7 +49,7 @@ kd * (I / r^2) * max(0, dot(N, L)) + Ambient + ks * (I / r^2) * max(0, dot(L, R)
 
 * MSAA
 
-> http://aicdg.com/aa/
+> https://aicdg.com/aa/
 
 ** 在 Rasterization 阶段，像素可见性是由 coverage 和 occlusion 两者共同决定的。fs 是遍历三角形，遍历子像素执行的。
 
