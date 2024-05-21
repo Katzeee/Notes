@@ -772,232 +772,286 @@ Probe权重由三线性插值，法线与方向，遮挡物（切比雪夫不等
     
 *** 直接打光线判断可见性
 
-## PBR
+== PBR
 
-- BRDF
+=== PBR光照
 
-  - Diffuse
+** Diffuse
 
-    - Lambert（传统型）
-      
-      Supoose light is equally reflected in each output direction
+*** Lambert（传统型）
++
+--
+Supoose light is equally reflected in each output direction
 
-      image::/assets/images/lambert-brdf.png[]
+image::/assets/images/lambert-brdf.png[]
 
-      出射光均匀分布在半球面上，所以单方向出射等于总出射除以半球积分，而总出射由能量守恒等于反射率乘p点辐照度
+出射光均匀分布在半球面上，所以单方向出射等于总出射除以半球积分，而总出射由能量守恒等于反射率乘p点辐照度
 
-      $$ L_o = \frac{P_{reflected}}{\pi} = \frac{\rho E}{\pi} $$
+[stem]
+++++
+L_o = \frac{P_{reflected}}{\pi} = \frac{\rho E}{\pi}
+++++
 
-      而根据BRDF的定义
+而根据BRDF的定义
 
-      $$ L_o = f_r(\omega_i, \omega_o) E $$
+[stem]
+++++
+L_o = f_r(\omega_i, \omega_o) E
+++++
 
-      !!! $\rho$ 即为 albedo
+NOTE: stem:[\rho] 即为 albedo
+--
 
-    - 基于物理型
+*** 基于物理型
 
-  - Specular(Microfacet Cook-Torrance BRDF)
+** Specular(Microfacet Cook-Torrance BRDF)
++
+--
+image::/assets/images/specular-BRDF.png[]
 
-    image::/assets/images/specular-BRDF.png[]
+分母中与v的夹角是因为要计算radians，4是因为计算过程中有stem:[\mathrm{d}\omega_i]和stem:[\mathrm{d}\omega_o]的比值，通过半程向量的对应关系计算之后有一个4，G项携带了与l的夹角
+--
 
-    分母中与v的夹角是因为要计算radians，4是因为计算过程中有$\mathrm{d}\omega_i$和$\mathrm{d}\omega_o$的比值，通过半程向量的对应关系计算之后有一个4，G项携带了与l的夹角
+*** F
++
+--
+Reflectance depends on incident angle (and polarization of light)
 
-    - F
+越靠近gressing angle反射越强
 
-      Reflectance depends on incident angle (and polarization of light)
+M(决定k)R（决定D和G） 和 S
+--
 
-      越靠近gressing angle反射越强
+**** Fresnel Equation
++
+--
+image::/assets/images/fresnel-equation.png[]
+--
 
-      M(决定k)R（决定D和G） 和 S
+**** Schlick 
++
+--
+image::/assets/images/schlick.png[]
 
-      - Fresnel Equation
+Fresnel项F可以直接用于Ks，而1-Ks即为Kd
 
-        image::/assets/images/fresnel-equation.png[]
+clamp避免产生黑点
 
-      - Schlick 
+```glsl
+vec3 fresnelSchlick(float cosTheta, vec3 F0) { 
+  return F0 + (1 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5); 
+}
+```
+image::/assets/images/pbr-f-without-clamp.png[without clamp]
+--
 
-        image::/assets/images/schlick.png[]
+*** D
++
+--
+NOTE: D项是一个概率密度函数，表示在给定的H方向上，表达的是在宏观法线为N的情况下，粗糙度roughness的表面上，微观表面法线与 H 向量对齐的概率。
 
-        Fresnel项F可以直接用于Ks，而1-Ks即为Kd
+D项需要计算出在特定的半程向量H下，有多少比例的微观凸起的法线与H对齐，因为只有当微观凸起的法线与H对齐时，光线才会被反射到观察者的眼中。
 
-        clamp避免产生黑点
+给定以h为中心的无穷小立体角stem:[\mathrm{d} \omega]和无穷小宏观平面stem:[\mathrm{dA}]，stem:[D(m)\mathrm{d}\omega\mathrm{dA}]是相应微表面部分总面积，即描述了有多面少面积会往该方向反射。满足：
+--
 
-        ```glsl
-        vec3 fresnelSchlick(float cosTheta, vec3 F0) { 
-          return F0 + (1 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5); 
-        }
-        ```
-        ![without clamp](/assets/images/pbr-f-without-clamp.png)
+. 在法线方向积分D即面积（微表面的总面积始终不小于宏观表面总面积）
 
-    - D
+. 投影到宏观平面积分结果为1（若观察方向为法线方向，则其积分可以归一化。即v = n时）
++
+--
+image::/assets/images/ndf-project-to-nm.png[]
+--
 
-      !!! D项是一个概率密度函数，表示在给定的H方向上，表达的是在宏观法线为N的情况下，粗糙度roughness的表面上，微观表面法线与 H 向量对齐的概率。
+**** 投影到垂直于观察方向的平面进行积分等于该宏观平面的大小（任何方向上微观表面投影面积始终与宏观表面投影面积相同）
++
+--
+image::/assets/images/ndf-project-to-vm.png[]
+--
 
-      D项需要计算出在特定的半程向量H下，有多少比例的微观凸起的法线与H对齐，因为只有当微观凸起的法线与H对齐时，光线才会被反射到观察者的眼中。
+**** 常用分布函数
++
+--
+一般考虑半程向量(此处为m)与法线的夹角
+--
 
-      给定以h为中心的无穷小立体角$\mathrm{d} \omega$和无穷小宏观平面$\mathrm{dA}$，$D(m)\mathrm{d}\omega\mathrm{dA}$是相应微表面部分总面积，即描述了有多面少面积会往该方向反射。
+***** Blinn-Phong分布
 
+***** Beckmann分布(Cook-Torrance)
++
+--
+image::/assets/images/beckmann.png[]
+--
 
-      - 在法线方向积分D即面积（微表面的总面积始终不小于宏观表面总面积）
+***** GGX（Trowbridge-Reitz）分布
++
+--
+image::/assets/images/ggx.png[]
 
-      - 投影到宏观平面积分结果为1（若观察方向为法线方向，则其积分可以归一化。即v = n时）
+NOTE: stem:[\alpha = roughness^2]
 
-        image::/assets/images/ndf-project-to-nm.png[]
+```glsl
+float DistributionGGX(vec3 N, vec3 H, float roughness) {
+  float a = roughness * roughness;
+  float a_square = a * a;
+  float nh = dot(N, H);
+  float denom = (nh * nh) * (a_square - 1) + 1;
+  denom = PI * (denom * denom);
+  return a_square / denom;
+}
+```
+--
 
-      - 投影到垂直于观察方向的平面进行积分等于该宏观平面的大小（任何方向上微观表面投影面积始终与宏观表面投影面积相同）
+***** Generalized-Trowbridge-Reitz（GTR）分布
 
-        image::/assets/images/ndf-project-to-vm.png[]
+**** 形状不变性（shape-invariant）是一个合格的法线分布函数需要具备的重要性质。具有形状不变性（shape-invariant）的法线分布函数，可以用于推导该函数的归一化的各向异性版本，并且可以很方便地推导出对应的遮蔽阴影项G。(Beckmann GGX)
 
-      - 常用分布函数
+*** G
++
+--
+光有D不行，还需要知道可见法线的分布，因此需要G1。
 
-        一般考虑半程向量(此处为m)与法线的夹角
+Shadow-mask，G2(微平面BRDF一般就是G2)还考虑光照的可见性。
 
-        - Blinn-Phong分布
+. **遮蔽（Shadowing）**：描述了微表面凸起如何阻挡从光源传来的光。当光源位于表面平面之下时，这种遮蔽现象更为显著。(NdotL)
+. **掩蔽（Masking）**：描述了微表面凸起如何阻挡从观察者方向出发的光线。当观察者的视线位于表面平面之下时，掩蔽现象更为显著。(NdotV)
 
-        - Beckmann分布(Cook-Torrance)
+几何函数的解析形式的确认依赖于法线分布函数以及几何函数的模型（即微表面轮廓）。
+--
 
-          image::/assets/images/beckmann.png[]
+**** 常用G函数
 
-        - GGX（Trowbridge-Reitz）分布
+***** V腔遮蔽函数(Cook-Torrance)
 
-          image::/assets/images/ggx.png[]
-
-          !!! $\alpha = roughness^2$
-
-          ```glsl
-          float DistributionGGX(vec3 N, vec3 H, float roughness) {
-            float a = roughness * roughness;
-            float a_square = a * a;
-            float nh = dot(N, H);
-            float denom = (nh * nh) * (a_square - 1) + 1;
-            denom = PI * (denom * denom);
-            return a_square / denom;
-          }
-          ```
-
-        - Generalized-Trowbridge-Reitz（GTR）分布
-
-      - 形状不变性（shape-invariant）是一个合格的法线分布函数需要具备的重要性质。具有形状不变性（shape-invariant）的法线分布函数，可以用于推导该函数的归一化的各向异性版本，并且可以很方便地推导出对应的遮蔽阴影项G。(Beckmann GGX)
-
-    - G
-
-      光有D不行，还需要知道可见法线的分布，因此需要G1。
-      
-      Shadow-mask，G2(微平面BRDF一般就是G2)还考虑光照的可见性。
-
-      1.  **遮蔽（Shadowing）**：描述了微表面凸起如何阻挡从光源传来的光。当光源位于表面平面之下时，这种遮蔽现象更为显著。(NdotL)
-      2.  **掩蔽（Masking）**：描述了微表面凸起如何阻挡从观察者方向出发的光线。当观察者的视线位于表面平面之下时，掩蔽现象更为显著。(NdotV)
-
-      几何函数的解析形式的确认依赖于法线分布函数以及几何函数的模型（即微表面轮廓）。
-
-      - 常用G函数
-
-        - V腔遮蔽函数(Cook-Torrance)
-
-        - Smith
-
-          GeometrySmith通常通过两个独立的函数来估计遮蔽和掩蔽效应：一个是与光线方向相关的G1(L)，另一个是与视线方向相关的G1(V)。最终的几何项G可以通过结合这两个单独的函数来得到，往往是以乘法形式：
+***** Smith
++
+--
+GeometrySmith通常通过两个独立的函数来估计遮蔽和掩蔽效应：一个是与光线方向相关的G1(L)，另一个是与视线方向相关的G1(V)。最终的几何项G可以通过结合这两个单独的函数来得到，往往是以乘法形式：
           
-           $$ G(N, V, L, \alpha) = G1(N, V, \alpha) \cdot G1(N, L, \alpha) $$
+[stem]
+++++
+G(N, V, L, \alpha) = G1(N, V, \alpha) \cdot G1(N, L, \alpha)
+++++
 
-          image::/assets/images/g2-smith.png[]
+image::/assets/images/g2-smith.png[]
 
-          $\Lambda$ 表示微表面斜率上的积分，有形状不变性的D能推出解析式
+stem:[\Lambda] 表示微表面斜率上的积分，有形状不变性的D能推出解析式
 
-          可计算：
-          
-          $$ G1_{SchlickGGX}(n,v,k)=\frac{n \cdot v}{(n \cdot v)(1 - k) + k} \\ $$
-          $$ k_{direct}=\frac{(\alpha + 1) ^ 2}{8} \\ $$
-          $$ k_{direct}=\frac{\alpha ^ 2}{2} $$
+可计算：
 
-      - 分离的遮蔽阴影函数
+[stem]
+++++
+G1_{SchlickGGX}(n,v,k)=\frac{n \cdot v}{(n \cdot v)(1 - k) + k} \\
+k_{direct}=\frac{(\alpha + 1) ^ 2}{8} \\
+k_{direct}=\frac{\alpha ^ 2}{2}
+++++
+--
 
-        考虑遮蔽（masking）和阴影（shadowing）独立的，将G项拆成两项相乘
+***** 分离的遮蔽阴影函数
++
+--
+考虑遮蔽（masking）和阴影（shadowing）独立的，将G项拆成两项相乘
+--
 
-      - 多重散射微平面BRDF
+***** 多重散射微平面BRDF
++
+--
+模微平面模型时所做出的单散射假设，没有模拟微表面上的多次散射
 
-        模微平面模型时所做出的单散射假设，没有模拟微表面上的多次散射
-      
-        能量损失，需要把能量补回来
+能量损失，需要把能量补回来
+--
 
-## Post Processing
+== Post Processing
 
-- Bloom
+* Bloom
++
+--
+down sample 后 blur 相加
+--
 
-  down sample 后 blur 相加
+* Tone Mapping
++
+--
+解决曝光，色偏问题
+--
 
-- Tone Mapping
-
-  解决曝光，色偏问题
-
-- Color Grading
-
-  LUT(Look up table)，做颜色的映射
+* Color Grading
++
+--
+LUT(Look up table)，做颜色的映射
+--
 
 
-## Deferred Shading
+== Deferred Shading
 
-- 流程
+* 流程
 
-  1. 第一个pass渲染G-buffer(一个FBO里面有3个Attchment，还有一个Depth buffer)
+1. 第一个pass渲染G-buffer(一个FBO里面有3个Attchment，还有一个Depth buffer)
++
+--
+Postion xyza, Normal xyza, Albedo xyz, Specular a  
 
-      Postion xyza,  
-      Normal xyza,  
-      Albedo xyz,  
-      Specular a  
+或者可以考虑从深度重建Position信息
 
-  image::/assets/images/g-buffer.jpg[]
+image::/assets/images/g-buffer.jpg[]
+--
 
-  2. 第二个pass计算光照
+2. 第二个pass计算光照
 
-  3. 考虑再渲染光源立方体时没有深度信息了
+3. 再Forward渲染光源立方体时没有深度信息了
++
+--
+需要把在第一阶段里的depth buffer拷贝到当前阶段
+--
 
-      需要把在第一阶段里的depth buffer拷贝到当前阶段
-
-- 解决问题
+* 解决问题
 
   多光源情况下渲染复杂度过高
 
-- Cons
+* Cons
 
-  - 一般不支持MSAA：
-  
-    你不能在G-buffer中保存抗锯齿后的数据，多倍G-buffer也没有顶点信息，无法插值获取中心信息
+** 一般不支持MSAA：
++
+--  
+不能在G-buffer中保存抗锯齿后的数据：多倍G-buffer没有顶点信息，因此无法插值获取中心信息
 
-    MSAA发生在着色阶段之前，你需要有几何信息，但G-buffer会丢失几何信息
-    
-    但可以考虑通过某些手段将丢失的信息补充回来
+MSAA发生在着色阶段之前，你需要有几何信息，但G-buffer会丢失几何信息
 
-  - 无法渲染透明物体：没有办法在G-buffer的一个像素点中保存那么多信息
+(但可以考虑通过某些手段将丢失的信息补充回来)
+--  
 
-  - 带宽大：G-buffer需要保存很多东西
+** 无法渲染透明物体：没有办法在G-buffer的一个像素点中保存那么多信息
 
-  - 只能使用一个光照pass，同理是因为丢失了几何信息
+** 带宽大：G-buffer需要保存很多东西，TBDR下subpass可以解决这个问题，不用把buffer写回dram，可以保存在in-chip cache中
 
-- Forward+
+** 只能使用一个光照pass，同理是因为丢失了几何信息
 
-  对视锥体进行细分，只考虑在一个划分里的光源
+== Forward+(TODO)
 
-  - Tailed
+> https://zhuanlan.zhihu.com/p/85615283
 
-  - Grid
+Forward+方法的渲染管线包含3个阶段：depth prepass，光源剔除(light culling)和最终的着色(shading)阶段。
 
-- TBDR(Tailed based)
+对视锥体进行细分，只考虑在一个划分里的光源
 
-  把屏幕分成小格，计算会受到哪些光照停下，进行分块处理
+- Tailed
+
+- Grid
+
+== TBDR(Tailed based deferred renderring)(TODO)
+
+把屏幕分成小格，计算会受到哪些光照停下，进行分块处理
 
 - Deferred lighting
++
+--
+考虑减少G-buffer的内存消耗，用尽量少的空间存储
+--
 
-  考虑减少G-buffer的内存消耗，用尽量少的空间存储
+1. pass1保存法线向量和镜面因子
 
-  1. pass1保存法线向量和镜面因子
+2. pass2计算光照（漫反射和镜面），写入两个缓冲区
 
-  2. pass2计算光照（漫反射和镜面），写入两个缓冲区
+3. pass3计算着色，可以根据不同mesh使用不同着色，从pass2中读取一些预计算的结果
 
-  3. pass3计算着色，可以根据不同mesh使用不同着色，从pass2中读取一些预计算的结果
-
-  4. 渲染半透明
-
-- Z-prepass
-
-  先走一遍光栅化但什么都不做，写入z-buffer
+4. 渲染半透明
