@@ -1,0 +1,101 @@
+= Reflection
+:revdate: 2024-05-22
+:page-category: Design
+:page-tags: [reflection]
+
+> https://www.bilibili.com/video/BV1MY4y1c7hU/ +
+> https://zhuanlan.zhihu.com/p/70044481
+
+== Usage
+
+Reflection means you can get type infomation in runtime. You can do something like:
+
+```cpp
+class A {
+    int x;
+};
+A a = reflection::create("A");
+
+auto A_type = reflection::get_by_name("A");
+
+for (auto &v : A_type.vars()) {
+    std::cout << v.name();
+    switch(v.type()) {
+        // case :
+    }
+}
+
+for (auto &f : A_type.funcs()) {
+    std::cout << f.name();
+}
+```
+
+== Metadata
+
+There must be a type descriptor to store the class metadata.
+
+```cpp
+class TypeDescritptor {
+private:
+    std::string name_;
+    std::vector<VarType> vars_;
+    std::vector<FuncType> funcs_;
+};
+```
+
+Use RAII to write a builder.
+
+
+```cpp
+
+template<typename C>
+class TypeDescritptorBuilder {
+public:
+    ~TypeDescritptorBuilder() { reflection::register(this); }
+    template<typename T>
+    TypeDescritptorBuilder &AddVar(std::string_view name, T C::*var);
+    template<typename F>
+    TypeDescritptorBuilder &AddFunc(std::string_view name, F func);
+
+};
+```
+
+To traverse the variables and functions, we must use *type erase*.
+
+Store type information in functor, expose ``void *`` or `std::any` to user.
+
+```cpp
+class VarType {
+public:
+    template<typename T, typename C>
+    VarType(T C::*v) {
+        getter_ = [v](std::any c) {
+            return std::any_cast<const C *>(c)->*v;
+        };
+    }
+
+    template<typename T, typename C>
+    T Get(const C &c) const {
+        return any_cast<T>(getter_(&c));
+    }
+private:
+    std::string name_;
+    std::function<std::any(std::any)> getter_;
+};
+```
+
+Member function is more complicated, consider:
+
+. return void or return type R
+
+. const or non-const function
+
+== Register
+
+* Use grammer analyer to build AST then generate metadata
+
+UE
+
+* User explictly register
+
+
