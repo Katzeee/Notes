@@ -1,0 +1,140 @@
+= Culling
+:revdate: 2024-05-30
+:page-category: Cg
+:page-tags: [cg]
+
+> https://zhuanlan.zhihu.com/p/437399913 +
+> https://zhuanlan.zhihu.com/p/363277669 +
+> https://zhuanlan.zhihu.com/p/150448978
+
+剔除的粒度会包括模型、子模型、三角形和像素等。
+
+== Pipeline Culling
+
+PreZ管线和延迟管线技术是从渲染流程上实现了一个像素级别的遮挡剔除。
+
+== Frustum Culling
+
+需要使用Bounding Volume来快速地实现视锥剔除。可采用AABB，OBB或球形包围盒。同时对场景使用数据结构保存便于快速遍历剔除，如BVH，K-D tree，OcTree.
+
+从场景数据结构的根节点开始与视锥做相交测试，一直做到物体包围盒。如果考虑包含情况则可以认为该子节点下所有物体都在视锥体内。
+
+考虑视锥体与球求相交关系：直接根据球心到六个平面的有向距离判断。
+
+考虑视锥体与长方体的相交关系：投影变换，到裁剪空间，根据长方体顶点的坐标判断。或者也是构造最小不相交视锥体。
+
+image::/assets/images/2024-05-30-box-frustum-overlap.png[]
+
+== Hardware Culling
+
+=== Backface Culling
+
+通过设置pipeline状态开启，剔除不可见的背面。
+
+=== Early-Z
+
+Z-max Culling和Z-min Culling是为了加速深度测试，为了让一个tile里面的像素不需要进行逐像素的深度测试，而Early-Z指的是把深度测试提前到ps之前做。
+
+== Occlusion Culling
+
+先进行视锥剔除，再进行遮挡剔除。
+
+遮挡剔除可以分为预计算和实时两种。
+
+=== Precomputed
+
+==== Precompited Visibility Culling, Potential Visible Set
+
+在**物体表面**生成许多细小的cell，分别记录所有其他cell相对于某个cell的可见关系。
+
+适用于低端设备和移动端设备，中小型场景。
+
+image::/assets/images/2024-05-30-PVS-process.png[]
+
+. 区域网格划分
++
+--
+先在场景俯视平面上进行等距划分。
+
+image::/assets/images/2024-05-30-PVS-from-top.png[]
+
+再做垂直划分，垂直划分要考虑地形的高低，还有是否有地图分层。
+
+image::/assets/images/2024-05-30-PVS-ground.png[]
+
+image::/assets/images/2024-05-30-PVS-several-floors.png[]
+--
+
+
+. 可见性检测
++
+--
+使用光线投射来计算遮挡关系，UE还会将包围盒扩大1.2倍以保证不会有错误的剔除发生。
+
+image::/assets/images/2024-05-30-occlusion-calculate.png[]
+
+计算完成之后按每个网格的可见性信息存下来，每个遮挡物用1个bit，代表序号为i的物体被遮挡了。
+--
+
+* 光线采样
++
+--
+```cpp
+for (const auto &cell : cells) {
+    for (const auto &obj : objs) { // occludee
+        int ray_count = GetRayCount(cell, obj);
+        for (int i = 0; i < ray_count; ++i) {
+            Ray r = GetRay(cell, obj, k);
+            for (const auto& occluder : occluders) {
+                bool hit = RayCast(r, occluder);
+            }
+        }
+    }
+}
+```
+--
+
+.. UE4 方案
++
+--
+将Cell和Object中心连线，计算每个面与连线的夹角，大于0认为其为可见面，具体数值作为概率密度函数（PDF），根据PDF进行重要性采样，取其中一个可见面，在面上随机采样点作为光线起点(Cell)和终点(Object)。
+
+极端情况下会导致所有光线都被遮挡，造成错误。
+
+image::/assets/images/2024-05-30-light-sample-error.png[]
+
+实际上该Cell是可以看见该Object的。
+
+image::/assets/images/2024-05-30-light-sample-error2.png[]
+--
+
+.. 从体积到体积的采样
++
+--
+
+image::/assets/images/2024-05-30-light-sample-volume.png[]
+--
+
+. 运行时剔除
++
+--
+预计算遮挡剔除系统在运行时的消耗极小，只需要索引出来相机所在的网格(Cell可用八叉树加速)，拿到网格的可见集数据，设置渲染器的开关即可完成剔除。这也是这个技术方案的一大优点，可以在手游这种资源吃紧的平台有更好的发挥空间，拿到一个还算过得去的剔除效果。
+
+系统的扩展性还比较高，可以扩展支持流式加载、LOD、花海草海、特效渲染物件和小型的动态物件等。
+--
+
+*优化：*
+    
+* 使用空间加速结构加速光线采样：UE4将Occludee按照地理位置划分为Group，计算可见性时如果该Group不可见则整组都不可见。
+
+* GPU光栅化获取遮挡信息
+
+* 自定义空间Cell的划分：空旷区域使用低密度Cell
+
+* 手动给植被(Alpha test)的物体加上遮挡体
+
+*缺点：*
+
+* *不支持动态物体剔除*，对于剩余少量的动态物体可以使用OcclusionQuery方案来做，这种方案原理也很简单：绘制模型极简模（一般用包围盒），不着色（ColorMask 0），通过API查询这次绘制有没有像素通过Depth和Stencil测试来确定模型是否需要绘制。
+
+* 不支持实时阴影剔除，有可能物体被遮挡但是阴影可以看见，这时候如果把物体剔除则影子也会消失
