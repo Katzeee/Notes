@@ -1,0 +1,97 @@
+= Spatial Acceleration Structures
+:revdate: 2024-06-04
+:page-category: Cg
+:page-tags: [cg]
+
+> https://www.cg.tuwien.ac.at/sites/default/files/course/4411/attachments/05_spatial_acceleration.pdf
+
+== BVH
+
+> https://blog.zcy.moe/blog/bvh/ +
+> https://kvm-explorer.github.io/post/bvh%E5%88%9D%E6%8E%A2/ +
+> https://zhuanlan.zhihu.com/p/50720158 +
+> https://zhuanlan.zhihu.com/p/475966001
+
+BVH 对物体进行划分，直到叶节点中的Primitive数量不大于某个一个阈值
+
+image::/assets/images/2024-06-04-bvh-tree.png[]
+
+```cpp
+struct BvhNode {
+    BvhNode *left;
+    BvhNode *right;
+    BoundingVolume bounding;
+    // choose one method to store the primitives in leaf
+    // for (1) and (2) you need a global vector to store sorted primitives
+    int l, r; // (1) 
+    int start, count; // (2)
+    std::vector<Primitive *> primitives;  // (3)
+};
+```
+
+递归建树：
+
+. 停止条件：当该node中的primitives数量小于阈值k则停止，剩下的都存在该节点中
+
+. 按规则进行图元进行排序并划分：
+
+** 每次随机选取xyz三个轴中的一个轴对物体排序
+
+** 每次选取xyz三个轴中跨度最大的轴对物体进行排序
++
+--
+以上两个都可以在排序好的基础上采用中点划分或等量划分
+--
+
+image::/assets/images/2024-06-04-bvh-tree-median-split-problem.png[]
+
+中点划分可能会导致无限递归，因为可能所有的三角形都被划到同一边。可以判断如果一边node中没有物体则停止递归。
+
+** SAH(表面积启发)
++
+--
+为了解决物体可能非常集中，导致包围盒的重叠较大无法有效加速，因此通过计算cost尽量估算最小重叠面积进行划分。
+
+在构建 BVH 的每个状态下，我们都可以选择直接建立叶子节点，或者以某种划分向下分割。如果我们设第 stem:[i] 个物体的求交开销是 stem:[t_{\text{sect}}(i)]，那么直接建立叶节点的情况下，该节点的求交开销是 
+
+[stem]
+++++
+\sum_{i=1}^{N} t_{\text{sect}}(i)
+++++
+
+其中 stem:[N] 是物体数，而将物体分为 A 和 B 两部分的情况下求交开销是 
+
+[stem]
+++++
+c(A, B) = t_{\text{trav}} + p_A \sum_{i=1}^{N_A}t_{\text{isect}(a_i)} + p_B \sum_{i=1}^{N_B}t_{\text{isect}(b_i)} 
+++++
+ 
+其中 stem:[t_{\text{trav}}] 是遍历子节点并决定光线进入哪个子节点的开销，stem:[p_A], stem:[p_B] 分别为光线进入 A 和 B 的概率，stem:[N_A], stem:[N_B] 是两部分的物体数。
+
+我们要做的就是找到一个合理的划分，使得 stem:[c(A,B)] 最小，这依赖对 stem:[t_{\text{trav}}], stem:[t_{\text{sect}}(i)] 和 stem:[p] 的良好估计。在 PBRT 中，作者进行了以下假设：
+
+* stem:[t_{\text{sect}}(i)] 为常值，且为 stem:[t_{\text{trav}}] 的 8 倍
+* stem:[p] 的大小与包围盒的表面积成正比
+
+可简化公式为
+
+[stem]
+++++
+c(A, B) = \frac{S(A)}{S(C)}N_A + \frac{S(B)}{S(C)}N_B + 0.125
+++++
+
+其中stem:[S(C)]为父包围盒和表面积。
+
+*实现*
+
+沿着坐标轴方向均匀划分出n个桶(这样就有n-1种可能的划分)，桶的划分数量为超参数
+
+按照公式计算最小的划分代价c(A, B)然后取最小的哪一种
+--
+
+. 递归对划分好的两边进行建树
+
+BVH的更新：
+
+
+
