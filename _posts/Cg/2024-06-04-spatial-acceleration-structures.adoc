@@ -10,7 +10,10 @@
 > https://blog.zcy.moe/blog/bvh/ +
 > https://kvm-explorer.github.io/post/bvh%E5%88%9D%E6%8E%A2/ +
 > https://zhuanlan.zhihu.com/p/50720158 +
-> https://zhuanlan.zhihu.com/p/475966001
+> https://zhuanlan.zhihu.com/p/475966001 +
+> https://fallingxun.github.io/post/algorithm/spatialdatastructures/spatialdatastructures_bvh/
+
+=== 结构
 
 BVH 对物体进行划分，直到叶节点中的Primitive数量不大于某个一个阈值
 
@@ -28,8 +31,9 @@ struct BvhNode {
     std::vector<Primitive *> primitives;  // (3)
 };
 ```
+=== 构造
 
-递归建树：
+自顶向下递归建树：
 
 . 停止条件：当该node中的primitives数量小于阈值k则停止，剩下的都存在该节点中
 
@@ -41,11 +45,13 @@ struct BvhNode {
 +
 --
 以上两个都可以在排序好的基础上采用中点划分或等量划分
---
 
 image::/assets/images/2024-06-04-bvh-tree-median-split-problem.png[]
 
 中点划分可能会导致无限递归，因为可能所有的三角形都被划到同一边。可以判断如果一边node中没有物体则停止递归。
+
+当不需要排序的时候采用 `std::nth_element` 会比 `std::sort` 更快
+--
 
 ** SAH(表面积启发)
 +
@@ -87,11 +93,19 @@ c(A, B) = \frac{S(A)}{S(C)}N_A + \frac{S(B)}{S(C)}N_B + 0.125
 沿着坐标轴方向均匀划分出n个桶(这样就有n-1种可能的划分)，桶的划分数量为超参数
 
 按照公式计算最小的划分代价c(A, B)然后取最小的哪一种
+
+*trade of between building and traversal*
 --
 
 . 递归对划分好的两边进行建树
 
+插入建树与自底向上建树比较少见，没要查到具体实现。
+
 BVH的更新：
 
+local rebuild: 不改变图元所在node，只递归向上更新AABB，容易破坏BVH的结构，减少加速效果。
 
+rebuild：重建子树，代价较大。
+
+== Quadtree/Octree
 
