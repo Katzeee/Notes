@@ -46,11 +46,11 @@ struct BvhNode {
 --
 以上两个都可以在排序好的基础上采用中点划分或等量划分
 
-image::/assets/images/2024-06-04-bvh-tree-median-split-problem.png[]
-
 中点划分可能会导致无限递归，因为可能所有的三角形都被划到同一边。可以判断如果一边node中没有物体则停止递归。
 
-当不需要排序的时候采用 `std::nth_element` 会比 `std::sort` 更快
+image::/assets/images/2024-06-04-bvh-tree-median-split-problem.png[]
+
+TIP: 当不需要排序的时候采用 `std::nth_element` 会比 `std::sort` 更快
 --
 
 ** SAH(表面积启发)
@@ -94,18 +94,80 @@ c(A, B) = \frac{S(A)}{S(C)}N_A + \frac{S(B)}{S(C)}N_B + 0.125
 
 按照公式计算最小的划分代价c(A, B)然后取最小的哪一种
 
-*trade of between building and traversal*
+NOTE: Trade of between building and traversal
 --
 
 . 递归对划分好的两边进行建树
 
 插入建树与自底向上建树比较少见，没要查到具体实现。
 
-BVH的更新：
+=== 操作
 
-local rebuild: 不改变图元所在node，只递归向上更新AABB，容易破坏BVH的结构，减少加速效果。
+遍历：从根节点开始与光线或视锥体求交，如果该节点没有相交，则该节点所有子节点都不会与其相交，若该节点被视锥体包含，则该节点所有子节点都可视。
 
-rebuild：重建子树，代价较大。
+=== 更新
+
+* local rebuild: 不改变图元所在node，只递归向上更新AABB，容易破坏BVH的结构，减少加速效果。
+
+* rebuild：重建子树，代价较大。
+
+=== 应用
+
+加速光线求交，视锥裁剪。
 
 == Quadtree/Octree
+
+> https://www.cg.tuwien.ac.at/sites/default/files/course/4411/attachments/05_spatial_acceleration.pdf +
+> https://blog.csdn.net/Kurozaki_Kun/article/details/83583971 +
+> https://blog.csdn.net/yhn19951008/article/details/119899092
+
+=== 结构
+
+```cpp
+struct QuadtreeNode {
+  std::vecotr<Object *> objects;
+  QuadtreeNode* children[2][2];
+  int divide;  
+};
+```
+
+=== 构造
+
+. 以scene的边界作为root node，定义最大划分深度S以及单节点最大物体个数k作为递归终止条件
+
+. 从根节点开始，若该节点无子节点则将物体插入该节点，若该节点有子节点则一直往下索引到子节点能包围该物体的最深节点并插入
+
+. 判断插入后是否需要分裂节点，将当前区域等分为4份(2D)或8份(3D)
+
+NOTE: 对于落在分割线上的物体，可存储在父节点或在**每一个**子节点都保存一份。
+
+image::/assets/images/2024-06-04-quad-tree.png[]
+
+=== 操作
+
+索引某物体在哪一个节点内：从根节点开始判断物体在四个格子中的哪一个(实际上就是一个四叉树)，直到找到正确的格子。
+
+找到与某一区域可能相交或包含的所有物体：从根节点开始，将所有与该区域有相交的节点中的物体都添加到结果集中，分别判断4个子节点是否与该区域有交集或包含，循环向下。
+
+=== 更新
+
+* 重建
+
+* 只调整该物体移动前所在的和移动后到达的两个节点
+
+=== 应用
+
+碰撞检测：只检索同一格子(以及其子节点内)所有物体即可
+
+适合小物体或者质点，大物体会被存在比较高的层级或者在多个子节点存数份，意义不大，大物体适合bvh。
+
+=== 改进
+
+稀疏四叉树：物体有可能在边界处来回，从而导致物体总是在切换节点，从而不得不更新四叉树/八叉树。使用稀疏四叉树可以有效的降低更新次数。
+
+* 若物体还没添加进四叉树/八叉树，则检测现在位于哪个节点的**inner boundary**内;
+
+* 若物体先前已经存在于某个节点，则先检测现在是否越出该节点的**outer boundary**，若越出再检测位于哪个节点的**inner boundary**内。
+
+image::/assets/images/2024-06-05-sparse-quad-tree.png[]
 
