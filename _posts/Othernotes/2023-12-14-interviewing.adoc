@@ -12,6 +12,8 @@
 * `int`: 至少与 `short` 一样长
 * `long`: 至少 4 字节，并且至少与 `int` 一样长
 * `long long`: 至少 8 字节，并且至少与 `long` 一样长
+* `sizeof("123")` 为 4, `\0`
+* `sizeof(void*)` 为 8，所有指针大小都与机器位数有关，因为要索引所有内存空间
 
 === 大端和小端的存储
 
@@ -122,6 +124,24 @@ auto main() -> int {
 
 输出为 ABA
 
+=== 构造函数内调用虚函数
+
+不建议这么写代码。子类调用子类的实现，父类调用父类的实现。
+
+虚函数表指针由编译器写入object，**一般**是作为initialize list的一员写入，可能其他编译器有其他实现。
+
+```cpp
+Base::Base(...arbitrary params...)
+   : __vptr(&Base::__vtable[0])  ← supplied by the compiler, hidden from the programmer
+ {
+   
+ }
+```
+
+=== 对空指针调用虚函数和普通成员函数
+
+虚函数的调用需要查虚函数表，所以会直接abort，普通成员函数可以调用，但第一个参数是this指针，如果在函数里没有用到this指针则可以正常完成调用。
+
 == 图形学
 
 === tone mapping 和 color grading
@@ -154,9 +174,11 @@ Early-Z 是一种硬件级别的优化技术，它允许GPU在进行像素着色
 
 alpha-test, depth modify都会导致early-z失效，因为先做了深度测试会导致透明物体后面的东西无法通过深度测试而不进行渲染。
 
+Early-Z 在物体严格从后向前渲染的过程中也没有办法起效，会造成很多overdraw，z prepass可以解决这个问题
+
 Z Prepass 是一个单独的渲染步骤，通常在主渲染循环开始之前完成。在这个预处理阶段，场景中的所有几何体仅使用一个简单的着色器（只输出深度信息，不进行任何颜色计算）进行绘制，从而在深度缓冲区中建立了正确的深度信息。在完成Z Prepass之后，当进行实际的渲染循环时，GPU就可以利用已填充的深度缓冲区数据来做优化——通过深度测试来决定是否需要执行更为复杂的颜色着色器。
 
-!!! Note 此处的深度信息是记录在GL_DEPTH_BUFFER_BIT里的，而不是一张texture里
+NOTE: 此处的深度信息是记录在GL_DEPTH_BUFFER_BIT里的，而不是一张texture里
 
 === Z-max Culling 、Z-min Culling、Early-Z[^1]
 
@@ -216,6 +238,62 @@ max(dot, 0.0)
 延迟渲染的变体少，可以使用GBuffer方便地实现一些类似SSR的效果
 
 至于延迟渲染适合多光源渲染，是很多人对延迟渲染认识的一个误区。在使用Cluster based lighting时，前向和延迟的光照开销是基本接近的。
+
+=== 性能优化方案
+
+* CPU瓶颈
+
+** draw call 过多
+
+. 合批
+
+. GPU instance
+
+** 游戏逻辑部分
+
+. 减少CPU计算，优化算法
+
+. compute shader
+
+* GPU瓶颈
+
+** 过多的顶点
+
+. 优化几何体
+
+. LOD
+
+. 遮挡剔除
+
+** 过多的逐顶点计算
+
+. 将一部分矩阵直接在CPU算好
+
+** 过多的逐片元计算
+
+. 遮挡剔除
+
+. 控制绘制顺序
+
+. 优化光照，阴影算法
+
+* 带宽瓶颈
+
+. 纹理压缩
+
+. subpass 
+
+. tiled based
+
+=== 渲染线程和RHI线程
+
+> https://www.cnblogs.com/kekec/p/15464958.html
+
+game thread往render task list里提交任务，render thread负责将这些任务执行生成平台无关的command list。
+
+rhi thread则将这些平台无关的command list转成指定的图形API的调用并提交到GPU执行。
+
+rhi thread可以有多个，game thread和render thread一般都只有一个
 
 == 计算几何
 
@@ -323,7 +401,7 @@ WARNING: 如果射线沿该轴的方向分量stem:[D = 0]，则需要特殊处�
 
 逻辑地址->查TLB->未命中查页表并更新TLB->可能会有缺页中断->物理地址->查cache->未命中查主存并更新cache
 
-“缺页”实际上指的是逻辑页面（虚拟内存中的页面）当前未被加载到物理内存中。当CPU尝试访问一个逻辑地址时，这个地址首先需要通过页表转换为物理地址。如果在这个转换过程中发现目标页面没有加载到物理内存（即缺页），则会发生缺页中断。
+“缺页”实际上指的是逻辑页面（虚拟内存中的页面）当前未被加载到物理内存中（通过页表的状态位判断是否产生缺页）。当CPU尝试访问一个逻辑地址时，这个地址首先需要通过页表转换为物理地址。如果在这个转换过程中发现目标页面没有加载到物理内存（即缺页），则会发生缺页中断。
 
 === 死锁
 
