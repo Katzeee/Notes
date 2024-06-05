@@ -1,0 +1,59 @@
+= Memory allocation
+:revdate: 2024-06-05
+:page-category: Design 
+:page-tags: [cpp]
+
+> Permature optimization is the root of all evil.   -- D.E.Knuth
+
+WARNING: We must know the workload before we do optimization!
+
+== What does malloc and free do
+
+We should keep a set of free memory intervals stem:[\bigcup_i [L_i, R_i)], where these intervals are got from OS.
+
+malloc: find an interval stem:[[l, r)] from stem:[\bigcup_i [L_i, R_i)]
+
+free: for given stem:[l] delete stem:[[l, r)]
+
+. how to manage the intervals
+
+. how to find stem:[r] when only stem:[l] given: store a meta info before stem:[l] as header
+
+== Workload
+
+*Parallel* is the most important thing. Modern CPU may have 128 threads running in 128 cores. A coarse-grained lock may destroy the whole system.
+
+Use `ltrace` to get the allocation pattern from different applications.
+
+```bash
+ltrace -f -e 'malloc+free-@libc.so*' $@ > /dev/null
+```
+
+== Modern malloc
+
+TIP: Fast path and slow path. Small allocation may be frequency.
+
+* Fast Path
++
+--
+Slab allocator: For common sizes generate a **thread local**(lock free, or race with `free`) memory pool. Like for 4B, 8B, ..., every block in this pool has the same size, and store a meta data at hte head of this pool, recording the allocation status of the blocks.
+
+image::/assets/images/2024-06-05-fast-path-slab.png[]
+--
+
+* Slow path
++
+--
+A big data structure and lock.
+
+segment tree
+--
+
+
+Almost every modern implmentation is based on it.
+
+glibc: arena->heap->tcache(thread-local)
+
+TCMalloc: cental free list, thread-caching malloc
+
+OpenGDK: ZGC: region based + tlab(thread-local)
