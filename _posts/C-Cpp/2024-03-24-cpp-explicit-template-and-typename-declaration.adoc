@@ -1,6 +1,6 @@
 = Cpp Explicit template and typename Declaration
 :revdate: 2024-03-24
-:page-category: Cpp
+:page-category: C-Cpp
 :page-tags: [cpp]
 
 *Compilers may hard to tell the real meaning without explicit declaration*
