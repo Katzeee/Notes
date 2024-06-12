@@ -4,7 +4,6 @@
 :page-tags: [reflection]
 
 > https://www.bilibili.com/video/BV1MY4y1c7hU/ +
-> https://zhuanlan.zhihu.com/p/70044481
 
 == Usage
 
@@ -43,23 +42,6 @@ private:
 };
 ```
 
-Use RAII to write a builder.
-
-
-```cpp
-
-template<typename C>
-class TypeDescritptorBuilder {
-public:
-    ~TypeDescritptorBuilder() { reflection::register(this); }
-    template<typename T>
-    TypeDescritptorBuilder &AddVar(std::string_view name, T C::*var);
-    template<typename F>
-    TypeDescritptorBuilder &AddFunc(std::string_view name, F func);
-
-};
-```
-
 To traverse the variables and functions, we must use *type erase*.
 
 Store type information in functor, expose ``void *`` or `std::any` to user.
@@ -67,14 +49,14 @@ Store type information in functor, expose ``void *`` or `std::any` to user.
 ```cpp
 class VarType {
 public:
-    template<typename T, typename C>
+    template <typename T, typename C>
     VarType(T C::*v) {
         getter_ = [v](std::any c) {
             return std::any_cast<const C *>(c)->*v;
         };
     }
 
-    template<typename T, typename C>
+    template <typename T, typename C>
     T Get(const C &c) const {
         return any_cast<T>(getter_(&c));
     }
@@ -90,12 +72,120 @@ Member function is more complicated, consider:
 
 . const or non-const function
 
+```cpp
+class FuncType {
+public:
+    template <typename C, typename... Args>
+    explicit FuncType(void (C::*func)(Args...)) {
+        fn_ = [this, func](std::any args) -> std::any {
+            auto *tp_args = std::any_cast<std::tuple<C &, Args...> *>(args);
+            std::apply(func, *tp_args);
+            return std::any{};
+        }
+    }
+
+    template <typename C, typename R, typename... Args>
+    explicit FuncType(R (C::*func)(Args...) const) { ... }
+
+    ...
+
+    template <typename C, typename... Args>
+    std::any Invoke(C &c, Args &&...args) {
+        if (is_const_) {
+            auto t_args = std::make_tuple(std::reference_wrapper<const C>(c), args...); // dangerous!!
+            return fn_(&t_args);
+        } else {
+            auto t_args = std::make_tuple(std::reference_wrapper<C>(c), args...); // dangerous!!
+            return fn_(&t_args);
+        }
+    }
+
+private:
+    std::string name_;
+    bool is_const_;
+    std::function<std::any(std::any)> fn_;
+};
+```
+
+NOTE: `std::reference_wrapper` is to revert the `std::decay` in `std::make_tuple`
+
+DANGER: if you call `Invoke(string)` on `func(string &)`, it will cause `any_cast_error`! So we should use an `ArgWrapper` to make our reflection system more robust.
+
+```cpp
+class FuncType {
+    using ArgArray = std::array<ArgWrapper, sizeof...(Args) + 1>; // +1 because we should pass `this` as the first parameter
+    template <typename C, typename... Args>
+    explicit FuncType(void (C::*func)(Args...)) {
+        fn_ = [this, func](void *args) -> std::any {
+            auto arr_args = *std::static_cast<ArgArray *>(args);
+            std::apply(func, CastToTuple(arr_args));
+            return std::any{};
+        }
+    }
+
+    template <typename C, typename... Args>
+    std::any Invoke(C &c, Args &&...args) {
+        ArgArray arr_args = { ArgWrapper{(C &)c}, ArgWrapper{std::forward<Args>(args)}... };
+        return fn_(&arr_args);
+    }
+}
+
+template <typename... Args, size_t N, size_t Is>
+std::tuple<Args...> CastToTuple(std::array<ArgWrapper, N> &arr, std::index_sequence<Is...>) {
+    return std::forward_as_tuple(arr[Is].template Cast<Args>()...);
+}
+
+template <typename... Args, size_t N, typename = std::enable_if_t<(N == sizeof...(Args))>>
+std::tuple<Args...> CastToTuple(std::array<ArgWrapper, N> &arr, std::index_sequence<Is...>) {
+    return CastToTuple<Args...>(arr, std::make_index_sequence<N>{});
+}
+```
+
+`ArgWrapper` receive the universal reference of our arguments, then forward it as the function needs.
+
+```cpp
+class ArgWrapper {
+public:
+    template <typename T>
+    ArgWrapper(T &&arg) {
+
+    }
+
+    template <typename T>
+    T Cast() {
+        // Accroding to the type of T and the storage, 
+    }
+private:
+    std::any storage_{};
+    int type_qualifier_ = 0; // const, volatile, lvalue, rvalue
+    int 
+};
+```
+
 == Register
 
 * Use grammer analyer to build AST then generate metadata
-
-UE
++
+--
+UE, QT
+--
 
 * User explictly register
++
+--
+Use RAII to write a builder.
 
+```cpp
 
+template <typename C>
+class TypeDescritptorBuilder {
+public:
+    ~TypeDescritptorBuilder() { reflection::register(this); }
+    template <typename T>
+    TypeDescritptorBuilder &AddVar(std::string_view name, T C::*var);
+    template <typename F>
+    TypeDescritptorBuilder &AddFunc(std::string_view name, F func);
+
+};
+```
+--
