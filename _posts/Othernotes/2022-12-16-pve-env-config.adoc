@@ -380,7 +380,7 @@ menu:网络设置[防火墙 > 高级设置 > 入站设置（最下）> TCP-WSS-I
 
 . Change Display to `none`, add select `Primary GPU` option.
 
-=== Hide vm from guest
+=== Hide vm from guest(for installing GPU driver)
 
 Edit `/etc/pve/qemu-server/<vm-id>.conf` in pve host.
 
@@ -390,6 +390,30 @@ args: -cpu 'host,-hypervisor,+kvm_pv_unhalt,+kvm_pv_eoi,hv_spinlocks=0x1fff,hv_v
 ```
 
 WARNING: I don't know which options are unnecessary, but it works.
+
+=== Moonlight streaming
+
+. Install `sunshine`
++
+--
+> https://github.com/LizardByte/Sunshine
+
+Install `auto-set-res`
+
+menu:Applications[Desktop>Add command]
+
+Do command: C:\Program Files\Sunshine\scripts\auto-set-res\MultiMonitorTool.exe /TurnOff 1
+
+Undo command: C:\Program Files\Sunshine\scripts\auto-set-res\MultiMonitorTool.exe /TurnOn 1
+
+[x] Run as admin
+--
+
+. Enable IPV6
++
+--
+> https://github.com/moonlight-stream/GS-IPv6-Forwarder
+--
 
 == Install TrueNAS Scale(Recommended)
 
