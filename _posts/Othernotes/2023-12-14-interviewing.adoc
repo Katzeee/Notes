@@ -235,7 +235,7 @@ max(dot, 0.0)
 
 延迟渲染一般会使用TAA，而TAA需要保存上一帧的SceneColor，也会增加Load/Store的带宽
 
-延迟渲染的变体少，可以使用GBuffer方便地实现一些类似SSR的效果
+延迟渲染只有有限的材质呈现类型，但可以使用GBuffer方便地实现一些类似SSR的效果
 
 至于延迟渲染适合多光源渲染，是很多人对延迟渲染认识的一个误区。在使用Cluster based lighting时，前向和延迟的光照开销是基本接近的。
 

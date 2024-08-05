@@ -1,0 +1,54 @@
+= Skinned Mesh
+:revdate: 2024-08-05
+:page-category: Cg
+:page-tags: [cg]
+
+== 骨骼蒙皮动画是什么
+
+骨骼蒙皮动画是在Mesh中添加骨骼，将顶点绑定至骨骼，做动画时只需要给骨骼绑关键帧，而顶点的位置是根据骨骼的运动状态而计算出的。
+
+一个顶点可以绑定到多个骨骼上，在最终计算时通过blend操作来确定最终位置。
+
+== 如何计算顶点位置
+
+=== 关键空间
+
+* LocalSpace: 模型空间
+* BoneSpace: 以关节处为原点，由当前骨骼相对于**父骨骼**坐标空间的Transform信息所描述
+* ComponentSpace: 当前骨骼相对于**Root**骨骼坐标空间的Transform信息
+* WorldSpace: 世界空间
+
+需要BoneSpace的原因是，每一根骨骼的运动都是相对于这个Bone而言的，这是最复合直觉的描述方式。**同时方便动画插值！！**
+
+插值有NLERP和SLERP，NLERP直接用四元数插值，会导致两边快，中间慢。SLERP转成夹角进行插值，效果好但是要算反三角函数，比较费。
+
+=== 数据存储
+
+说是Bone，实际上存储的是Joint的数据（9DoF），Position，Orientation，Scale，代表着其当前状态，这部分是每帧动画都有的。
+
+最关键的变换是旋转，但是在做动作（如下蹲）的时候可能会有位置变化，面部表情可能会有放缩变化。
+
+还有一点比较关键的是需要存储一个inverse_bind_matrix，这个矩阵实际上就是Joint在最开始绑定时的模型矩阵的逆。这个矩阵描述了模型Vertex与这个Joint的相对位置关系，也就是下面的LocalToBoneSpaceMatrix.
+
+动画信息是存储在BoneSpace中的
+
+=== 计算过程
+
+LocalSpace - (LocalToBoneSpaceMatrix) -> BoneSpace - (CurrentBoneSpaceMatrix * ParentBoneSpaceMatrix * ... * RootBoneSpaceMatrix) -> RootBoneSpace
+
+首先第一步是从模型空间中的坐标，乘上由它所绑定的骨骼在模型空间中位置决定的一个矩阵LocalToBoneSpaceMatrix将其变换到该骨骼的BoneSpace中。
+
+接下来，由于BoneSpace是基于父骨骼所定义的坐标空间，因此对一个Vertex的计算需要经过多次变换直到RootBoneSpace才可以得到这个Vertex在RootBoneSpace下的空间坐标，而RootBoneSpace在建模中一般直接和WorldSpace对齐（因为没有不对齐的理由，RootBoneSpace可以在任何一个位置，那为了方便计算就和WorldSpace重合）
+
+如果在动画中导致不重合的话，还需多一次变换，从RootBoneSpace到WorldSapce
+
+在实际实现时，每一根骨骼上绑定了很多的顶点，所以会先计算每个骨骼所对应的那个从LocalSpace to WorldSpace的矩阵，只后再对每个顶点进行计算。
+
+image::/assets/images/2024-08-05-skinned-mesh-calculate.png[]
+
+== 其他问题
+
+=== T-pose vs A-pose
+
+T-pose导致肩膀位置被挤压，可能精度不够
+
