@@ -5,7 +5,7 @@
 
 This article is based on Unity 2022.3.22f1. 
 
-UGUI source is stored in `[Engine]/Data/Resources/PackageManager/BuiltInPackages/com.unity.ugui`. You can copy it to your Project then remove the `Unity UI` and those packages which depenent on it in menu:Window[Package Manager]. (Or maybe you can directly debug it)
+UGUI source is stored in `[Engine]/Data/Resources/PackageManager/BuiltInPackages/com.unity.ugui`. You can copy it to your Project then remove the `Unity UI` and packages which depenent on it in menu:Window[Package Manager]. (Or maybe you can directly debug it)
 
 == EventSystem
 
@@ -13,6 +13,8 @@ These are two components on `EventSystem` game object:
 
 * EventSystem: Queries input module every frame for the player input event.
 * link:https://docs.unity3d.com/2022.2/Documentation/Manual/script-StandaloneInputModule.html[StandaloneInputModule]: Generates and processes EventData, sends events.
+
+=== How `EventSystem` Update
 
 Following is a simplified sequence diagram for `EventSystem::Update`
 
@@ -42,7 +44,10 @@ activate PointerInputModule
 PointerInputModule -> PointerInputModule: PointerInputModule::GetPointerData()
 note left: get(when hold) or create(when pressed) pointer\ndata object, prepare the input data from Input
 PointerInputModule -> EventSystem: EventSystem::RaycastAll()
-PointerInputModule -> PointerInputModule : Fill the pointer data using raycast result
+note right: raycast components is on the canvas object, so this function is like to find all canvas
+PointerInputModule -> PointerInputModule: PointerInputModule::FindFirstRaycast()
+note right: get the most upper canvas
+PointerInputModule -> PointerInputModule: Fill the pointer data using raycast result
 PointerInputModule --> StandaloneInputModule: mouseData
 deactivate PointerInputModule
 StandaloneInputModule -> StandaloneInputModule: StandaloneInputModule::ProcessMousePress()
@@ -54,7 +59,7 @@ activate ExecuteEvents
 ExecuteEvents -> ExecuteEvents: ExecuteEvents::Execute<IPointerDownHandler>
 activate ExecuteEvents
 ExecuteEvents -> ExecuteEvents: ExecuteEvents::GetEventList<IPointerDownHandler>(gameObject)
-note left: get all IPointerDownHandler handlers on this game object
+note left: HERE get all IPointerDownHandler handlers on this game object\nnot using register
 ExecuteEvents -> ExecuteEvents: ExecuteEvents::Execute(handler, event)
 note left: for every handler, excute the callback
 return Is someone handled the event
@@ -71,4 +76,53 @@ end
 @enduml
 ----
 
+=== Custom UI Events Scripts
+
+If you want to write a component dealing with click event, implement a class deriving from `IPointerClickHandler` then implements its method.
+
+```cs
+    public interface IPointerClickHandler : IEventSystemHandler
+    {
+        /// <summary>
+        /// Use this callback to detect clicks.
+        /// </summary>
+        void OnPointerClick(PointerEventData eventData);
+    }
+```
+
 == Render
+
+=== Script Part
+
+. When `Graphic` itself find it need to be rebuilded, they will register itself to `CanvasUpdateRegistry`. Then every frame when `Canvas` rendering UI, it calls `Canvas::willRenderCanvases()` which is an event calling `CanvasUpdateRegistry::PerformUpdate()`.
+
+. All renderable components(Image, Text, RawImage etc.) are derived from `Graphic`. `Graphic` implements `Rebuild()` function using for draw the UI elements, which called by `CanvasUpdateRegistry::PerformUpdate()`.
+
+. `Graphic` deals with mesh and material data then passes it to `CanvasRenderer` which finally become instructions for real rendering. `Canvas` handles ``CanvasRenderer``s, batches them and generates render instructions.
+
+=== Engine Part
+
+UGUI performs batch generation and rendering on a per-Canvas basis.
+
+. Calculate canvas alpha, when alpha == 0, don't batch
+
+. When UI order changes, update batch:
+
+. Generate render instructions, then caculate UI depth according to the following rules:
+
+.. if no need render, depth = -1
+.. if no intersection(overlapping), depth = 0
+.. if intersect with other UI elements(among all lower elements, find the higest)
++
+--
+Theoretical stem:[\textit{O}(n^2)], can use rectangle intersection to accelerate.
+--
+
+* when can batch(material instance id == texture instance id): depth = max(depth of elements under it)
+* when cannot batch: depth = max(depth of elements under it) + 1
+
+. Sort all UI elements based on depth to get visiable list
+
+. Batch intersecting visiable elements in viasiable list if they have same material instance id and texture instance id
+
+WARNING: `Mask` using stencil test works, so it may break batching, and lead to 2 more drawcalls, one for writing stencil, one for cleaning.
