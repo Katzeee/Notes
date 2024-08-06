@@ -98,9 +98,9 @@ If you want to write a component dealing with click event, implement a class der
 
 . All renderable components(Image, Text, RawImage etc.) are derived from `Graphic`. `Graphic` implements `Rebuild()` function using for draw the UI elements, which called by `CanvasUpdateRegistry::PerformUpdate()`.
 
-. `Graphic` deals with mesh and material data then passes it to `CanvasRenderer` which finally become instructions for real rendering. `Canvas` handles ``CanvasRenderer``s, batches them and generates render instructions.
+. `Graphic` deals with mesh(`UpdateGeometry()`) and material(`UpdateMaterial()`) data then passes it to `CanvasRenderer` which finally become instructions for real rendering. `Canvas` handles ``CanvasRenderer``s, batches them and generates render instructions.
 
-=== Engine Part
+=== Engine Part(based on Unity 4.x)
 
 UGUI performs batch generation and rendering on a per-Canvas basis.
 
