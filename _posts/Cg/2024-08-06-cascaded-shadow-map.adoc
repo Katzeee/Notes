@@ -1,0 +1,70 @@
+= Cascaded Shadow Map
+:revdate: 2024-08-06
+:page-category: Cg
+:page-tags: [shadow]
+
+
+== Split view frustum
+
+> https://www.researchgate.net/publication/220805307_Parallel-split_shadow_maps_for_large-scale_virtual_environments
+
+image::/assets/images/2024-08-06-z-split-frustum.png[]
+
+考虑shadow map上一个像素大小stem:[\textit{d}s \times \textit{d}s]，应该会根据面片的法线方向而对应到屏幕上stem:[\textit{d}p]长度的一片区域，而stem:[\textit{d}p/\textit{d}s]便可以被视为shadow map aliasing（因为屏幕上一像素的位置应该至少对应shadow map上一像素才是最完美的状态）当stem:[\textit{d}p]大于屏幕像素时，便会发生欠采样，也就是屏幕上多个像素对应到shadow map上一个像素。
+
+[stem]
+++++
+\frac{\textit{d}p}{\textit{d}s} = n\frac{\textit{d}z}{z\textit{d}s}\frac{\cos \phi}{\cos \theta}
+++++
+
+stem:[z]为近平面，其中stem:[\textit{d}z/z\textit{d}s]成为perspective aliasing，stem:[\cos \phi/\cos \theta]称为projection aliasing. Projection aliasing与场景物体位置有很大关系（法线方向），不好通过算法来改进。现在考虑的是如何让perspective aliasing更优。
+
+若在整张shadow map中始终维持stem:[\textit{d}p/\textit{d}s=\rho]为一个常数，便可以保证每一部分的阴影质量完全相同。
+
+[stem]
+++++
+s = \int_0^s{\textit{d}s} = \frac{1}{\rho}\int_n^z{\frac{\textit{d}z}{z}} = \frac{1}{\rho}\ln (\frac{z}{n})
+++++
+
+考虑情况stem:[s=1]即shadow map完全盖住这个frustum，可以得到最小aliasing stem:[\rho = \ln (f/n)]，stem:[s=\ln(z/n)/\ln(f/n)]，这意味着在数据可连续存储状况下（当然这是不可能的，因为一张shadow map必然是离散的值）对应到深度为stem:[z]处的shadow map长度应该是stem:[s]。
+
+既然数据没法连续存储，那我们就不能用一张贴图来存整个场景的shadow map，找到最合适的分割点，使得每一个分割内的shadow map都尽量达到一个更小的aliasing.
+
+对每一个在stem:[z=C_i]处进行分割，有
+
+[stem]
+++++
+s_i = s(C_i) = \frac{\ln(C_i/n)}{\ln(f/n)}
+++++
+
+即
+
+[stem]
+++++
+C_i = n(f/n)^{s_i}
+++++
+
+按照之前所说，为了保证每一个分割里面的aliasing相等，也就是分配给stem:[[C_i,C_{i-1}\]]的shadow map分辨率应该相同，也就是stem:[s_i=i/N]，其中stem:[N]为分割个数。此分割的问题在于近平面处的分割太多，比较浪费。
+
+现在实践中常用的是对数分割和平均分割的加权平均值，即
+
+[stem]
+++++
+C_i = \lambda n(f/n)^{i/N} + (1-\lambda)(n+(i/N)(f-n))
+++++
+
+image::/assets/images/2024-08-07-csm-frustum-split.gif[]
+
+== Create light frustum
+
+https://zhuanlan.zhihu.com/p/45673049
+
+. 分割view frustum
+. 将分割后的视锥体转换到light space
+. 取xyz min做light frustum的min顶点，xyz max做light frustum的max顶点，两点确定一个AABB立方体，这里需要注意的是，不能只将这两个点转回世界空间，因为两个点在任意一个空间确定的都只能是一个AABB立方体，light space里的AABB在world space不一定是AABB，所以需要将8个顶点都计算出来再转回world space
+
+image::/assets/images/2024-08-07-csm-frustum-bounding.gif[]
+
+NOTE: 这里需要注意可能会有物体在view frustum外但是其阴影在里面，用这种方式可能会漏渲染该物体的阴影，这里需要有其他方案扩大这个bounding box
+
+== Render shadow map
