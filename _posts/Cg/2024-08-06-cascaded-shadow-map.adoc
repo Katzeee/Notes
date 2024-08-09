@@ -68,3 +68,36 @@ image::/assets/images/2024-08-07-csm-frustum-bounding.gif[]
 NOTE: 这里需要注意可能会有物体在view frustum外但是其阴影在里面，用这种方式可能会漏渲染该物体的阴影，这里需要有其他方案扩大这个bounding box
 
 == Render shadow map
+
+WARNING: Unity URP can't use `RenderWithShader()`, use build-in to make a demo!
+
+根据上一步计算出的light frustum生成正交摄像机，渲染阴影贴图
+
+image::/assets/images/2024-08-08-csm-4-split-shadow-map.png[]
+
+NOTE: 这里应该需要开启Cull off，因为可能会有物体正好穿过近（远）平面，如果不渲染背面，则会导致那一部分阴影漏光
+
+image::/assets/images/2024-08-08-csm-cull-back-leak.png[]
+
+== Artifact
+
+plane边缘处出现狗啃阴影，这是因为在边缘处采样shadow map时，可能因为贴图精度不够采样到非plane区域，也就是本该时无穷远的地方，但是没有cs里面渲染之前用无穷远的值填充（比如无穷远的深度应该为1）
+
+
+
+在实现的时候，bias如果是用法向量计算的，可能有一部分的acne很大都消不掉，这是因为那个位置计算出的stem:[\cos \theta]正好在临界值上，前面的因为倾斜角度比较小，不需要太大bias，后面因为倾斜角度比较大，bias算出来比较大都没有影响。
+
+image::/assets/images/2024-08-09-csm-acne.png[]
+
+可能会在光锥体的最远处出现一条接缝，这里可以hack一下，把这一点点位置交给下一级阴影处理，也就是z范围缩小一点。
+
+image::/assets/images/2024-08-09-csm-shadow-seam.png[]
+
+```hlsl
+if (pos_L.x >= 0 && pos_L.x <= 1 && 
+    pos_L.y >= 0 && pos_L.y <= 1 && 
+    pos_L.z >= 0 && pos_L.z <= 1 - 0.01) // in cur split
+```
+当物体较大，横跨两个分割的时候，可能会出现阴影的断层。
+
+image::2024-08-09-csm-large-object-blend.png[]
