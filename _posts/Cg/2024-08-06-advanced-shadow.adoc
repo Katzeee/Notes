@@ -1,10 +1,77 @@
-= Cascaded Shadow Map
+= Advanced Shadow
 :revdate: 2024-08-06
 :page-category: Cg
 :page-tags: [shadow]
 
+== PCF
 
-== Split view frustum
+=== 基础PCF
+
+普通的PCF不用多说，采样除了当前点周围一圈的点，比如3x3。判断当前深度与这9个点比有n个在阴影中，则阴影权重就是n/9。
+
+=== 泊松采样PCF
+
+除了使用上述所说的3x3区域进行采样，还可以使用泊松圆盘分布采样，以得到更好的软阴影效果
+
+=== 硬件PCF
+
+硬件PCF是在2x2的区域上通过纹理采样器 compare func 并开启 linear sampling 实现双线性插值采样以做到直接计算出当前像素插值阴影权重。
+
+也可以通过4次硬件PCF再手动混合以得到一个3x3（四个采样中心偏离0.5texel）或4x4（四个采样中心偏离1.0texel）的硬件PCF。
+
+=== 连续采样PCF
+
+> https://zhuanlan.zhihu.com/p/369761748 +
+> https://tajourney.games/5482/ +
+> https://blog.csdn.net/wodownload2/article/details/134932880
+
+==== 理论
+
+之前提到的PCF方法无论如何都会在半影区看到阴影分层现象。
+
+image::/assets/images/2024-08-09-pcf-shadow-layering.png[]
+
+我们的一张阴影贴图实际上是这样离散的值。
+
+image::/assets/images/2024-08-09-pcf-dicrete-texture.png[]
+
+对采样得到的值不进行PCF混合时相当于用box filter采样，明显断层，无任何平滑过渡。
+
+image::/assets/images/2024-08-09-pcf-box-filter.png[]
+
+线性插值相当于使用离散的tent filter采样。其结果也仅仅是一阶连续，而导数并不连续，在两采样点之间会有一定过滤，但会导致在其导数分层位置有明显分界线。
+
+image::/assets/images/2024-08-09-pcf-tent-filter.png[]
+
+之所以会造成这种尖锐，正是因为**filter是离散的**，它将像素看成了点，权重计算只是一个轴上的（1D），而不是计算像素整个面积所占据的权重。
+
+问题就变成了如何使采样出的结果连续？通过卷积可以做到。卷积实际上是考虑的就是面积（2D）。
+
+image::/assets/images/2024-08-12-convolution-of-box-signal.gif[]
+
+==== 实现
+
+实现上，考虑采样kernel是一个底为3，高为1.5的等腰三角形，在4x4的区域上进行采样混合。
+
+以实际渲染的点为中心，分别计算xy轴4个像素所占的权重，即如下图。
+
+红点处为实际需要渲染的像素在shadow map中的uv坐标，在x，y两个方向分别计算四个像素的权重贡献。
+
+4x4的pcf是分为了4个2x2的Group进行计算的，因此红点左边的两个weight是Group1，3的权重贡献，同理再对y轴计算一遍便可以得到所有权重，用于计算实际采样点的坐标。
+
+image::/assets/images/2024-08-12-pcf-conv-calulate-weight.png[]
+
+NOTE: 红点不一定正好落在4x4区域的正中心
+
+image::/assets/images/2024-08-12-pcf-conv-calulate-weight-not-center.png[]
+
+在Unity的实现中，左右两边的offset算出来之后需要加上起始值1.5和0.5得到真正的采样UV位置，如何理解？
+
+这里考虑特殊情况比较好理解，当红点正好取到-1.5位置的时候，希望group1的x取值应该在-1的位置，而group2应该在0的位置。当红点在-0.5的位置时，group2的取值应该在0.5的位置等等。
+
+== Cascaded Shadow Map
+
+=== Split view frustum
 
 > https://www.researchgate.net/publication/220805307_Parallel-split_shadow_maps_for_large-scale_virtual_environments
 
@@ -55,7 +122,7 @@ C_i = \lambda n(f/n)^{i/N} + (1-\lambda)(n+(i/N)(f-n))
 
 image::/assets/images/2024-08-07-csm-frustum-split.gif[]
 
-== Create light frustum
+=== Create light frustum
 
 https://zhuanlan.zhihu.com/p/45673049
 
@@ -67,7 +134,7 @@ image::/assets/images/2024-08-07-csm-frustum-bounding.gif[]
 
 NOTE: 这里需要注意可能会有物体在view frustum外但是其阴影在里面，用这种方式可能会漏渲染该物体的阴影，这里需要有其他方案扩大这个bounding box
 
-== Render shadow map
+=== Render shadow map
 
 WARNING: Unity URP can't use `RenderWithShader()`, use build-in to make a demo!
 
@@ -79,7 +146,7 @@ NOTE: 这里应该需要开启Cull off，因为可能会有物体正好穿过近
 
 image::/assets/images/2024-08-08-csm-cull-back-leak.png[]
 
-== Artifact
+=== Artifact
 
 plane边缘处出现狗啃阴影，这是因为在边缘处采样shadow map时，可能因为贴图精度不够采样到非plane区域，也就是本该时无穷远的地方，但是没有cs里面渲染之前用无穷远的值填充（比如无穷远的深度应该为1）
 
@@ -100,4 +167,5 @@ if (pos_L.x >= 0 && pos_L.x <= 1 &&
 ```
 当物体较大，横跨两个分割的时候，可能会出现阴影的断层。
 
-image::2024-08-09-csm-large-object-blend.png[]
+image::/assets/images/2024-08-09-csm-large-object-blend.png[]
+
