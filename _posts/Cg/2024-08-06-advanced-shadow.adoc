@@ -71,9 +71,15 @@ image::/assets/images/2024-08-12-pcf-conv-calulate-weight-not-center.png[]
 
 == Cascaded Shadow Map
 
-=== Split view frustum
+Reference:
 
-> https://www.researchgate.net/publication/220805307_Parallel-split_shadow_maps_for_large-scale_virtual_environments
+> https://www.researchgate.net/publication/220805307_Parallel-split_shadow_maps_for_large-scale_virtual_environments +
+> https://learn.microsoft.com/en-us/windows/win32/dxtecharts/common-techniques-to-improve-shadow-depth-maps
+> https://zhuanlan.zhihu.com/p/45673049 +
+> https://blog.csdn.net/qq_39300235/article/details/107796167 +
+> https://www.cnblogs.com/X-Jun/p/16111750.html +
+
+=== Split view frustum
 
 image::/assets/images/2024-08-06-z-split-frustum.png[]
 
@@ -148,24 +154,62 @@ image::/assets/images/2024-08-08-csm-cull-back-leak.png[]
 
 === Artifact
 
-plane边缘处出现狗啃阴影，这是因为在边缘处采样shadow map时，可能因为贴图精度不够采样到非plane区域，也就是本该时无穷远的地方，但是没有cs里面渲染之前用无穷远的值填充（比如无穷远的深度应该为1）
+. plane边缘处出现狗啃阴影
++
+--
+这是因为在边缘处采样shadow map时，可能因为贴图精度不够采样到非plane区域，也就是本该时无穷远的地方，但是没有cs里面渲染之前用无穷远的值填充（比如无穷远的深度应该为1）
+--
 
-
-
-在实现的时候，bias如果是用法向量计算的，可能有一部分的acne很大都消不掉，这是因为那个位置计算出的stem:[\cos \theta]正好在临界值上，前面的因为倾斜角度比较小，不需要太大bias，后面因为倾斜角度比较大，bias算出来比较大都没有影响。
+. acne无法消除
++
+--
+在实现的时候，bias如果是只用法向量计算的，可能有一部分的acne很大都消不掉，这是因为那个位置计算出的stem:[\cos \theta]正好在临界值上，前面的因为倾斜角度比较小，不需要太大bias，后面因为倾斜角度比较大，bias算出来比较大都没有影响。
 
 image::/assets/images/2024-08-09-csm-acne.png[]
+--
 
-可能会在光锥体的最远处出现一条接缝，这里可以hack一下，把这一点点位置交给下一级阴影处理，也就是z范围缩小一点。
 
-image::/assets/images/2024-08-09-csm-shadow-seam.png[]
+. 每级光锥体的最远处出现接缝
++
+--
+这里可以hack一下，把这一点点位置交给下一级阴影处理，也就是z范围缩小一点。
 
 ```hlsl
 if (pos_L.x >= 0 && pos_L.x <= 1 && 
     pos_L.y >= 0 && pos_L.y <= 1 && 
     pos_L.z >= 0 && pos_L.z <= 1 - 0.01) // in cur split
 ```
-当物体较大，横跨两个分割的时候，可能会出现阴影的断层。
+
+image::/assets/images/2024-08-09-csm-shadow-seam.png[]
+--
+
+
+. 当物体横跨两个分割时，出现阴影的断层
++
+--
+解决方案：blend
 
 image::/assets/images/2024-08-09-csm-large-object-blend.png[]
+--
 
+. 摄像机平移时，阴影抖动
++
+--
+原因是每次摄像机平移时都需要重新计算世界空间到光空间的投影矩阵，由于小数精度问题，导致片元对应的深度贴图采样位置在像素之间跳跃。
+
+解决方法：在每次计算投影矩阵时，让平移后的位置对齐到整数即可避免。这样可以保证在摄像机移动的时候，视锥体在光照空间下的AABB并不会立马跟着移动，而是累积到texel对应世界空间的宽高的变化时，AABB才会发生一次texel大小的跃动，所以移动摄像机的时候不会出现阴影的抖动。
+
+image::/assets/images/2024-08-12-csm-camera-translate-shimmering.gif[]
+--
+
+. 摄像机旋转时，阴影抖动
++
+--
+原因同上，旋转时light cam的包围盒发生变化，导致屏幕像素与shadow map之间的映射发生变化，出现闪烁。
+
+解决方法也是需要找到一个办法让该包围盒不变，最简单的方法是注意到当摄像机旋转时，frustum的包围盒只是长宽发生变化，而方向没有发生变化，因此只需要固定包围盒的长宽都等于相机frustum的斜对角线长度即可
+
+image::/assets/images/2024-08-12-csm-camera-rotation-shimmering.gif[]
+
+WARNING: 一定要先处理平移导致的抖动，因为你如果先处理了旋转的抖动（固定包围盒大小），还是会因为小数精度问题导致抖动没有被消除。
+--
