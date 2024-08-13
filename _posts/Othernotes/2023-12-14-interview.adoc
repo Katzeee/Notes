@@ -260,7 +260,7 @@ max(dot, 0.0)
 
 另外需要注意的一点是，我们在这里求得的相交结果，都是保守的结果。如果错误地将不可见判定为可见，损失的只是一点点开销而已。但是如果将本来应该可见的物体，判定为不可见，就会照成错误的渲染结果。
 
-=== Forward+ 和 Deferred
+=== Forward+ 和 TBDR
 
 Forward + tiled based = Forward+
 
@@ -268,7 +268,9 @@ Deferred + tiled based = TBDR
 
 Tiled Based的方法增加了一个光源剔除的过程，这个过程把整个屏幕分割成若干块（通常每块有16×16个像素），每块各自计算出一个单独的可见光源列表，然后对每块中的像素，只需要计算其对应块中可见的光源的贡献。
 
-移动端Forward+会比较多，部分机型使用延迟渲染会降低性能，提高功耗。
+移动端Forward+会比较多，部分机型使用延迟渲染会降低性能，提高功耗（现在也不一定了）。
+
+NOTE: Tile没有统一的固定大小，在不同的平台架构和渲染器中有所不同，不过一般是2的N次方，且长宽不一定相等，可以是16x16、32x32、64x64等等，不宜太小或太大，否则优化效果不明显。PowerVR GPU通常取32x32，而ARM Mali GPU取16x16。
 
 === 延迟渲染的劣势
 
@@ -279,6 +281,8 @@ Tiled Based的方法增加了一个光源剔除的过程，这个过程把整个
 G-Buffer除了用于直接照明外，还被广泛用于一些间接照明的效果，比如SSAO，SSR，如延迟渲染一般会使用TAA，而TAA需要保存上一帧的SceneColor，也会增加Load/Store的带宽
 
 延迟渲染只有有限的材质呈现类型（指无法同时使用多种着色模型，因为着色过程都是在一个shader中实现的），但可以使用GBuffer方便地实现一些类似SSR的效果
+
+NOTE: 针对难以处理多种着色模型的问题，目前的Deferred引擎多数采用在G-Buffer上额外存储Shading Model ID + Custom Data的形式，在着色时，根据不同Shading Model ID动态选择光照算法并解码对应的材质数据。
 
 至于延迟渲染适合多光源渲染，是很多人对延迟渲染认识的一个误区。在使用Cluster based lighting时，前向和延迟的光照开销是基本接近的
 
@@ -291,6 +295,8 @@ G-Buffer除了用于直接照明外，还被广泛用于一些间接照明的效
 === 针对延迟渲染的优化
 
 从G-Buffer的读和写方面下手。写的部分主要是G-Buffer的压缩，在这个方向演化出了许多用于压缩和减小G-Buffer的方案，比如早年Crytek提出的Best Fit Normalfootnote:2[CryEngine3: Reaching the Speed of Light http://advances.realtimerendering.com/s2010/Kaplanyan-CryEngine3(SIGGRAPH-2010-Advanced-RealTime-Rendering-Course).pdf]和其他一些法线压缩方案footnote:3[Compact Normal Storage for small G-Buffers https://aras-p.info/texts/CompactNormalStorage.html]，以及基于YCbCr（或者YCoCg）的色彩空间把三通道的RGB信息压缩到两通道footnote:4[Rendering Technologies from Crysis 3 https://www.slideshare.net/TiagoAlexSousa/rendering-technologies-from-crysis-3-gdc-2013]（当然色彩压缩的方案由于最终着色的时候还需要多读一个相邻像素值去重建原始色彩，所以得失如何还不好说）。G-Buffer的压缩方案一个缺陷是，它可能会导致硬件的混合模式失效（主要影响贴花混合）。
+
+=== Visibility Buffer/Deferred Texturing
 
 === 性能优化方案
 

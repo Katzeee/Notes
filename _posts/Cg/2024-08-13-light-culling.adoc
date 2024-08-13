@@ -1,0 +1,30 @@
+= Light Culling
+:revdate: 2024-08-13
+:page-category: Cg
+:page-tags: [cg, render pipeline]
+
+== Tiled Based 
+
+=== 理论
+
+Tiled Based的方法增加了一个光源剔除的过程，这个过程把整个屏幕分割成若干块（通常每块有16×16个像素），每块各自计算出一个单独的可见光源列表，然后对每块中的像素，只需要计算其对应块中可见的光源的贡献。
+
+image::/assets/images/2024-08-13-tiled-light-list.png[]
+
+**对于Foward框架来说，光源剔除发生在Z-Prepass之后，而对Deferred框架来说，光源剔除在G-Buffer Pass之后。** 
+
+NOTE: 由于其芯片面积有限，移动GPU实际上并没有专门的Shared Memory，而是利用片上的寄存器当做Shared Memory，一旦寄存器用尽，Shared Memory的数据就只能存储于系统内存（也就是所谓的Register Spill），这意味着通常在桌面GPU上利用Shared Memory进行的一些Compute Shader优化技巧在移动GPU上并不可行。
+
+Tiled Based方法进一步减少了带宽，因为对于一个像素来说，相较于传统Forward/Deferred方法，涉及的光照计算只执行一次，也就意味着所有光照相关的材质信息都只需要读取一次，并且最终结果也是一次写入。
+
+相较于传统的Deferred Rendering，TBDR的方法对于光源的剔除更粗粒度了（逐块而不是逐像素的），所以当光源数量不够多的时候，这个方法并没有明显的性能优势（带宽读写减少的时间无法抵消光源剔除计算的开销及剔除不准造成的浪费）。
+
+=== 实现
+
+光源剔除需要一个额外的Compute Shader来计算，依据是当前块的屏幕空间位置和块内像素的深度区间（基于这两个信息可以计算出当前块对应的小视椎体）。每个Compute Group内独立地对场景所有光源进行相较测试，每次可以并行测试256盏光源（16×16个像素）。
+
+对于Foward框架来说，计算出来的光源列表需要存储在一个UAV Buffer中，然后再执行一次Geometry Pass，根据每个像素所在的块去索引UAV Buffer中的可见光源列表，然后用Shader中的动态循环去计算每个光源对当前像素的贡献；而对于Deferred框架来说，光源列表可以存储在Compute Group对应的Shared Memory中，光源剔除之后，可以在同一个Compute Shader内执行光照计算。
+
+image::/assets/images/2024-08-13-tiled-based-light-culling-structure.png[]
+
+== Cluster Based
