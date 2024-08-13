@@ -1,4 +1,4 @@
-= Interviewing
+= Interview
 :revdate: 2023-12-24
 :page-category: Othernotes
 :page-tags: [c-cpp, cg, design, work, os, network]
@@ -36,7 +36,7 @@
 
 `malloc` 函数不保证可重入，因为它可能会修改全局或静态的内部数据结构，例如用于跟踪空闲内存和已分配内存的数据结构。
 
-=== cpp内存布局
+=== cpp与内存布局
 
 C++对象在内存中的布局可以细分为以下几个区域：
 
@@ -132,7 +132,7 @@ auto main() -> int {
 
 ```cpp
 Base::Base(...arbitrary params...)
-   : __vptr(&Base::__vtable[0])  ← supplied by the compiler, hidden from the programmer
+   : __vptr(&Base::__vtable[0])  // ← supplied by the compiler, hidden from the programmer
  {
    
  }
@@ -142,13 +142,13 @@ Base::Base(...arbitrary params...)
 
 虚函数的调用需要查虚函数表，所以会直接abort，普通成员函数可以调用，但第一个参数是this指针，如果在函数里没有用到this指针则可以正常完成调用。
 
-=== `weak_ptr`的实现与使用
+=== `weak_ptr` 的实现与使用
 
-`weak_ptr`中存一个裸指针和一个来自`shared_ptr`的引用计数`__weak_count`
+`weak_ptr` 中存一个裸指针和一个来自 `shared_ptr` 的引用计数 `__weak_count`
 
-使用`expired()`判断引用计数的个数，判断对象是否被销毁
+使用 `expired()` 判断引用计数的个数，判断对象是否被销毁
 
-使用`lock()` 获得一个 `shared_ptr`（可能为空指针），会导致引用计数+1
+使用 `lock()` 获得一个 `shared_ptr`（可能为空指针），会导致引用计数+1
 
 === 035原则
 
@@ -194,15 +194,21 @@ Early-Z 在物体严格从后向前渲染的过程中也没有办法起效，会
 
 Z Prepass 是一个单独的渲染步骤，通常在主渲染循环开始之前完成。在这个预处理阶段，场景中的所有几何体仅使用一个简单的着色器（只输出深度信息，不进行任何颜色计算）进行绘制，从而在深度缓冲区中建立了正确的深度信息。在完成Z Prepass之后，当进行实际的渲染循环时，GPU就可以利用已填充的深度缓冲区数据来做优化——通过深度测试来决定是否需要执行更为复杂的颜色着色器。
 
+简单来说，Z-Prepass流程里关闭了Color Buffer的写入，同时Pixel Shader极为简单或者索性为空，这样一遍渲染之后可以快速地获得场景中的Z Buffer；紧接着，我们关闭Z Buffer的写入，将Depth Test Operator改为Equal。
+
 NOTE: 此处的深度信息是记录在GL_DEPTH_BUFFER_BIT里的，而不是一张texture里
 
-=== Z-max Culling 、Z-min Culling、Early-Z[^1]
+由于移动端GPU为了功耗的考虑，几乎都倾向于使用Tiled Based Deferred架构，这一架构的设计导致了连续在同一个帧缓冲上的逻辑渲染流程会被打断成两部分，每次绘制，一个物体的Vertex Shader会在TBR架构下执行两遍，如果加上Z-Prepass，相当于每个物体至少要执行四遍Vertex Shader，所以Z-Prepass反应在移动端硬件上，往往就成为了一个负优化。
+
+> 高通和arm的架构下是要跑两次的，一次binning pass确定三角形在哪些tile，顺便也会有一些z cull剔除掉不可见的三角形，这一遍编译器会把shader里面和gl_Position输出无关的部分优化掉，第二遍正常的VS，处理position和varying相关的内容，苹果看起来是一遍跑完的，两种各有优劣吧。
+
+=== Z-max Culling 、Z-min Culling、Early-Z
 
 在Pixel Shader 开始执行前，如果我们开启了深度测试，GPU硬件会提前进行一次深度比较，这样如果深度测试失败，就可以跳过 Pixel Shader的执行，减少运行的开销。
 
-提前进行的深度测试，包括 Z-max Culling 、Z-min Culling、Early-Z。
+提前进行的深度测试，包括 Z-max Culling 、Z-min Culling、Early-Zfootnote:1[游戏中的剔除技术（二）视锥剔除和硬件剔除 https://zhuanlan.zhihu.com/p/437399913]。
 
-GPU渲染画面，一般都是使用 8x8的像素作为一个 tile，GPU 会保存一个 tile 中的深度值的最大值 stem:[z\_{max}] 和最小值 stem:[z\_{min}]。图元三角形准备阶段执行之后，就会使用整个三角形的最小深度值 zmintriz\_{min}^{tri}z\_{min}^{tri} 和 tile 上的最大深度值做一次比较，如果满足 zmintri\>zmaxz\_{min}^{tri} > z\_{max}z\_{min}^{tri} > z\_{max} ，就说明整个三角形在这个 tile 上都是被挡住的，就可以跳过后续的逐像素的深度测试，这就是Z-max Culling的过程。Z-min Culling也是类似的原理，如果整个三角形的最大深度 zmaxtriz\_{max}^{tri}z\_{max}^{tri} 和 tile 上的最小深度 zminz\_{min}z\_{min} 相比时得到 zmaxtri<zminz\_{max}^{tri} <z\_{min}z\_{max}^{tri} <z\_{min} ，说明整个三角形在这个 tile 上都全部可见的，也可以跳过后续的逐像素的深度测试。
+GPU渲染画面，一般都是使用 8x8的像素作为一个 tile，GPU 会保存一个 tile 中的深度值的最大值 stem:[z\_{max}] 和最小值 stem:[z\_{min}]。图元三角形准备阶段执行之后，就会使用整个三角形的最小深度值 zmintriz\_{min}^{tri}z\_{min}^{tri} 和 tile 上的最大深度值做一次比较，如果满足 zmintri\>zmaxz\_{min}^{tri} > z\_{max}z\_{min}^{tri} > z\_{max} ，就说明整个三角形在这个 tile 上都是被挡住的，就可以跳过后续的逐像素的深度测试，这就是Z-max Culling的过程。Z-min Culling也是类似的原理，如果整个三角形的最大深度 zmaxtriz\_{max}^{tri}z\_{max}^{tri} 和 tile 上的最小深度 zminz\_{min}z\_{min} 相比时得到 zmaxtri<zminz\_{max}^{tri} <z\_{min}z\_{max}^{tri} < z\_{min} ，说明整个三角形在这个 tile 上都全部可见的，也可以跳过后续的逐像素的深度测试。
 
 在 Pixel Shader 执行之前，我们拿到了当前当前像素点的深度值，还会提前进行一次深度测试，叫做 early-z/early depth。如果深度测试失败，则丢弃这个像素点，不会执行 Pixel shader。
 
@@ -244,9 +250,9 @@ max(dot, 0.0)
 
 0.0 not 0
 
-=== 视锥剔除是怎么做的footnote:1[https://zhuanlan.zhihu.com/p/437399913]
+=== 视锥剔除是怎么做的
 
-已知我们场景中的物体都是使用空间数据结构+Bounding Volume 结构保存的，通常情况下，我们进行视锥剔除的大致流程如下：
+已知我们场景中的物体都是使用空间数据结构+Bounding Volume 结构保存的，通常情况下，我们进行视锥剔除的大致流程如下footnote:1[]：
 
 遍历节点，对于每个父节点的 BV，和视锥 frustrum 进行一次相交测试，相交测试的结果有这样三种：不相交、相交、包含，这样的相交测试叫做 **exclusion/inclusion/intersection test**。因为测试相交和包含的计算量很大，有的时候我们会把算法简化，得到的结果为相交、不相交，这种相交测试叫做 **exclusion/inclusion test**。三种状态结果的相交测试，虽然会耗费额外的计算开销，但是允许我们直接跳过包含状态下整个父节点下的所有子节点的遍历，因此一般认为三种状态的相交测试更好。
 
@@ -256,17 +262,35 @@ max(dot, 0.0)
 
 === Forward+ 和 Deferred
 
-移动端Forward+会比较多，部分机型使用延迟渲染会提高性能，降低功耗。
+Forward + tiled based = Forward+
+
+Deferred + tiled based = TBDR
+
+Tiled Based的方法增加了一个光源剔除的过程，这个过程把整个屏幕分割成若干块（通常每块有16×16个像素），每块各自计算出一个单独的可见光源列表，然后对每块中的像素，只需要计算其对应块中可见的光源的贡献。
+
+移动端Forward+会比较多，部分机型使用延迟渲染会降低性能，提高功耗。
+
+=== 延迟渲染的劣势
 
 延迟渲染只能处理opaque物体，所以translucent物体的渲染依然放在前向渲染中。
 
 延迟渲染需要更高的带宽，但通过subpass可以优化
 
-延迟渲染一般会使用TAA，而TAA需要保存上一帧的SceneColor，也会增加Load/Store的带宽
+G-Buffer除了用于直接照明外，还被广泛用于一些间接照明的效果，比如SSAO，SSR，如延迟渲染一般会使用TAA，而TAA需要保存上一帧的SceneColor，也会增加Load/Store的带宽
 
-延迟渲染只有有限的材质呈现类型，但可以使用GBuffer方便地实现一些类似SSR的效果
+延迟渲染只有有限的材质呈现类型（指无法同时使用多种着色模型，因为着色过程都是在一个shader中实现的），但可以使用GBuffer方便地实现一些类似SSR的效果
 
-至于延迟渲染适合多光源渲染，是很多人对延迟渲染认识的一个误区。在使用Cluster based lighting时，前向和延迟的光照开销是基本接近的。
+至于延迟渲染适合多光源渲染，是很多人对延迟渲染认识的一个误区。在使用Cluster based lighting时，前向和延迟的光照开销是基本接近的
+
+=== 延迟渲染的基本流程
+
+延迟渲染的核心是G-Buffer，也就是把光照计算所需的材质参数通过一次物体绘制输出到若干张贴图。
+
+传统的延迟渲染在G-Buffer生成之后，会根据光源影响区域的形状（Light Volume），对每个光源执行一次绘制（点光源就绘制一个球体，聚光灯就绘制一个圆锥），如果屏幕上某个像素被Light Volume覆盖到了，我们就在该像素的位置执行一次当前光源的光照计算。得益于光照计算是线性可叠加的，所以我们只要把Color Buffer的叠加模式设置为ADD，并将Source Factor和Dst Factor设置为ONE即可实现光照的叠加计算。于是，经过优化，多遍渲染O(m*n)的复杂度在这里被降低成了O(m+n)。
+
+=== 针对延迟渲染的优化
+
+从G-Buffer的读和写方面下手。写的部分主要是G-Buffer的压缩，在这个方向演化出了许多用于压缩和减小G-Buffer的方案，比如早年Crytek提出的Best Fit Normalfootnote:2[CryEngine3: Reaching the Speed of Light http://advances.realtimerendering.com/s2010/Kaplanyan-CryEngine3(SIGGRAPH-2010-Advanced-RealTime-Rendering-Course).pdf]和其他一些法线压缩方案footnote:3[Compact Normal Storage for small G-Buffers https://aras-p.info/texts/CompactNormalStorage.html]，以及基于YCbCr（或者YCoCg）的色彩空间把三通道的RGB信息压缩到两通道footnote:4[Rendering Technologies from Crysis 3 https://www.slideshare.net/TiagoAlexSousa/rendering-technologies-from-crysis-3-gdc-2013]（当然色彩压缩的方案由于最终着色的时候还需要多读一个相邻像素值去重建原始色彩，所以得失如何还不好说）。G-Buffer的压缩方案一个缺陷是，它可能会导致硬件的混合模式失效（主要影响贴花混合）。
 
 === 性能优化方案
 
@@ -420,9 +444,9 @@ WARNING: 如果射线沿该轴的方向分量stem:[D = 0]，则需要特殊处�
 
 采样的基础首先是生成均匀随机序列，使用伪随机数或是低差异序列。在此基础上基于分布的pdf或是cdf或其他算法去生成目标分布的采样值。
 
-=== 如何判断几何体与视锥相交footnote:1[]
+=== 如何判断几何体与视锥相交
 
-对于任意的几何体，都可以计算和视锥的相交信息，思路是将 几何体-视锥 之间的测试转化成 点-几何体 之间的测试，方法如下：
+对于任意的几何体，都可以计算和视锥的相交信息，思路是将 几何体-视锥 之间的测试转化成 点-几何体 之间的测试，方法如下footnote:1[]：
 
 已知一个几何体（下图左上绿色）和视锥（下图左上蓝色），在几何体内选定任意一点p，将几何体平移，直到几何体和视锥刚好接触，保持几何体和视锥刚好接触的状态，将几何体在视锥表面滑动，p点移动后可以形成一个新的大几何体（下图右上橙色）。然后将几何体平移，同样是保持几何体和视锥接触，不过此时要将几何体放在视锥内部，使用类似的方式，得到一个新的小几何体（下图左下紫色）。得到新的大小几何体后，就可以和原始的点p位置做比较。如果点p位于小几何体内部，说明视锥时包含原始的几何体的，如果点p在大几何体内，小几何体外，说明二者是相交的关系。
 
