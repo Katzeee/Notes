@@ -250,6 +250,8 @@ max(dot, 0.0)
 
 0.0 not 0
 
+在fs中normalize法线，vs中normalize之后，插值完依然不是normalized，因此需要在fs中normalize
+
 === 视锥剔除是怎么做的
 
 已知我们场景中的物体都是使用空间数据结构+Bounding Volume 结构保存的，通常情况下，我们进行视锥剔除的大致流程如下footnote:1[]：
