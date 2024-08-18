@@ -17,13 +17,45 @@ PreZ管线和延迟管线技术是从渲染流程上实现了一个像素级别�
 
 需要使用Bounding Volume来快速地实现视锥剔除。可采用AABB，OBB或球形包围盒。同时对场景使用数据结构保存便于快速遍历剔除，如BVH，K-D tree，OcTree.
 
-从场景数据结构的根节点开始与视锥做相交测试，一直做到物体包围盒。如果考虑包含情况则可以认为该子节点下所有物体都在视锥体内。
+从场景数据结构的根节点开始**与视锥做相交测试**，一直做到物体包围盒。如果考虑包含情况则可以认为该子节点下所有物体都在视锥体内。
+
+**一般的处理方法是把视锥的6个面分别与BV做相交测试，这里给出了一个AABB与视锥体求相交的算法**footnote:1[有没有较完善高效的视锥剔除算法？ - MaxwellGeng的回答 - 知乎 https://www.zhihu.com/question/313499217/answer/614248155]
+
+```hlsl
+float BoxIntersect(float3 extent, float3 position, // <1>
+                   float3x3 boxLocalToWorld, float4 planes[6]) // <2>
+for ()
+{
+    float result = 1;
+    for (uint i = 0; i < 6; ++i)
+    {
+        float4 plane = planes[i];
+        float3 absNormal = abs(mul(plane.xyz, boxLocalToWorld)); // <3>
+        result *= ((dot(position, plane.xyz) + plane.w) < dot(absNormal, extent)); // <4>
+    }  
+    return result; // <5>
+}
+```
+<1> AABB由其中心位置position和边长的一半extent描述，此处extent可以理解为AABB在第一象限的角的坐标
+<2> plane由平面方程描述，因此xyz即为法线，法向量朝着内部
+<3> 将平面法线变换到模型空间，并转移到第一象限
+<4> ``dot(position, plane.xyz + plane.w)``为AABB中心到视锥体面的有向距离（此处plane.xyz为normalized），``dot(absNormal, extent)``是当平面与AABB相切时，AABB中心到平面的距离，也就是最远相交距离。**把平面想象成一个无限大的平面，只有当AABB完全在一个平面的负半空间时，可以确定其与视锥体不相交footnote:2[【Frustum Culling】视锥体剪裁数学原理和代码实现 https://www.jianshu.com/p/b42b99c8ed73]**
+<5> 没有做early exit，因为GPU分支可能会导致变慢
+
+NOTE: 该算法会有不相交但是返回相交的情况出现，但不影响使用，如橙色方块。同时该算法在local space进行计算，其一是考虑到精度问题，ndc空间的精度较差，其二是用到了AABB包围盒。在Intro to dx12这本书中给出的culling也是在local space进行计算的footnote:3[Introduction to 3D Game Programming with DirectX 12例程 https://github.com/yottaawesome/intro-to-dx12/blob/master/src/Chapter%2016%20Instancing%20and%20Frustum%20Culling/InstancingAndCulling/InstancingAndCullingApp.cpp#L393]
+
+image::/assets/images/2024-08-18-frustum-culling-false-positive.png[]
+
+Separating Axis Theorem方法提供了一个精确的Frustum与AABB的相交算法。
+
 
 考虑视锥体与球求相交关系：直接根据球心到六个平面的有向距离判断。
 
-考虑视锥体与长方体的相交关系：投影变换，到裁剪空间，根据长方体顶点的坐标判断。或者也是构造最小不相交视锥体。
+考虑视锥体与长方体的相交关系：投影变换，到裁剪空间，根据长方体顶点的坐标判断。或者也是构造最小不相交视锥体。（这个算法目前我只看到过介绍，没看到过相关实现）
 
 image::/assets/images/2024-05-30-box-frustum-overlap.png[]
+
+视锥体剔除一般是一个比较粗粒度的剔除，因此使用球形包围盒减少计算量是一个很好的优化。
 
 == Hardware Culling
 
