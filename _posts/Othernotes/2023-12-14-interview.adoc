@@ -7,6 +7,7 @@
 
 === `char` `short` `int` `long` `long long`的长度
 
+* `bool`: 1 字节
 * `char`: 1 字节（按照标准，`char` 的大小是 1 字节）
 * `short`: 至少 2 字节
 * `int`: 至少与 `short` 一样长
@@ -57,7 +58,7 @@ C++对象在内存中的布局可以细分为以下几个区域：
 
 * `std::make_shared` 无法指定自定义删除器。
 
-=== `static`函数与`inline`函数的链接
+=== ``static``函数与``inline``函数的链接
 
 声明为内联链接，链接时只保留一个副本
 
@@ -156,7 +157,7 @@ Base::Base(...arbitrary params...)
 
 === `vector` 在扩容的时候会重新构造并析构之前的吗？
 
-会，如果移动构造时noexcept则会优先调用移动构造
+会，如果有移动构造且为noexcept则会优先调用移动构造
 
 == 图形学
 
@@ -276,17 +277,15 @@ NOTE: Tile没有统一的固定大小，在不同的平台架构和渲染器中�
 
 === 延迟渲染的劣势
 
-延迟渲染只能处理opaque物体，所以translucent物体的渲染依然放在前向渲染中。
+. 延迟渲染只能处理opaque物体，所以translucent物体的渲染依然放在前向渲染中。
 
-延迟渲染需要更高的带宽，但通过subpass可以优化
+. 延迟渲染需要更高的带宽，但通过subpass可以优化。G-Buffer除了用于直接照明外，还被广泛用于一些间接照明的效果，比如SSAO，SSR，如延迟渲染一般会使用TAA，而TAA需要保存上一帧的SceneColor，也会增加Load/Store的带宽
 
-G-Buffer除了用于直接照明外，还被广泛用于一些间接照明的效果，比如SSAO，SSR，如延迟渲染一般会使用TAA，而TAA需要保存上一帧的SceneColor，也会增加Load/Store的带宽
+. 延迟渲染只有有限的材质呈现类型（指无法同时使用多种着色模型，因为着色过程都是在一个shader中实现的），但可以使用GBuffer方便地实现一些类似SSR的效果
 
-延迟渲染只有有限的材质呈现类型（指无法同时使用多种着色模型，因为着色过程都是在一个shader中实现的），但可以使用GBuffer方便地实现一些类似SSR的效果
+. 至于延迟渲染适合多光源渲染，是很多人对延迟渲染认识的一个误区。在使用Cluster based lighting时，前向和延迟的光照开销是基本接近的
 
 NOTE: 针对难以处理多种着色模型的问题，目前的Deferred引擎多数采用在G-Buffer上额外存储Shading Model ID + Custom Data的形式，在着色时，根据不同Shading Model ID动态选择光照算法并解码对应的材质数据。
-
-至于延迟渲染适合多光源渲染，是很多人对延迟渲染认识的一个误区。在使用Cluster based lighting时，前向和延迟的光照开销是基本接近的
 
 === 延迟渲染的基本流程
 
@@ -430,6 +429,14 @@ WARNING: 如果射线沿该轴的方向分量stem:[D = 0]，则需要特殊处�
 * 如果 stem:[t\_enter < 0] 并且 stem:[t\_exit > 0]，这意味着射线起点在 AABB 内部。
 
 只有当 stem:[t\_enter <= t\_exit] 并且 stem:[t\_exit >= 0] 时，射线才与 AABB 相交。
+
+=== 射线与球求相交
+
+连接射线起点与球心，stem:[\cos \theta]计算球心到直线距离，与半径比较。
+
+=== 异面直线距离
+
+叉积求得与两直线都垂直的直线。
 
 === 如何判断射线与OBB包围盒相交
 
