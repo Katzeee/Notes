@@ -143,10 +143,6 @@ WARNING: Unity URP can't use `RenderWithShader()`, use build-in to make a demo!
 
 image::/assets/images/2024-08-08-csm-4-split-shadow-map.png[]
 
-NOTE: 这里应该需要开启Cull off，因为可能会有物体正好穿过近（远）平面，如果不渲染背面，则会导致那一部分阴影漏光
-
-image::/assets/images/2024-08-08-csm-cull-back-leak.png[]
-
 === Render shadow 
 
 . 根据划分方法决定使用哪一张shadow mapfootnote:1[]
@@ -174,6 +170,23 @@ image::/assets/images/2024-08-08-csm-cull-back-leak.png[]
 image::/assets/images/2024-08-09-csm-acne.png[]
 --
 
+. 阴影平坠
++
+--
+
+光锥体穿过了物体导致shadowmap阴影镂空
+
+image::/assets/images/2024-08-22-shadow-pancaking.png[]
+
+image::/assets/images/2024-08-22-shadow-pancaking-shadow-map.png[]
+
+这里的处理是在顶点着色器中将顶点位置限制到近平面解决，注意处理RESVERSE_Z的情况
+
+```hlsl
+// UNITY_NEAR_CLIP_VALUE 是为了处理符号问题
+o.vertex.z = min(o.vertex.z, o.vertex.w * UNITY_NEAR_CLIP_VALUE);
+```
+--
 
 . 每级光锥体的最远处出现接缝
 +
