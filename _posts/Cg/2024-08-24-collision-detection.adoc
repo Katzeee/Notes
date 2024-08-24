@@ -1,0 +1,187 @@
+= Collision Detection
+:revdate: 2024-08-24
+:page-category: Cg
+:page-tags: [cg, physics]
+
+NOTE: 碰撞检测基于凸多边形
+
+== SAT(Separating Axis Theorem)
+
+如果存在一条轴试两个凸多边形的投影不重合，则未发生碰撞。
+
+image::/assets/images/2024-08-24-collision-sat.png[]
+
+算法过程：使用两个多边形的每一条边的法线方向尝试作为分离轴，将多边形投影到轴上，判断是否发生碰撞。
+
+缺点：
+
+. 3D 空间计算效率低，先要计算在分离面的投影，判断分离面的投影是否相交还要再计算其分离轴。
+
+. 不好计算相交深度，需要找到重叠最短的轴才能知道相交深度。
+
+. **只能知道是否相交，无法判断相交位置**。
+
+. 没有通用的 CCD 算法。
+
+== GJK(Gilbert-Johnson-Keerthi distance algorithm)
+
+=== Math
+
+闵可夫斯基和
+
+[stem]
+++++
+C = \{a + b | a \in A, b \in B\}
+++++
+
+image::/assets/images/2024-08-24-collision-minkowski-addition.png[]
+
+闵可夫斯基差
+
+[stem]
+++++
+C = \{a - b | a \in A, b \in B\}
+++++
+
+image::/assets/images/2024-08-24-collision-minkowski-subtraction.png[]
+
+Support 函数
+
+任意选定一个方向，多边形在该方向上投影最远的点即为 Support 函数的值。
+
+image::/assets/images/2024-08-24-collision-support-function.png[]
+
+如图所示，a点和d点分别是该方向上support函数的返回值。
+
+=== 算法原理
+
+当两个多边形的闵可夫斯基差过原点时则说明有相交。
+
+=== 算法过程
+
+* 朴素算法
+
+. 算出两个多边形各顶点的差。
+
+. 使用最左边的顶点作为起点，顺时针围成一个凸多边形作为完整的闵可夫斯基差。
+
+. 判断原点是否在其内部（叉积）。
+
++
+--
+缺点：性能差，针对曲面很难表示一个完整的闵可夫斯基差。
+--
+
+* GJK
++
+--
+不需要算出完整的闵可夫斯基差，只需计算出其中的某个简单形（k阶简单形为包含其k+1个顶点组成的多边形）。
+
+若某个简单形已经包含了原点，则其闵可夫斯基差一定包含原点。
+
+若证明整个闵可夫斯基差都在其离原点最近的一条边的另一边，则闵可夫斯基差一定不包含原点。
+--
+
+. 任意选定一个方向，如三角形中心连线方向。
+
+. 分别计算两个多边形在该方向以及该方向反方向上的support函数值，即可得到图中a，b，d，f点，分别做差。
++
+--
+image::/assets/images/2024-08-24-gjk-first-step.png[]
+--
+
+. 连接上一步得到的两个差，延靠原点这边作法线，计算得到第三个点。
++
+--
+image::/assets/images/2024-08-24-gjk-second-step.png[]
+--
+
+. 若此时形成的简单形已经包含了原点，则确定相交。
++
+--
+image::/assets/images/2024-08-24-gjk-is-collision.png[]
+--
+
+. 若此时仍未相交，则继续使用最新的边的法线求解support函数的值，得到新的简单形。
++
+--
+image::/assets/images/2024-08-24-gjk-continue.png[]
+--
+
+. 直到简单形退化，即该方向上找到的差已经方向错误或已经包含在原顶点内，比如此时找到的f-c，即证明该闵可夫斯基差不可能与原点有交点。
++
+--
+image::/assets/images/2024-08-24-gjk-no-collision.png[]
+--
+
+=== EPA(Expanding Polytope Algorithm)
+
+如何计算碰撞的其他信息：
+
+* 碰撞点
+
+* 插入深度和方向
+
+* 碰撞点法线
+
+通过一个包含原点的简单形，朝着最可能找到最近边的方向拓展，直到找到。
+
+image::/assets/images/2024-08-24-gjk-epa.png[]
+
+. 从GJK算法获得的最后一个简单形入手。
+
+. 选取这个简单形上离远点最近的边做法线作为support方向，记最近距离为d。
+
+. 以上述support方向计算出一个新顶点，加入简单形。
+
+. 若新简单形距离原点的最近距离大于d，则跳转到2。
+
+. 若新简单形的距离等于d，则找到了最近边。
+
+. 将该垂线段映射回原多边形。
+
+image::/assets/images/2024-08-24-gjk-epa-to-poly.png[]
+
+== CCD
+
+* 二分查找：从起点到终点这段进行二分，查找碰撞发生的位置。
+
+* 超采样：以更高帧率计算。
+
+* 特殊形状的射线检测：与圆的射线检测有解析解。
+
+* **GJK射线检测**
+
+=== GJK 射线检测
+
+. 以移动方向作为supoort得出闵可夫斯基差上一个顶点，与原点连线（绿色实线），并过原点作垂线。
++
+--
+image::/assets/images/2024-08-24-gjk-raycast-1.png[]
+--
+
+. 以移动方向反方向为support得出另一个顶点，与上一步中垂线（绿色虚线）再做垂线（绿色实线），这是移动最长不会碰到原点的距离。
++
+--
+image::/assets/images/2024-08-24-gjk-raycast-2.png[]
+--
+
+. 不停以原点离连线方向作垂线（绿色实线）为support，计算得出离原点最近的简单形与最近边，与原点连线做垂线并移动。
++
+--
+image::/assets/images/2024-08-24-gjk-raycast-3.png[]
+
+image::/assets/images/2024-08-24-gjk-raycast-4.png[]
+
+image::/assets/images/2024-08-24-gjk-raycast-5.png[]
+--
+
+=== 优化方案
+
+PhsyX对某些能直接求得解析解的图形使用解析解快速求得，以GJK作为兜底。而Chaos由于很少计算的都是不规则多面体的碰撞，所以只使用了GJK进行计算。
+
+不同形状的性能消耗：AABB < 球体 < 胶囊体 < OBB < 凸多边形 < 非凸多边形。
+
+引擎提供的碰撞模式：overlap，hit(block)，前者只计算是否相交，而后者需要输出交点，以及CCD是否需要开启的选项。
+
+使用空间加速算法排除不会发生碰撞的物体。

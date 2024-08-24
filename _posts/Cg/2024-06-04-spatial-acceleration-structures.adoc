@@ -1,9 +1,15 @@
 = Spatial Acceleration Structures
 :revdate: 2024-06-04
 :page-category: Cg
-:page-tags: [cg]
+:page-tags: [cg, acceleration structure]
 
 > https://www.cg.tuwien.ac.at/sites/default/files/course/4411/attachments/05_spatial_acceleration.pdf
+
+== Uniform Grid
+
+均匀划分的格子在建立结构与查找都可以得到最优性能，因为结构简单，而查找可以通过坐标直接计算出在哪个格子中，是O(1)的复杂度。
+
+但空间消耗比较大，如果物体非常集中的话剔除效果并不好。
 
 == BVH
 
