@@ -11,13 +11,17 @@
 
 === 泊松采样PCF
 
-除了使用上述所说的3x3区域进行采样，还可以使用泊松圆盘分布采样，以得到更好的软阴影效果。
+除了使用上述所说的3x3区域进行采样，还可以使用泊松圆盘分布采样，以得到更好的软阴影效果。但会带来一些伪影。
 
 === 硬件PCF
 
 硬件PCF是在2x2的区域上通过纹理采样器 compare func 并开启 linear sampling 实现双线性插值采样以做到直接计算出当前像素插值阴影权重。
 
 也可以通过4次硬件PCF再手动混合以得到一个3x3（四个采样中心偏离0.5texel）或4x4（四个采样中心偏离1.0texel）的硬件PCFfootnote:4[阴影的PCF采样优化算法 https://zhuanlan.zhihu.com/p/369761748]。
+
+=== The Witness
+
+The Witness 提供了一种更快并更简单得到PCF权重的过滤方法。footnote:9[Shadow Mapping Summary http://the-witness.net/news/2013/09/shadow-mapping-summary-part-1/]
 
 === 连续采样PCF
 
@@ -275,3 +279,9 @@ image::/assets/images/2024-08-12-csm-camera-rotation-shimmering.gif[]
 
 WARNING: 一定要先处理平移导致的抖动，因为你如果先处理了旋转的抖动（固定包围盒大小），还是会因为小数精度问题导致抖动没有被消除。
 --
+
+== VSM
+
+VSM的问题：
+
+UAV格式的贴图光栅化写入性能较差，依赖Cache

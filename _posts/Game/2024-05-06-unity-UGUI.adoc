@@ -94,11 +94,11 @@ If you want to write a component dealing with click event, implement a class der
 
 === Script Part
 
-. When `Graphic` itself find it need to be rebuilded, they will register itself to `CanvasUpdateRegistry`. Then every frame when `Canvas` rendering UI, it calls `Canvas::willRenderCanvases()` which is an event calling `CanvasUpdateRegistry::PerformUpdate()`.
+. When `Graphic` itself find it need to be rebuilt, it will register itself to `CanvasUpdateRegistry`. Then every frame when `Canvas` rendering UI, it calls `Canvas::willRenderCanvases()` which is an event calling `CanvasUpdateRegistry::PerformUpdate()`.
 
 . All renderable components(Image, Text, RawImage etc.) are derived from `Graphic`. `Graphic` implements `Rebuild()` function using for draw the UI elements, which called by `CanvasUpdateRegistry::PerformUpdate()`.
 
-. `Graphic` deals with mesh(`UpdateGeometry()`) and material(`UpdateMaterial()`) data then passes it to `CanvasRenderer` which finally become instructions for real rendering. `Canvas` handles ``CanvasRenderer``s, batches them and generates render instructions.
+. `Graphic` deals with mesh(`UpdateGeometry()`) and material(`UpdateMaterial()`) data then passes it to `CanvasRenderer` which finally become instructions for real rendering. `Canvas` handles ``CanvasRenderers``, batches them and generates render instructions.
 
 === Engine Part(based on Unity 4.x)
 

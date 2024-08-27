@@ -3,11 +3,11 @@
 :page-category: Cg
 :page-tags: [cg, gpu]
 
-References:
+== Desktop GPU
 
-> https://developer.nvidia.com/content/life-triangle-nvidias-logical-pipeline
+NOTE: Check here to get more official documentfootnote:1[https://developer.nvidia.com/content/life-triangle-nvidias-logical-pipeline]
 
-== GPU Composition
+=== GPU Composition
 
 * TPC: Texture Processor Cluster
 * SM: Streaming Multiprocessor
@@ -23,7 +23,7 @@ References:
 * RT Core
 * Tensor Core: for tensor, matrix computation
 
-== How do shader codes run on `Fermi` architecture
+=== How do shader codes run on `Fermi` architecture
 
 *1. From CPU to GPU*
 
@@ -46,6 +46,10 @@ One warp may excute many times to finish(store the intermediate result then load
 
 [.text-center]
 image::/assets/images/2024-03-15-vs-step.png[]
+
+SFU for sin, cos, sqrt.
+
+LD/ST for loading uniform variables.
 
 *3. Rasterizer*
 
@@ -78,19 +82,163 @@ Finally, the data will passed to `ROP` for depth test, blend or something.
 
 NOTE: The manipulate of the depth and color data must be atomic.
 
-== GPU Context in Core
+=== Vector vs Scalar
 
-One GPU Core can be abstrcted to a `Fetch/Decode Module`, some ``ALU``s, and some ``Context``s. ``ALU``s are responsible for excuting the commands and ``Context``s are the context of the ``ALU``s.
+Scalar: do a scalar operation for all thread in one work group to save cycles.
+
+image::/assets/images/2024-08-27-vector-vs-scalar.png[]
+
+=== Context 
+
+One GPU Core can be abstrcted to A `Fetch/Decode Module`, some ``ALUs``, and some ``Contexts``. ``ALUs`` are responsible for excuting the commands and ``Contexts`` are the context of the ``ALUs``.
 
 One instruction is excuted by one `ALU` in one `Context`.
 
 If there is a time-consuming instruction, the scheduler can let the `ALU` to excute in another context to avoid blocking.
 
-== Optimization 
+*1. What are in Context*
+
+* General Purpose Registers(GPR)
+
+* Local variables, Varyings
+
+*2. What should we do*
+
+* Use less GPR in one shader, makes more warp in one SM, then less latency when retriving textures.
+
+* Devide one complex pass into more simple passes
+
+* Sampling texture may use more GPRs
+
+=== Optimization 
 
 * Customize geometry instancing to replace the static batching and dynamic batching in Unity, which will merge mesh incresing VBO memory, and cause heavy CPU consumption, respectively.
+
 * Decrease the number of vertices and triangles to decrease the consumption of VS, PS and data storage.3D objects should use LOD.
+
 * Avoid transfering data to GPU every frame. In Unity, use GPU particle to instead CPU particle. Avoid large amount of transparency particle, which will cause overdraw.
+
 * Avoid rendering status setting and fetching, like set shader property in `Update()`, because CPU communicate with GPU through `MMIO`.
+
 * *Enable mipmap to decrease the texture cache missing.*
+
 * Avoid excessively small triangles which may cause overdrawing, imagine a small triangle is at the center of 4 `2x2 pixel tile` but only cover the center 4 pixels, then the 4 tiles must calculate for this triangle and mask the other result.
+
+== Moblie GPU
+
+=== Types
+
+* Mali
+
+* Adreno(From AMD Imageon)
+
+* PowerVR
+
+NOTE: Battery-cosuming = Hot = Low FPS Most battery-cosuming part is GPU and memory.
+
+=== Difference from Desktop
+
+Low frequency, high amount of ALU
+
+Bandwidth optimization: tile-based rendering
+
+* Desktop GPU use Immediate Mode Rendering(IMR)
++
+--
+image::/assets/images/2024-08-27-GPU-IMR.png[]
+--
+
+* Mali tiled-based rendering
++
+--
+Vertex shader -> Store position and varying to memory -> Load from memory to local tile memory -> Fragment shader
+
+image::/assets/images/2024-08-27-mali-TBR.png[]
+
+16 x 16 Tile
+--
+
+* Power-VR tiled-based deferred rendering
++
+--
+Vertex shader -> Store position and varying to memory -> Tile-based hidden surface removal, only draw pixels can be seen(zero overdraw) -> Fragment shader
+
+image::/assets/images/2024-08-27-powervr-tbdr.png[]
+
+32 x 32 Tile
+--
+
+* Adreno 
++
+--
+**Only transform position** -> For every tile get triangle visibility list -> Vertex shader -> Fragment shader
+
+image::/assets/images/2024-08-27-adreno-tbr.png[]
+
+Big tile `GMEM`
+
+--
+** Optimizition:
++
+--
+Position data use seperate buffer, if vertex is culled, then GPU will not fetch the other vertex data.
+--
+
+=== TBR vs TBDR
+
+* Mali and Adreno 
++
+--
+Low-cost blend, like tiled IMR. 
+--
+
+* PowerVR 
++
+--
+High-cost blend, blend will flush HSR.
+
+Discard need write z to HSR(consuming).
+--
+
+=== How to operate on-chip memory
+
+* OpenGL
++
+--
+EXT_shader_pixel_local_storage
+ARM_shader_framebuffer_fetch
+ARM_shader_framebuffer_fetch_depth_stencil
+--
+
+* Metal
++
+--
+Memoryless
+Imageblocks(A11 and later)
+--
+
+* Vulkan
++
+--
+Subpass
+--
+
+* Use
++
+--
+Depth
+Tonemapping
+Programmable Blending(physical correct color glass)
+Deferred rendering
+--
+
+=== Tools
+
+* Snapdragon Profiler
+* Xcode Instrument
+* Mali offline compiler
+* PowerVR Shader Editor
+
+=== Optimization
+
+*
