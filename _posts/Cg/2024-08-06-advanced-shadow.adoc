@@ -193,7 +193,7 @@ o.vertex.z = min(o.vertex.z, o.vertex.w * UNITY_NEAR_CLIP_VALUE);
 
 但要注意这会使比较大的三角形发生较大的变化导致阴影形状出现问题，图中深蓝色为光锥体，对于这个蓝色三角形会将其变成橙色三角形的形状而出现一些问题。
 
-image::/assets/images/2024-08-22-shadow-pancaking-big-triangle[]
+image::/assets/images/2024-08-22-shadow-pancaking-big-triangle.png[]
 --
 
 . 每级光锥体的最远处出现接缝
