@@ -741,7 +741,7 @@ image::/assets/images/ssao-rendering-equation.png[]
 ~~需要法线信息，采样更自由，可以加权采样~~
 --
 
-* AO Volume
+* AO Volumefootnote:1[摸着原神学图形 AO Volume原理 https://zhuanlan.zhihu.com/p/612028148]
 
 ** 作用：为静态物体提供大范围的AO，如桌面可以在地面上产生大面积AO
 
