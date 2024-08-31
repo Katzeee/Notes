@@ -1,0 +1,291 @@
+= SSAO CS Implementation
+:revdate: 2024-08-30
+:page-category: Cg
+:page-tags: [ssao, compute shader, cg]
+
+== 算法介绍
+
+经典SSAO算法的实现是根据深度图进行采样得出该点的遮蔽因子，最终生成一张AO图。
+
+其中比较重要的几个部分是：
+
+* 生成采样向量
++
+--
+在切线空间生成采样方向，之后变换到世界空间。
+
+通过使采样点更接近中心可以获得更好的采样效果
+
+由于采样点不足会导致采样结果有明显的条带状
+
+image::/assets/images/2024-08-30-ssao-strip-ao.png[]
+
+通过加入随机转动，可以获得更好的采样效果（通过随机变量生成不同的TBN矩阵可以实现这一点）
+
+image::/assets/images/2024-08-30-ssao-noise-ao.png[]
+
+--
+
+* 如何采样并比较
++
+--
+可以通过深度图重建世界坐标，uv值为xy，通过投影矩阵P和视角矩阵V反向变换回世界空间
+
+同样获得采样向量以后通过VP可以转换到clip space
+--
+
+* 处理Artifact
++
+--
+由于加入的随即转动是有规则性的，会生成规则噪点，因此需要使用Blur来消除明显的噪点
+
+由于在采样时没有考虑到不同物体之间的深度突变可能会带来的问题，导致AO采样出错，需要加入range来进行约束
+
+image::/assets/images/2024-08-30-ssao-range-check.png[]
+--
+
+== 基于CS实现的SSAO
+
+参考代码来自微软的的DirectX-Graphics-Samples仓库footnote:1[microsoft/DirectX-Graphics-Samples https://github.com/microsoft/DirectX-Graphics-Samples/tree/master]。总体思路是基于mssaofootnote:2[Efficient Screen-Space Approach to High-Quality Multi-Scale Ambient Occlusion https://www.comp.nus.edu.sg/~lowkl/publications/mssao_visual_computer_2012.pdf]的vofootnote:3[Volumetric Obscurance https://www.ppsloan.org/publications/vo.pdf]实现。
+
+原理是在目标像素点周围，XY平面上均匀取值，并计算每条射线上被占据的比例进行汇总。
+
+image::/assets/images/2024-08-31-vo-idea.png[]
+
+从RenderDoc的抓帧结果可以看到总共分为了三个步骤，接下来将按照顺序分别分析各个步骤
+
+image::/assets/images/2024-08-30-cs-ssao-steps.png[]
+
+=== 生成Hi-Z buffer
+
+这部分的代码比较简单，同时生成了2x和4x的hi-z buffer（2x 即4个像素的数据存到一个像素中，xy方向均2x）
+
+分析Dispatch参数可以发现在原图大小为1920 * 1080时，dispatch * numthread可以处理960 * 544个像素
+
+```hlsl
+    // startST 为2x buffer纹素位置，一次cache原图中4个像素，
+    uint2 startST = Gid.xy << 4 | GTid.xy;
+    uint destIdx = GTid.y << 4 | GTid.x;
+    g_CacheW[ destIdx +  0  ] = Linearize(startST | uint2(0, 0));
+    g_CacheW[ destIdx +  8  ] = Linearize(startST | uint2(8, 0));
+    g_CacheW[ destIdx + 128 ] = Linearize(startST | uint2(0, 8));
+    g_CacheW[ destIdx + 136 ] = Linearize(startST | uint2(8, 8));
+```
+
+图中为一个thread group处理的z buffer区域，相同颜色的格子是一个thread cache的像素，g_CacheW相当于把这个16 * 16的区域flat之后存储起来，减少访存的消耗
+
+image::/assets/images/2024-08-30-ssao-cachew.png[]
+
+```hlsl
+    GroupMemoryBarrierWithGroupSync(); // 同步group cache的写入
+```
+
+2x 中存的是原buffer中每2x2 quad的左上角的值，如图所示，每个quad中取左上角的值作为2x ds的取值。同时还保存一个2x ds的atlas数组，将**2x ds**的每4 * 4大小的quad中16个像素按从上到下从左到右的顺序存在atlas的每一层中
+
+image::/assets/images/2024-08-30-ssao-2x-ds.png[]
+
+```hlsl
+    uint ldsIndex = (GTid.x << 1) | (GTid.y << 5);
+    float w1 = g_CacheW[ldsIndex];
+
+    uint2 st = DTid.xy;
+    uint slice = (st.x & 3) | ((st.y & 3) << 2);
+    DS2x[st] = w1;
+    DS2xAtlas[uint3(st >> 2, slice)] = w1;
+```
+
+最后考虑 4x 的情况，当GroupIndex为4的倍数的时候，进行4x ds与4x ds atlas的填充
+
+```hlsl
+    if ((GI & 011) == 0)
+    {
+        st = DTid.xy >> 1;
+        slice = (st.x & 3) | ((st.y & 3) << 2);
+        DS4x[st] = w1;
+        DS4xAtlas[uint3(st >> 2, slice)] = w1;
+    }
+```
+
+=== 采样AO
+
+在采样部分分成了WIDE_SAMPLE和非WIDE_SAMPLE两种，其中WIDE_SAMPLE一个线程组有16*16个线程，非WIDE_SAMPLE则是8*8。考虑非WIDE_SAMPLE的情况。对于输入DepthTex为240 * 135时，输出的AOTex也是240 * 135
+
+```hlsl
+    // InSliceDimension 为 纹素的长宽，当纹理大小为240 * 135 时，gInvSliceDimension为(1 / 240, 1 / 135)
+    float2 QuadCenterUV = int2(DTid.xy + GTid.xy - 3) * gInvSliceDimension;
+    float4 depths = DepthTex.Gather(LinearBorderSampler, QuadCenterUV);
+```
+
+黄色像素位置为DepthTex的左上角边界，红色位置为计算出的QuadCenterUV即采样点的位置，共64个，但最终落在DepthTex内的采样区域只有红框框起来的13*13的区域（一次Gather采样4个像素）
+
+image::/assets/images/2024-08-30-ssao-quad-center.png[]
+
+这里进行cache的填充与同步，DepthSamples即是将16 * 16的DepthTex拉平存储。（TILE_DIM为16）
+
+```hlsl
+    // Gather出来的数据是这样存储的，其中w为采样点uv
+    // w z
+    // x y
+    int destIdx = GTid.x * 2 + GTid.y * 2 * TILE_DIM;
+    DepthSamples[destIdx] = depths.w;
+    DepthSamples[destIdx + 1] = depths.z;
+    DepthSamples[destIdx + TILE_DIM] = depths.x;
+    DepthSamples[destIdx + TILE_DIM + 1] = depths.y;
+    GroupMemoryBarrierWithGroupSync();
+```
+
+开始计算AO，thisIdx的取值即为下图中红框中的区域，这是最终输出到AO上的每个像素的中心位置，正好对应OutPixel的取值是一个8 * 8的区域
+
+```hlsl
+    uint thisIdx = GTid.x + GTid.y * TILE_DIM + 4 * TILE_DIM + 4;
+    ...
+    uint2 OutPixel = DTid.xy;
+```
+
+image::/assets/images/2024-08-30-ssao-this-idx.png[]
+
+可以看到这里传入TestSamples的xy偏移量是组成了如下图的一个区域（TestSamples会对偏移量做对称处理），其中被分为了三类，用不同颜色进行了标注
+
+gInvThicknessTable是用于控制AO强度的一个参数，它用于控制遮蔽效果的强度和范围。对于每一个采样点给了不同的权重进行控制
+
+```hlsl
+    const float invThisDepth = 1.0 / DepthSamples[thisIdx];
+    float ao = 0.0;
+
+    // 68 samples:  sample all cells in *within* a circular radius of 5
+    // Axial
+    ao += gSampleWeightTable[0].x * TestSamples(thisIdx, 1, 0, invThisDepth, gInvThicknessTable[0].x);
+    ao += gSampleWeightTable[0].y * TestSamples(thisIdx, 2, 0, invThisDepth, gInvThicknessTable[0].y);
+    ao += gSampleWeightTable[0].z * TestSamples(thisIdx, 3, 0, invThisDepth, gInvThicknessTable[0].z);
+    ao += gSampleWeightTable[0].w * TestSamples(thisIdx, 4, 0, invThisDepth, gInvThicknessTable[0].w);
+    // Diagonal
+    ao += gSampleWeightTable[1].x * TestSamples(thisIdx, 1, 1, invThisDepth, gInvThicknessTable[1].x);
+    ao += gSampleWeightTable[2].x * TestSamples(thisIdx, 2, 2, invThisDepth, gInvThicknessTable[2].x);
+    ao += gSampleWeightTable[2].w * TestSamples(thisIdx, 3, 3, invThisDepth, gInvThicknessTable[2].w);
+    // L-Shaped
+    ao += gSampleWeightTable[1].y * TestSamples(thisIdx, 1, 2, invThisDepth, gInvThicknessTable[1].y);
+    ao += gSampleWeightTable[1].z * TestSamples(thisIdx, 1, 3, invThisDepth, gInvThicknessTable[1].z);
+    ao += gSampleWeightTable[1].w * TestSamples(thisIdx, 1, 4, invThisDepth, gInvThicknessTable[1].w);
+    ao += gSampleWeightTable[2].y * TestSamples(thisIdx, 2, 3, invThisDepth, gInvThicknessTable[2].y);
+    ao += gSampleWeightTable[2].z * TestSamples(thisIdx, 2, 4, invThisDepth, gInvThicknessTable[2].z);
+```
+
+image::/assets/images/2024-08-30-ssao-sample-area.png[]
+
+通过代码可以看到对于每个类型的sample point，分别是这样进行采样的
+
+```hlsl
+float TestSamples( uint centerIdx, uint x, uint y, float invDepth, float invThickness )
+{
+    float invRange = invThickness * invDepth;
+    float frontDepth = invThickness - 0.5;
+
+    if (y == 0)
+    {
+        // Axial
+        return 0.5 * (
+            TestSamplePair(frontDepth, invRange, centerIdx, x) +
+            TestSamplePair(frontDepth, invRange, centerIdx, x * TILE_DIM));
+    }
+    else if (x == y)
+    {
+        // Diagonal
+        return 0.5 * (
+            TestSamplePair(frontDepth, invRange, centerIdx, x * TILE_DIM - x) +
+            TestSamplePair(frontDepth, invRange, centerIdx, x * TILE_DIM + x));
+    }
+    else
+    {
+        // L-Shaped
+        return 0.25 * (
+            TestSamplePair(frontDepth, invRange, centerIdx, y * TILE_DIM + x) +
+            TestSamplePair(frontDepth, invRange, centerIdx, y * TILE_DIM - x) +
+            TestSamplePair(frontDepth, invRange, centerIdx, x * TILE_DIM + y) +
+            TestSamplePair(frontDepth, invRange, centerIdx, x * TILE_DIM - y));
+    }
+}
+
+float TestSamplePair( float frontDepth, float invRange, uint base, int offset )
+{
+    // "Disocclusion" measures the penetration distance of the depth sample within the sphere.
+    // Disocclusion < 0 (full occlusion) -> the sample fell in front of the sphere
+    // Disocclusion > 1 (no occlusion) -> the sample fell behind the sphere
+    float disocclusion1 = DepthSamples[base + offset] * invRange - frontDepth;
+    float disocclusion2 = DepthSamples[base - offset] * invRange - frontDepth;
+
+    float pseudoDisocclusion1 = saturate(gRejectFadeoff * disocclusion1);
+    float pseudoDisocclusion2 = saturate(gRejectFadeoff * disocclusion2);
+
+    return
+        clamp(disocclusion1, pseudoDisocclusion2, 1.0) +
+        clamp(disocclusion2, pseudoDisocclusion1, 1.0) -
+        pseudoDisocclusion1 * pseudoDisocclusion2;
+}
+```
+
+image::/assets/images/2024-08-31-ssao-axial-sample.png[]
+
+image::/assets/images/2024-08-31-ssao-diagonal-sample.png[]
+
+image::/assets/images/2024-08-31-ssao-l-shaped-sample.png[]
+
+Thickness的计算回到cpp部分，通过代码可以看到，考虑一个单位球，SampleThickness计算的是在采样点位置上的单位球球面坐标z轴的值。
+
+```cpp
+    SampleThickness[ 0] = sqrt(1.0f - 0.2f * 0.2f); // 1, 0
+    SampleThickness[ 1] = sqrt(1.0f - 0.4f * 0.4f); // 2, 0
+    SampleThickness[ 2] = sqrt(1.0f - 0.6f * 0.6f); // 3, 0
+    SampleThickness[ 3] = sqrt(1.0f - 0.8f * 0.8f); // 4, 0
+    SampleThickness[ 4] = sqrt(1.0f - 0.2f * 0.2f - 0.2f * 0.2f); // 1, 1
+    SampleThickness[ 5] = sqrt(1.0f - 0.2f * 0.2f - 0.4f * 0.4f); // 1, 2
+    SampleThickness[ 6] = sqrt(1.0f - 0.2f * 0.2f - 0.6f * 0.6f); // 1, 3
+    SampleThickness[ 7] = sqrt(1.0f - 0.2f * 0.2f - 0.8f * 0.8f); // 1, 4
+    SampleThickness[ 8] = sqrt(1.0f - 0.4f * 0.4f - 0.4f * 0.4f); // 2, 2 
+    SampleThickness[ 9] = sqrt(1.0f - 0.4f * 0.4f - 0.6f * 0.6f); // 2, 3
+    SampleThickness[10] = sqrt(1.0f - 0.4f * 0.4f - 0.8f * 0.8f); // 2, 4
+    SampleThickness[11] = sqrt(1.0f - 0.6f * 0.6f - 0.6f * 0.6f); // 3, 3
+```
+
+WARNING: 采样这段的原理不是很清楚
+
+ScreenspaceDiameter / BufferWidth 为10个纹素的长度
+
+令 TanHalfFovH 为sample中心点在z = 1即远平面时sample的球的半径，TanHalfFovH = screen width / z far
+
+越靠近近平面时，采样球的半径则越小`float invRange = invThickness * invDepth;`**这是因为采样球的大小映射到depth buffer上时必须正好占一个半径为5的圆的大小**
+
+将所有的inv去除计算Range的值，可以得到如下公式，第一项和buffer大小相关，因为越小的buffer对应到屏幕空间的距离越远，因此越小的buffer采样range就应该越小。第二项和Depth相关，越靠近近平面采样范围越小。
+
+前三项的乘积为纹理空间采样球直径，最后一项为前面算出的factor，表示在单位球上采样时在球内的最大z值
+
+[stem]
+++++
+\begin{align}
+Range   &= Thickness * Depth \\
+        &= RangeFactor * SampleThickness * Depth \\
+        &= ThicknessMultiplier * Depth * SampleThickness \\
+        &= 2 * TanHalfFovH * \frac{ScreenspaceDiameter}{BufferWidth} * Depth * SampleThickness \\
+        &= 2 * \frac{ScreenWidth / 2}{Zfar} * \frac{ScreenspaceDiameter}{BufferWidth} * Depth * SampleThickness \\
+        &= \frac{ScreenWidth}{BufferWidth} * \frac{Depth}{Zfar} * ScreenspaceDiameter * SampleThickness \\
+\end{align}
+++++
+
+```cpp
+        const float ScreenspaceDiameter = 10.0f;
+        float ThicknessMultiplier = 2.0f * TanHalfFovH * ScreenspaceDiameter / BufferWidth;
+        float InverseRangeFactor = 1.0f / ThicknessMultiplier;
+
+        // SsaoCB 即传递给GPU的cbuffer
+        SsaoCB[ 0] = InverseRangeFactor / SampleThickness[ 0];
+        SsaoCB[ 1] = InverseRangeFactor / SampleThickness[ 1];
+        SsaoCB[ 2] = InverseRangeFactor / SampleThickness[ 2];
+        SsaoCB[ 3] = InverseRangeFactor / SampleThickness[ 3];
+        SsaoCB[ 4] = InverseRangeFactor / SampleThickness[ 4];
+        SsaoCB[ 5] = InverseRangeFactor / SampleThickness[ 5];
+        SsaoCB[ 6] = InverseRangeFactor / SampleThickness[ 6];
+        SsaoCB[ 7] = InverseRangeFactor / SampleThickness[ 7];
+        SsaoCB[ 8] = InverseRangeFactor / SampleThickness[ 8];
+        SsaoCB[ 9] = InverseRangeFactor / SampleThickness[ 9];
+        SsaoCB[10] = InverseRangeFactor / SampleThickness[10];
+        SsaoCB[11] = InverseRangeFactor / SampleThickness[11];
+```
