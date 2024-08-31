@@ -161,100 +161,11 @@ Base::Base(...arbitrary params...)
 
 == 图形学
 
-=== tone mapping 和 color grading
+=== 应用阶段
 
-Tone mapping 是为了解决显示器没有办法显示HDR颜色，而在渲染过程中用的都是HDR贴图的问题，将HDR颜色映射到LDR色彩空间让其在显示屏上正常显示。
-
-Color grading 是给屏幕套滤镜，LUT。
-
-=== Gamma空间
-
-Gamma校正（Gamma Correction）是一种图像处理技术，用于调整由于显示设备非线性特性造成的亮度失真。**人类视觉感知亮度的方式是非线性的，意味着我们对暗区域的变化比亮区域更为敏感。**
-
-在着色器（shader）里面进行的光照计算应该在线性空间中进行，而不是在Gamma空间。这是因为现实世界的光线是线性传播的，即光照的物理规律（如反射、折射和散射等）都遵循线性运算。
-
-=== 为什么Fresnel项可以作为镜面反射系数
-
-Fresnel项描述的就是有多少能量会被反射（物理意义）
-
-**角度依赖性**：真实世界中，当光线以较低的角度（接近切线）入射到表面上时，反射比例会增加；而当光线垂直（或接近垂直）入射时，反射比例则相对较低。这意味着观察者从不同角度看向物体时，会感受到不同程度的反射亮度。Fresnel项正是用来计算这个随角度变化的反射比例的。
-    
-**能量守恒**：在任何给定的角度，表面的总反射量必须遵循能量守恒原则，即入射光的能量等于反射光与折射/吸收光的能量之和。Fresnel项给出了反射部分，剩下的部分自然就是漫反射和透射部分。
-
-=== 为什么把法线从模型空间变换到世界空间不能直接乘model矩阵
-
-因为法线向量代表了表面的方向，而不是位置。法线是方向向量，不应受到平移的影响，只需受到旋转和缩放的影响。但是，当涉及到非均匀缩放时，直接使用模型矩阵会破坏法线的正确方向，因此需要特殊处理。应该乘model_it.法线的定义就是垂直于平面，对于平面上两点的变换都乘上了model，应该两点连成的线在世界空间也相当于乘了model，如果有一个矩阵乘上法线，使法线到世界空间，并且世界空间法线与被model变换过的那条线还垂直，就是model_it.
-
-=== Early-Z 和 Z Prepass
-
-Early-Z 是一种硬件级别的优化技术，它允许GPU在进行像素着色之前先执行深度测试。
-
-alpha-test, depth modify都会导致early-z失效，因为先做了深度测试会导致透明物体后面的东西无法通过深度测试而不进行渲染。
-
-Early-Z 在物体严格从后向前渲染的过程中也没有办法起效，会造成很多overdraw，z prepass可以解决这个问题
-
-Z Prepass 是一个单独的渲染步骤，通常在主渲染循环开始之前完成。在这个预处理阶段，场景中的所有几何体仅使用一个简单的着色器（只输出深度信息，不进行任何颜色计算）进行绘制，从而在深度缓冲区中建立了正确的深度信息。在完成Z Prepass之后，当进行实际的渲染循环时，GPU就可以利用已填充的深度缓冲区数据来做优化——通过深度测试来决定是否需要执行更为复杂的颜色着色器。
-
-简单来说，Z-Prepass流程里关闭了Color Buffer的写入，同时Pixel Shader极为简单或者索性为空，这样一遍渲染之后可以快速地获得场景中的Z Buffer；紧接着，我们关闭Z Buffer的写入，将Depth Test Operator改为Equal。
-
-NOTE: 此处的深度信息是记录在GL_DEPTH_BUFFER_BIT里的，而不是一张texture里
-
-由于移动端GPU为了功耗的考虑，几乎都倾向于使用Tiled Based Deferred架构，这一架构的设计导致了连续在同一个帧缓冲上的逻辑渲染流程会被打断成两部分，每次绘制，一个物体的Vertex Shader会在TBR架构下执行两遍，如果加上Z-Prepass，相当于每个物体至少要执行四遍Vertex Shader，所以Z-Prepass反应在移动端硬件上，往往就成为了一个负优化。
-
-> 高通和arm的架构下是要跑两次的，一次binning pass确定三角形在哪些tile，顺便也会有一些z cull剔除掉不可见的三角形，这一遍编译器会把shader里面和gl_Position输出无关的部分优化掉，第二遍正常的VS，处理position和varying相关的内容，苹果看起来是一遍跑完的，两种各有优劣吧。
-
-=== Z-max Culling 、Z-min Culling、Early-Z
-
-在Pixel Shader 开始执行前，如果我们开启了深度测试，GPU硬件会提前进行一次深度比较，这样如果深度测试失败，就可以跳过 Pixel Shader的执行，减少运行的开销。
-
-提前进行的深度测试，包括 Z-max Culling 、Z-min Culling、Early-Zfootnote:1[游戏中的剔除技术（二）视锥剔除和硬件剔除 https://zhuanlan.zhihu.com/p/437399913]。
-
-GPU渲染画面，一般都是使用 8x8的像素作为一个 tile，GPU 会保存一个 tile 中的深度值的最大值 stem:[z\_{max}] 和最小值 stem:[z\_{min}]。图元三角形准备阶段执行之后，就会使用整个三角形的最小深度值 zmintriz\_{min}^{tri}z\_{min}^{tri} 和 tile 上的最大深度值做一次比较，如果满足 zmintri\>zmaxz\_{min}^{tri} > z\_{max}z\_{min}^{tri} > z\_{max} ，就说明整个三角形在这个 tile 上都是被挡住的，就可以跳过后续的逐像素的深度测试，这就是Z-max Culling的过程。Z-min Culling也是类似的原理，如果整个三角形的最大深度 zmaxtriz\_{max}^{tri}z\_{max}^{tri} 和 tile 上的最小深度 zminz\_{min}z\_{min} 相比时得到 zmaxtri<zminz\_{max}^{tri} <z\_{min}z\_{max}^{tri} < z\_{min} ，说明整个三角形在这个 tile 上都全部可见的，也可以跳过后续的逐像素的深度测试。
-
-在 Pixel Shader 执行之前，我们拿到了当前当前像素点的深度值，还会提前进行一次深度测试，叫做 early-z/early depth。如果深度测试失败，则丢弃这个像素点，不会执行 Pixel shader。
-
-Z-max Culling 、Z-min Culling、Early-Z都是由 GPU 硬件来自动完成的。当然，这些机制生效的前提是没有在 Pixel Shader中写入了自定义深度值、使用了 discard、或者向 Unordered Access View中写入了值，这些提前的丢弃机制就无法再生效了。这时，深度测试就会在 pixel shader 执行之后再执行，叫做 late depth test。
-
-=== clip 和 scissor
-
-clip指的是把NDC空间以外的三角形裁掉，在vs阶段之后，fs之前。而scissor指的是裁剪测试，在fs阶段之后。
-
-clip中把NDC空间以外的三角形裁掉实际上会增加新的顶点，而这些新增的顶点是需要再走一遍vs的。
-
-clip的硬件实现：把空间分为屏幕区域，和一个比屏幕区域稍微大一些的，暂时称为guard 区域，你有一个三角形完全在屏幕外，那clip就是直接丢弃，你有一个三角形在屏幕边界，但是最远的顶点超出了guard区域，那么这个三角形还是会进行删掉屏幕区域以外的部分同时新增顶点，你有一个三角形在屏幕边界，但是最远的顶点没有超出guard区域，那么这个三角形不做任何处理，跟正常的三角形一样走光栅化
-
-=== 切线空间，TBN矩阵是什么，怎么求
-
-切线空间是以顶点法线为z轴，uv方向分别为xy轴的一个空间（此处的uv方向指的是把uv贴到三角形上，此时的uv轴的方向），或者说切线和副切线为xy轴。
-
-TBN矩阵是从切线空间转到模型空间的一个矩阵。
-
-正常求法就如上面所说，需要以一个三角形为基础，知道三点的发现方向与uv坐标得出，当然这部分不可能手算，太麻烦了。
-
-真正在使用时顶点包含法线方向和切线方向，叉乘即可得出副切线方向，可构建tbn矩阵。
-
-image::/assets/images/2024-08-08-uv-tbn.png[]
-
-NOTE: 还有一种TBN矩阵，是在切线空间采样时使用的，这个切线空间不要求x与y轴的方向，只要保证法线为z轴即可，因为采样时本来都是随机数，xy轴方向变化只是使采样点围绕z轴旋转，不影响采样点的随机性。此时可使用施密特正交化的方法在顶点切面上选取任意顶点切线方向。
-
-=== 渲染skymap需要注意什么
-
-vs中不需要乘Model矩阵，Position取xyww，因为想让skymap在最远处，同理，View矩阵需要去掉平移的那一列
-
-glCullFace 因为是从里面看到外面，如果用的是场景中其他普通的cube需要改变cullface的面
-
-glDepthFunc LEQUAL
-
-=== shader注意事项
-
-max(dot, 0.0)
-
-0.0 not 0
-
-在fs中normalize法线，vs中normalize之后，插值完依然不是normalized，因此需要在fs中normalize
-
-=== 视锥剔除是怎么做的
-
+. 视锥剔除是怎么做的
++
+--
 已知我们场景中的物体都是使用空间数据结构+Bounding Volume 结构保存的，通常情况下，我们进行视锥剔除的大致流程如下footnote:1[]：
 
 遍历节点，对于每个父节点的 BV，和视锥 frustrum 进行一次相交测试，相交测试的结果有这样三种：不相交、相交、包含，这样的相交测试叫做 **exclusion/inclusion/intersection test**。因为测试相交和包含的计算量很大，有的时候我们会把算法简化，得到的结果为相交、不相交，这种相交测试叫做 **exclusion/inclusion test**。三种状态结果的相交测试，虽然会耗费额外的计算开销，但是允许我们直接跳过包含状态下整个父节点下的所有子节点的遍历，因此一般认为三种状态的相交测试更好。
@@ -263,8 +174,38 @@ max(dot, 0.0)
 
 另外需要注意的一点是，我们在这里求得的相交结果，都是保守的结果。如果错误地将不可见判定为可见，损失的只是一点点开销而已。但是如果将本来应该可见的物体，判定为不可见，就会照成错误的渲染结果。
 
-=== Forward+ 和 TBDR
+NOTE: 具体计算过程一般是用视锥体的六个面分别于BV求交
+--
 
+=== 模型变换
+
+. 为什么把法线从模型空间变换到世界空间不能直接乘model矩阵
++
+--
+因为法线向量代表了表面的方向，而不是位置。法线是方向向量，不应受到平移的影响，只需受到旋转和缩放的影响。但是，当涉及到非均匀缩放时，直接使用模型矩阵会破坏法线的正确方向，因此需要特殊处理。应该乘model_it.法线的定义就是垂直于平面，对于平面上两点的变换都乘上了model，应该两点连成的线在世界空间也相当于乘了model，如果有一个矩阵乘上法线，使法线到世界空间，并且世界空间法线与被model变换过的那条线还垂直，就是model_it.
+--
+
+. 切线空间，TBN矩阵是什么，怎么求
++
+--
+切线空间是以顶点法线为z轴，uv方向分别为xy轴的一个空间（此处的uv方向指的是把uv贴到三角形上，此时的uv轴的方向），或者说切线和副切线为xy轴。
+
+TBN矩阵是从切线空间转到模型空间的一个矩阵。
+
+正常求法就如上面所说，需要以一个三角形为基础，知道三点的法线方向与uv坐标得出，当然这部分不可能手算，太麻烦了。
+
+真正在使用时顶点包含法线方向和切线方向，叉乘即可得出副切线方向，可构建tbn矩阵。
+
+image::/assets/images/2024-08-08-uv-tbn.png[]
+
+NOTE: 还有一种TBN矩阵，是在切线空间采样时使用的，这个切线空间不要求x与y轴的方向，只要保证法线为z轴即可，因为采样时本来都是随机数，xy轴方向变化只是使采样点围绕z轴旋转，不影响采样点的随机性。此时可使用施密特正交化的方法在顶点切面上选取任意顶点切线方向。
+--
+
+=== 渲染路径
+
+. Forward+ 和 TBDR
++
+--
 Forward + tiled based = Forward+
 
 Deferred + tiled based = TBDR
@@ -274,9 +215,11 @@ Tiled Based的方法增加了一个光源剔除的过程，这个过程把整个
 移动端Forward+会比较多，部分机型使用延迟渲染会降低性能，提高功耗（现在也不一定了）。
 
 NOTE: Tile没有统一的固定大小，在不同的平台架构和渲染器中有所不同，不过一般是2的N次方，且长宽不一定相等，可以是16x16、32x32、64x64等等，不宜太小或太大，否则优化效果不明显。PowerVR GPU通常取32x32，而ARM Mali GPU取16x16。
+--
 
-=== 延迟渲染的劣势
-
+. 延迟渲染的劣势
++
+--
 . 延迟渲染只能处理opaque物体，所以translucent物体的渲染依然放在前向渲染中。
 
 . 延迟渲染需要更高的带宽，但通过subpass可以优化。G-Buffer除了用于直接照明外，还被广泛用于一些间接照明的效果，比如SSAO，SSR，如延迟渲染一般会使用TAA，而TAA需要保存上一帧的SceneColor，也会增加Load/Store的带宽
@@ -286,21 +229,108 @@ NOTE: Tile没有统一的固定大小，在不同的平台架构和渲染器中�
 . 至于延迟渲染适合多光源渲染，是很多人对延迟渲染认识的一个误区。在使用Cluster based lighting时，前向和延迟的光照开销是基本接近的
 
 NOTE: 针对难以处理多种着色模型的问题，目前的Deferred引擎多数采用在G-Buffer上额外存储Shading Model ID + Custom Data的形式，在着色时，根据不同Shading Model ID动态选择光照算法并解码对应的材质数据。
+--
 
-=== 延迟渲染的基本流程
-
+. 延迟渲染的基本流程
++
+--
 延迟渲染的核心是G-Buffer，也就是把光照计算所需的材质参数通过一次物体绘制输出到若干张贴图。
 
 传统的延迟渲染在G-Buffer生成之后，会根据光源影响区域的形状（Light Volume），对每个光源执行一次绘制（点光源就绘制一个球体，聚光灯就绘制一个圆锥），如果屏幕上某个像素被Light Volume覆盖到了，我们就在该像素的位置执行一次当前光源的光照计算。得益于光照计算是线性可叠加的，所以我们只要把Color Buffer的叠加模式设置为ADD，并将Source Factor和Dst Factor设置为ONE即可实现光照的叠加计算。于是，经过优化，多遍渲染O(m*n)的复杂度在这里被降低成了O(m+n)。
+--
 
-=== 针对延迟渲染的优化
-
+. 针对延迟渲染的优化
++
+--
 从G-Buffer的读和写方面下手。写的部分主要是G-Buffer的压缩，在这个方向演化出了许多用于压缩和减小G-Buffer的方案，比如早年Crytek提出的Best Fit Normalfootnote:2[CryEngine3: Reaching the Speed of Light http://advances.realtimerendering.com/s2010/Kaplanyan-CryEngine3(SIGGRAPH-2010-Advanced-RealTime-Rendering-Course).pdf]和其他一些法线压缩方案footnote:3[Compact Normal Storage for small G-Buffers https://aras-p.info/texts/CompactNormalStorage.html]，以及基于YCbCr（或者YCoCg）的色彩空间把三通道的RGB信息压缩到两通道footnote:4[Rendering Technologies from Crysis 3 https://www.slideshare.net/TiagoAlexSousa/rendering-technologies-from-crysis-3-gdc-2013]（当然色彩压缩的方案由于最终着色的时候还需要多读一个相邻像素值去重建原始色彩，所以得失如何还不好说）。G-Buffer的压缩方案一个缺陷是，它可能会导致硬件的混合模式失效（主要影响贴花混合）。
+--
 
-=== Visibility Buffer/Deferred Texturing
+* Early-Z 和 Z Prepass
++
+--
+Early-Z 是一种硬件级别的优化技术，它允许GPU在进行像素着色之前先执行深度测试。**early-z 会写入深度**
 
-=== 性能优化方案
+alpha-test, depth modify都会导致early-z失效，因为先做了深度测试会导致透明物体后面的东西无法通过深度测试而不进行渲染。
 
+Early-Z 在物体严格从后向前渲染的过程中也没有办法起效，会造成很多overdraw，z prepass可以解决这个问题
+
+Z Prepass 是一个单独的渲染步骤，通常在主渲染循环开始之前完成。在这个预处理阶段，场景中的所有几何体仅使用一个简单的着色器（只输出深度信息，不进行任何颜色计算）进行绘制，从而在深度缓冲区中建立了正确的深度信息。在完成Z Prepass之后，当进行实际的渲染循环时，GPU就可以利用已填充的深度缓冲区数据来做优化——通过深度测试来决定是否需要执行更为复杂的颜色着色器。
+
+简单来说，Z-Prepass流程里关闭了Color Buffer的写入，同时Pixel Shader极为简单或者索性为空，这样一遍渲染之后可以快速地获得场景中的Z Buffer；**紧接着，我们关闭Z Buffer的写入，将Depth Test Operator改为Equal。**
+
+NOTE: 此处的深度信息是记录在GL_DEPTH_BUFFER_BIT里的，而不是一张texture里
+
+> 由于移动端GPU为了功耗的考虑，几乎都倾向于使用Tiled Based Deferred架构，这一架构的设计导致了连续在同一个帧缓冲上的逻辑渲染流程会被打断成两部分，每次绘制，一个物体的Vertex Shader会在TBR架构下执行两遍，如果加上Z-Prepass，相当于每个物体至少要执行四遍Vertex Shader，**所以Z-Prepass反应在移动端硬件上，往往就成为了一个负优化。** +
+> 高通和arm的架构下是要跑两次的，一次binning pass确定三角形在哪些tile，顺便也会有一些z cull剔除掉不可见的三角形，这一遍编译器会把shader里面和gl_Position输出无关的部分优化掉，第二遍正常的VS，处理position和varying相关的内容，苹果看起来是一遍跑完的，两种各有优劣吧。
+--
+
+=== PBR
+
+. 为什么Fresnel项可以作为镜面反射系数
++
+--
+Fresnel项描述的就是有多少能量会被反射（物理意义）
+
+**角度依赖性**：真实世界中，当光线以较低的角度（接近切线）入射到表面上时，反射比例会增加；而当光线垂直（或接近垂直）入射时，反射比例则相对较低。这意味着观察者从不同角度看向物体时，会感受到不同程度的反射亮度。Fresnel项正是用来计算这个随角度变化的反射比例的。
+    
+**能量守恒**：在任何给定的角度，表面的总反射量必须遵循能量守恒原则，即入射光的能量等于反射光与折射/吸收光的能量之和。Fresnel项给出了反射部分，剩下的部分自然就是漫反射和透射部分。
+--
+
+=== 后处理
+
+. tone mapping 和 color grading
++
+--
+Tone mapping 是为了解决显示器没有办法显示HDR颜色，而在渲染过程中用的都是HDR贴图的问题，将HDR颜色映射到LDR色彩空间让其在显示屏上正常显示。通过这条tone mapping 曲线我们就可以将HDR亮度值转换到[0,1]
+
+Color grading 是给屏幕套滤镜，LUT。
+--
+
+. Gamma空间
++
+--
+Gamma校正（Gamma Correction）是一种图像处理技术，用于调整由于显示设备非线性特性造成的亮度失真。**人类视觉感知亮度的方式是非线性的，意味着我们对暗区域的变化比亮区域更为敏感。**
+
+在着色器（shader）里面进行的光照计算应该在线性空间中进行，而不是在Gamma空间。这是因为现实世界的光线是线性传播的，即光照的物理规律（如反射、折射和散射等）都遵循线性运算。
+--
+
+=== 其他
+
+. 为什么需要线性深度
++
+--
+避免深度采样点分布不均匀时，在某一区间内由深度计算出的空间位置误差太大。
+--
+
+. 渲染skymap需要注意什么
++
+--
+vs中不需要乘Model矩阵，Position取xyww，因为想让skymap在最远处，同理，View矩阵需要去掉平移的那一列
+
+glCullFace 因为是从里面看到外面，如果用的是场景中其他普通的cube需要改变cullface的面
+
+glDepthFunc LEQUAL
+--
+
+. shader注意事项
++
+--
+max(dot, 0.0)
+
+0.0 not 0
+
+在fs中normalize法线，vs中normalize之后，插值完依然不是normalized，因此需要在fs中normalize
+--
+
+. Visibility Buffer/Deferred Texturing
++
+--
+尚未总结
+--
+
+. 性能优化方案
++
+--
 * CPU瓶颈
 
 ** draw call 过多
@@ -344,9 +374,11 @@ NOTE: 针对难以处理多种着色模型的问题，目前的Deferred引擎多
 . subpass 
 
 . tiled based
+--
 
-=== 渲染线程和RHI线程
-
+. 渲染线程和RHI线程
++
+--
 > https://www.cnblogs.com/kekec/p/15464958.html
 
 game thread往render task list里提交任务，render thread负责将这些任务执行生成平台无关的command list。
@@ -354,6 +386,32 @@ game thread往render task list里提交任务，render thread负责将这些任�
 rhi thread则将这些平台无关的command list转成指定的图形API的调用并提交到GPU执行。
 
 rhi thread可以有多个，game thread和render thread一般都只有一个
+--
+
+
+. Z-max Culling 、Z-min Culling、Early-Z
++
+--
+在Pixel Shader 开始执行前，如果我们开启了深度测试，GPU硬件会提前进行一次深度比较，这样如果深度测试失败，就可以跳过 Pixel Shader的执行，减少运行的开销。
+
+提前进行的深度测试，包括 Z-max Culling 、Z-min Culling、Early-Zfootnote:1[游戏中的剔除技术（二）视锥剔除和硬件剔除 https://zhuanlan.zhihu.com/p/437399913]。
+
+GPU渲染画面，一般都是使用 8x8的像素作为一个 tile，GPU 会保存一个 tile 中的深度值的最大值 stem:[z\_{max}] 和最小值 stem:[z\_{min}]。图元三角形准备阶段执行之后，就会使用整个三角形的最小深度值 zmintriz\_{min}^{tri}z\_{min}^{tri} 和 tile 上的最大深度值做一次比较，如果满足 zmintri\>zmaxz\_{min}^{tri} > z\_{max}z\_{min}^{tri} > z\_{max} ，就说明整个三角形在这个 tile 上都是被挡住的，就可以跳过后续的逐像素的深度测试，这就是Z-max Culling的过程。Z-min Culling也是类似的原理，如果整个三角形的最大深度 zmaxtriz\_{max}^{tri}z\_{max}^{tri} 和 tile 上的最小深度 zminz\_{min}z\_{min} 相比时得到 zmaxtri<zminz\_{max}^{tri} <z\_{min}z\_{max}^{tri} < z\_{min} ，说明整个三角形在这个 tile 上都全部可见的，也可以跳过后续的逐像素的深度测试。
+
+在 Pixel Shader 执行之前，我们拿到了当前当前像素点的深度值，还会提前进行一次深度测试，叫做 early-z/early depth。如果深度测试失败，则丢弃这个像素点，不会执行 Pixel shader。
+
+Z-max Culling 、Z-min Culling、Early-Z都是由 GPU 硬件来自动完成的。当然，这些机制生效的前提是没有在 Pixel Shader中写入了自定义深度值、使用了 discard、或者向 Unordered Access View中写入了值，这些提前的丢弃机制就无法再生效了。这时，深度测试就会在 pixel shader 执行之后再执行，叫做 late depth test。
+--
+
+. clip 和 scissor
++
+--
+clip指的是把NDC空间以外的三角形裁掉，在vs阶段之后，fs之前。而scissor指的是裁剪测试，在fs阶段之后。
+
+clip中把NDC空间以外的三角形裁掉实际上会增加新的顶点，而这些新增的顶点是需要再走一遍vs的。
+
+clip的硬件实现：把空间分为屏幕区域，和一个比屏幕区域稍微大一些的，暂时称为guard 区域，你有一个三角形完全在屏幕外，那clip就是直接丢弃，你有一个三角形在屏幕边界，但是最远的顶点超出了guard区域，那么这个三角形还是会进行删掉屏幕区域以外的部分同时新增顶点，你有一个三角形在屏幕边界，但是最远的顶点没有超出guard区域，那么这个三角形不做任何处理，跟正常的三角形一样走光栅化
+--
 
 == 计算几何
 
