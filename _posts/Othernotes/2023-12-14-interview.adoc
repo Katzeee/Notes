@@ -177,6 +177,8 @@ Base::Base(...arbitrary params...)
 NOTE: 具体计算过程一般是用视锥体的六个面分别于BV求交
 --
 
+. 遮挡剔除
+
 === 模型变换
 
 . 为什么把法线从模型空间变换到世界空间不能直接乘model矩阵
@@ -264,6 +266,14 @@ NOTE: 此处的深度信息是记录在GL_DEPTH_BUFFER_BIT里的，而不是一�
 > 高通和arm的架构下是要跑两次的，一次binning pass确定三角形在哪些tile，顺便也会有一些z cull剔除掉不可见的三角形，这一遍编译器会把shader里面和gl_Position输出无关的部分优化掉，第二遍正常的VS，处理position和varying相关的内容，苹果看起来是一遍跑完的，两种各有优劣吧。
 --
 
+. 为什么需要线性深度
++
+--
+避免深度采样点分布不均匀时，在某一区间内由深度计算出的空间位置误差太大。
+--
+
+. Visibility Buffer/Deferred Texturing
+
 === PBR
 
 . 为什么Fresnel项可以作为镜面反射系数
@@ -275,6 +285,12 @@ Fresnel项描述的就是有多少能量会被反射（物理意义）
     
 **能量守恒**：在任何给定的角度，表面的总反射量必须遵循能量守恒原则，即入射光的能量等于反射光与折射/吸收光的能量之和。Fresnel项给出了反射部分，剩下的部分自然就是漫反射和透射部分。
 --
+
+. Lambert模型中的PI是怎么来的
+
+. Cook-Torrance 模型公式的推导，分母是怎么来的
+
+. IBL中的预计算图
 
 === 后处理
 
@@ -294,39 +310,33 @@ Gamma校正（Gamma Correction）是一种图像处理技术，用于调整由�
 在着色器（shader）里面进行的光照计算应该在线性空间中进行，而不是在Gamma空间。这是因为现实世界的光线是线性传播的，即光照的物理规律（如反射、折射和散射等）都遵循线性运算。
 --
 
-=== 其他
+. LUT的实现
 
-. 为什么需要线性深度
-+
---
-避免深度采样点分布不均匀时，在某一区间内由深度计算出的空间位置误差太大。
---
+=== 阴影算法
 
-. 渲染skymap需要注意什么
-+
---
-vs中不需要乘Model矩阵，Position取xyww，因为想让skymap在最远处，同理，View矩阵需要去掉平移的那一列
+* CSM光锥体如何计算
 
-glCullFace 因为是从里面看到外面，如果用的是场景中其他普通的cube需要改变cullface的面
+* CSM如何判断该点用哪个层级的阴影图
 
-glDepthFunc LEQUAL
---
+* CSM如何解决抖动现象
 
-. shader注意事项
-+
---
-max(dot, 0.0)
+* 卷积PCF
 
-0.0 not 0
+* 硬件优化PCF采样
 
-在fs中normalize法线，vs中normalize之后，插值完依然不是normalized，因此需要在fs中normalize
---
+* VSM(Variance Soft Shadow Maps)
 
-. Visibility Buffer/Deferred Texturing
-+
---
-尚未总结
---
+* VSM(Virtual Shadow Maps)
+
+=== GI算法
+
+* SSAO 实现
+
+* 基于体积的SSAO
+
+=== 优化
+
+. 硬件加速结构
 
 . 性能优化方案
 +
@@ -388,7 +398,6 @@ rhi thread则将这些平台无关的command list转成指定的图形API的调�
 rhi thread可以有多个，game thread和render thread一般都只有一个
 --
 
-
 . Z-max Culling 、Z-min Culling、Early-Z
 +
 --
@@ -402,6 +411,30 @@ GPU渲染画面，一般都是使用 8x8的像素作为一个 tile，GPU 会保�
 
 Z-max Culling 、Z-min Culling、Early-Z都是由 GPU 硬件来自动完成的。当然，这些机制生效的前提是没有在 Pixel Shader中写入了自定义深度值、使用了 discard、或者向 Unordered Access View中写入了值，这些提前的丢弃机制就无法再生效了。这时，深度测试就会在 pixel shader 执行之后再执行，叫做 late depth test。
 --
+
+=== 其他
+
+. 渲染skymap需要注意什么
++
+--
+vs中不需要乘Model矩阵，Position取xyww，因为想让skymap在最远处，同理，View矩阵需要去掉平移的那一列
+
+glCullFace 因为是从里面看到外面，如果用的是场景中其他普通的cube需要改变cullface的面
+
+glDepthFunc LEQUAL
+--
+
+. shader注意事项
++
+--
+max(dot, 0.0)
+
+0.0 not 0
+
+在fs中normalize法线，vs中normalize之后，插值完依然不是normalized，因此需要在fs中normalize
+--
+
+=== 渲染管线
 
 . clip 和 scissor
 +
