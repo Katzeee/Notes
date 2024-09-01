@@ -1,0 +1,228 @@
+= TAA实现 TAA Implementation
+:revdate: 2024-09-01
+:page-category: Cg
+:page-tags: [aa, cg]
+
+== TAA 原理
+
+这篇文章将TAA的原理写的非常清楚footnote:1[主流抗锯齿方案详解（二）TAA https://zhuanlan.zhihu.com/p/425233743]，本文的重心将放在TAA的实现上。
+
+image::/assets/images/2024-09-01-halton-sample.png[]
+
+TAA作为一种时序算法，思路便是使用历史帧数据进行混合达到抗锯齿的效果，通过每帧对采样点进行偏移以实现时序上的SSAA。
+
+但考虑到动态物体和摄像机移动的问题，需要一个技术可以将当前帧某一个像素的位置（uv）准确的映射到上一帧的位置上。
+
+若仅考虑摄像机的移动不考虑物体移动的话，可以通过重投影的方式来实现，由当前帧的z值和uv重建世界坐标，再用上一帧的VP矩阵即可得到其上一帧的clip space坐标。
+
+若物体也需要移动，则需要同时记录物体的移动信息，也就是M矩阵，通过对物体进行完整的MVP逆变换与上一帧的MVP变化也可以得到上一帧的clip space坐标。考虑到TAA往往配合延迟渲染使用，因此可以将这部分信息在Gbuffer pass进行准备，记录在Motion Vector中，记录本帧uv到上一帧uv的差值。
+
+接下来将根据两个不同的实现来对TAA的实现过程进行分析。分别是GPUOpen-LibrariesAndSDKs提供的glTFSamplefootnote:3[GPUOpen-LibrariesAndSDKs/glTFSample https://github.com/GPUOpen-LibrariesAndSDKs/glTFSample]，与Microsoft提供的DirectX-Graphics-Samplesfootnote:2[microsoft/DirectX-Graphics-Samples https://github.com/microsoft/DirectX-Graphics-Samples/]
+
+== Jitter实现
+
+=== Projection Matrix Jitter
+
+在网上比较流行的一种实现是通过给Projection矩阵加上偏移以实现偏移采样点
+
+.GLTFSample.cpp
+```cpp
+    if (m_UIState.bUseTAA)
+    {
+        static uint32_t Seed;
+        m_camera.SetProjectionJitter(m_Width, m_Height, Seed);
+    }
+    else
+        m_camera.SetProjectionJitter(0.f, 0.f);
+```
+
+.Camera.cpp
+```cpp
+void Camera::SetProjectionJitter(float jitterX, float jitterY)
+{
+	math::Vector4 proj = m_Proj.getCol2();
+	proj.setX(jitterX);
+	proj.setY(jitterY);
+	m_Proj.setCol2(proj);
+}
+
+void Camera::SetProjectionJitter(uint32_t width, uint32_t height, uint32_t &sampleIndex)
+{
+    static const auto CalculateHaltonNumber = [](uint32_t index, uint32_t base)
+    {
+        float f = 1.0f, result = 0.0f;
+
+        for (uint32_t i = index; i > 0;)
+        {
+            f /= static_cast<float>(base);
+            result = result + f * static_cast<float>(i % base);
+            i = static_cast<uint32_t>(floorf(static_cast<float>(i) / static_cast<float>(base)));
+        }
+
+        return result;
+    };
+
+    sampleIndex = (sampleIndex + 1) % 16;   // 16x TAA
+
+    float jitterX = 2.0f * CalculateHaltonNumber(sampleIndex + 1, 2) - 1.0f;
+    float jitterY = 2.0f * CalculateHaltonNumber(sampleIndex + 1, 3) - 1.0f;
+
+    jitterX /= static_cast<float>(width);
+    jitterY /= static_cast<float>(height);
+
+    SetProjectionJitter(jitterX, jitterY);
+}
+```
+
+=== Viewport Jitter
+
+在微软提供的示例中，没有通过修改投影矩阵的方式，而是选择了使用修改Viewport来实现，因为最终写到color buffer上还是需要通过floor对齐到像素，这同样可以在D3D实现采样点的偏移（注释中只提到了D3D，不知道其他API是否也可以）
+
+.ModelViewer.cpp
+```cpp
+    // We use viewport offsets to jitter sample positions from frame to frame (for TAA.)
+    // D3D has a design quirk with fractional offsets such that the implicit scissor
+    // region of a viewport is floor(TopLeftXY) and floor(TopLeftXY + WidthHeight), so
+    // having a negative fractional top left, e.g. (-0.25, -0.25) would also shift the
+    // BottomRight corner up by a whole integer.  One solution is to pad your viewport
+    // dimensions with an extra pixel.  My solution is to only use positive fractional offsets,
+    // but that means that the average sample position is +0.5, which I use when I disable
+    // temporal AA.
+    TemporalEffects::GetJitterOffset(m_MainViewport.TopLeftX, m_MainViewport.TopLeftY);
+```
+
+== Motion Vector 的渲染
+
+=== Graphic Pipeline
+
+gltfSample中提供的是普通的基于Graphic Pipeline的渲染流程
+
+在数据上需要提供如下部分
+
+.GLTFPbrPass-vert.glsl
+```glsl
+struct PerFrame
+{
+    mat4          u_mCameraCurrViewProj;
+    mat4          u_mCameraPrevViewProj;
+    mat4          u_mCameraCurrViewProjInverse;
+    ...
+};
+
+// 提供上一帧与当前帧的VP矩阵以及当前帧的VP逆矩阵
+layout (std140, binding = ID_PER_FRAME) uniform _PerFrame 
+{
+    PerFrame myPerFrame;
+};
+
+
+// 提供上一帧与当前帧的M矩阵
+layout (std140, binding = ID_PER_OBJECT) uniform perObject
+{
+    mat4 u_mCurrWorld;
+    mat4 u_mPrevWorld;
+} myPerObject;
+```
+
+在vs中需要逐顶点计算prevPosition的值，由硬件进行光栅化再在ps中使用，这里还考虑到了蒙皮动画带来的物体移动
+
+.GLTFVertexFactory.glsl
+```glsl
+#ifdef HAS_MOTION_VECTORS
+	Output.CurrPosition = gl_Position; // current's frame vertex position 
+
+	mat4 prevTransMatrix = GetPrevWorldMatrix() * skinningMatrix;
+	vec3 worldPrevPos = (prevTransMatrix * vec4(a_Position, 1)).xyz;
+	Output.PrevPosition = GetPrevCameraViewProj() * vec4(worldPrevPos, 1);
+#endif
+```
+
+在ps中对Motion Vector Tex进行填充，这里的Motion Vector为两帧uv差值，Format是R16G16_FLOAT
+
+.GLTFPbrPass-frag.glsl
+```glsl
+#ifdef HAS_MOTION_VECTORS_RT
+    Output_motionVect = Input.CurrPosition.xy / Input.CurrPosition.w -
+                        Input.PrevPosition.xy / Input.PrevPosition.w;
+#endif
+```
+
+=== Compute Pipeline
+
+微软提供的示例中直接使用了Compute Pipeline来计算Motion Vector，记录的是HPos（Clip Space）下xyz三个坐标的差值，Format为R32_UINT（用作R10G10B10）
+
+思考Motion Vector中保存的数据实际上就是两帧的HPos差值（或uv差值），在已经获得本帧Zbuffer的情况下，可以通过Zbuffer重建世界坐标，因此可以使用Compute Pipeline来简化一些运算
+
+NOTE: 由于采用了CS去实现，这个Motion Vector是没有考虑到物体的移动的，因为Zbuffer的信息显然不包含物体的任何几何信息，也就无法得知这个像素上渲染的是哪个物体
+
+.CameraVelocityCS.hlsl
+```hlsl
+// Pack the velocity to write to R10G10B10A2_UNORM
+packed_velocity_t PackVelocity( float3 Velocity )
+{
+    return PackXY(Velocity.x) | PackXY(Velocity.y) << 10 | PackZ(Velocity.z) << 20;
+}
+
+Texture2D<float> DepthBuffer : register(t0);
+RWTexture2D<packed_velocity_t> VelocityBuffer : register(u0);
+
+cbuffer CBuffer : register(b1)
+{
+    matrix CurToPrevXForm;
+}
+
+[RootSignature(Common_RootSig)]
+[numthreads( 8, 8, 1 )]
+void main( uint3 DTid : SV_DispatchThreadID )
+{
+    uint2 st = DTid.xy;
+    float2 CurPixel = st + 0.5;
+    float Depth = DepthBuffer[st];
+    float4 HPos = float4( CurPixel, Depth, 1.0 );
+    float4 PrevHPos = mul( CurToPrevXForm, HPos );
+
+    PrevHPos.xyz /= PrevHPos.w;
+
+    VelocityBuffer[st] = PackVelocity(PrevHPos.xyz - float3(CurPixel, Depth));
+}
+```
+
+其中CurToPrevXForm是这样计算的，preMult和postMult是NDC空间到Clip Space的一些处理
+
+.MotionBlur.cpp
+```cpp
+
+    uint32_t Width = g_SceneColorBuffer.GetWidth();
+    uint32_t Height = g_SceneColorBuffer.GetHeight();
+
+    float RcpHalfDimX = 2.0f / Width;
+    float RcpHalfDimY = 2.0f / Height;
+    float RcpZMagic = nearClip / (farClip - nearClip);
+
+    Matrix4 preMult = Matrix4(
+        Vector4( RcpHalfDimX, 0.0f, 0.0f, 0.0f ),
+        Vector4( 0.0f, -RcpHalfDimY, 0.0f, 0.0f),
+        Vector4( 0.0f, 0.0f, UseLinearZ ? RcpZMagic : 1.0f, 0.0f ),
+        Vector4( -1.0f, 1.0f, UseLinearZ ? -RcpZMagic : 0.0f, 1.0f )
+    );
+
+    Matrix4 postMult = Matrix4(
+        Vector4( 1.0f / RcpHalfDimX, 0.0f, 0.0f, 0.0f ),
+        Vector4( 0.0f, -1.0f / RcpHalfDimY, 0.0f, 0.0f ),
+        Vector4( 0.0f, 0.0f, 1.0f, 0.0f ),
+        Vector4( 1.0f / RcpHalfDimX, 1.0f / RcpHalfDimY, 0.0f, 1.0f ) );
+
+
+    Matrix4 CurToPrevXForm = postMult * reprojectionMatrix * preMult;
+
+    // 重投影矩阵由Camera进行计算
+    m_ReprojectMatrix = m_PreviousViewProjMatrix * Invert(GetViewProjMatrix());
+```
+
+== TAA 
+
+两者的TAA计算过程都是使用Compute Pipeline做的，总体的思路类似，大致可分为三步
+
+. 使用CS的特性，预取ColorBuffer存入groupshared内存
+. 对范围内邻居像素采样计算bounding box用于对历史颜色的clamp
+. lerp当前颜色与历史clamp值得到最终结果

@@ -434,6 +434,12 @@ max(dot, 0.0)
 在fs中normalize法线，vs中normalize之后，插值完依然不是normalized，因此需要在fs中normalize
 --
 
+. 为什么要有低差异序列
++
+--
+随机采样的效果比较差，容易有噪点，简单的均匀采样随机性太差，会出现规则的pattern
+--
+
 === 渲染管线
 
 . clip 和 scissor

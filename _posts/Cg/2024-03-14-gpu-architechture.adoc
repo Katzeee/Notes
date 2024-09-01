@@ -29,7 +29,7 @@ NOTE: Check here to get more official documentfootnote:1[https://developer.nvidi
 
 The program send `Grapics API drawcalls` to GPU drivers, then drivers store them in `Push buffer`. After some time or call `flush` explicitly, GPU will receive these the commands from `Host Interface` and excute them in `Front End`.
 
-The work will be distributed by `Primitive Distributor`: batch the vertices in `Index buffer` and send them to ``GPC``s.
+The work will be distributed by `Primitive Distributor`: batch the vertices in `Index buffer` and send them to ``GPCs``.
 
 [.text-center]
 image::/assets/images/2024-03-15-application-step.png[]
@@ -109,6 +109,14 @@ If there is a time-consuming instruction, the scheduler can let the `ALU` to exc
 * Devide one complex pass into more simple passes
 
 * Sampling texture may use more GPRs
+
+=== Memory Hiearchy
+
+image::/assets/images/2024-09-01-nvidia-memory-hiearchy.png[]
+
+=== Compute Shader 
+
+image::/assets/images/2024-09-01-compute-shader-system-values.png[]
 
 === Optimization 
 
