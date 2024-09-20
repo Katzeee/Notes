@@ -1,0 +1,24 @@
+= 体渲染(Volumetric Rendering)
+:revdate: 2024-09-19
+:page-category: Cg
+:page-tags: [volumetric, cg]
+
+== Literature Review
+
+传统渲染主要关心光线在物体表面的反射情况，而体渲染关心光线在内部的传播。体渲染的核心主要包括Modeling与Lighting两个方面。相对于表面渲染基于Kajiya的方程SRE，体渲染基于体渲染方程VRE。天空中的大气渲染也是一种体渲染。footnote:1[体渲染的前导基础知识与移动端应用（一） https://zhuanlan.zhihu.com/p/711119913]
+
+体渲染中需要关注体积中介质的相关参数，也就是介质是如何影响光的传播的，主要分为以下四种情况，其各种情况都有对应的物理建模。footnote:2[体渲染探秘（一）理论基础 https://zhuanlan.zhihu.com/p/348973932]footnote:2-1[基础知识-体渲染 (Volume Rendering) https://zhuanlan.zhihu.com/p/639892534]
+
+image::/assets/images/2024-09-20-light-scattering.png[]
+
+基于物理的渲染就是解方程，或者说用不同算法做到对渲染方程的逼近，基于物理的体渲染有几种常用的方式，分别是基于VoxelVolume与基于RayMarchingfootnote:5[体渲染探秘（二）基于VoxelVolume实现体积雾 https://zhuanlan.zhihu.com/p/366083234]，以及这篇文章footnote:6[Volume Rendering https://www.scratchapixel.com/lessons/3d-basic-rendering/volume-rendering-for-developers/intro-volume-rendering.html]提到的技术delta tracking.footnote:7[Light Transport II: Volume Rendering/Sampling Volume Scattering https://pbr-book.org/3ed-2018/Light_Transport_II_Volume_Rendering/Sampling_Volume_Scattering]
+
+image::/assets/images/2024-09-20-tracking-method.png[]
+
+关于大气散射的渲染，有文章footnote:3[技术美术入门之Volumetric and Translucent Rendering(体积渲染与半透明渲染 上)【Part6】 https://zhuanlan.zhihu.com/p/683087480]footnote:4[基于物理的大气体渲染从理论到实践（一） https://zhuanlan.zhihu.com/p/559466624]给出了详细的公式推导过程。
+
+对于体积雾的渲染，实现可以参考Bwronski在SIGGRAPH 2014的演讲footnote:9[SIGGRAPH 2014 Volumetric Fog https://bartwronski.com/wp-content/uploads/2014/08/bwronski_volumetric_fog_siggraph2014.pdf]与Frostbite在SIGGRAPH 2015的实现footnote:10[Physically Based and Unified Volumetric Rendering in Frostbite https://www.ea.com/frostbite/news/physically-based-unified-volumetric-rendering-in-frostbite]。UE中的实现便是基于VoxelVolume实现的。footnote:11[UE5 体积雾渲染流程与源码分析 https://fl0.top/2024/09/08/UE5_VolumetricFog/#%E6%95%A3%E5%B0%84%E5%8E%9F%E7%90%86%E6%B5%85%E6%9E%90]
+
+== Light Scattering
+
+// == 
