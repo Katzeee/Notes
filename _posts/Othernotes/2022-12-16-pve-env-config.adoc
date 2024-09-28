@@ -1100,6 +1100,35 @@ Change the token to something like `openssl rand -base64 48`
 NOTE: Once you have signed up, you should update `SIGNUPS_ALLOWED` to false.
 --
 
+* calibre-web
++
+--
+
+NOTE: Can only read books.
+
+```yaml
+services:
+  calibre-web:
+    image: linuxserver/calibre-web:latest
+    container_name: calibre-web
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - DOCKER_MODS=linuxserver/mods:universal-calibre #optional
+      - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #optional
+    volumes:
+      - /mnt/database/.docker.conf.d/calibre-web/config:/config
+      - /mnt/xac/Books:/books
+    ports:
+      - 8083:8083
+      - 8084:8080
+    restart: unless-stopped
+```
+
+Need a metadata file in `/books`, here is an empty https://drive.google.com/file/d/189tv5i5SNT6rivLLLvCmC2JeLtODmSS1/view
+
+--
 === Resize the disk of LXC
 
 ```bash
