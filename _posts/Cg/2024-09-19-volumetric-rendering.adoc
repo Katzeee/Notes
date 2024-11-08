@@ -11,7 +11,7 @@
 
 image::/assets/images/2024-09-20-light-scattering.png[]
 
-基于物理的渲染就是解方程，或者说用不同算法做到对渲染方程的逼近，基于物理的体渲染有几种常用的方式，分别是基于VoxelVolume与基于RayMarchingfootnote:5[体渲染探秘（二）基于VoxelVolume实现体积雾 https://zhuanlan.zhihu.com/p/366083234]，以及这篇文章footnote:6[Volume Rendering https://www.scratchapixel.com/lessons/3d-basic-rendering/volume-rendering-for-developers/intro-volume-rendering.html]提到的技术delta tracking.footnote:7[Light Transport II: Volume Rendering/Sampling Volume Scattering https://pbr-book.org/3ed-2018/Light_Transport_II_Volume_Rendering/Sampling_Volume_Scattering]
+**基于物理**的渲染就是解方程，或者说用不同算法做到对渲染方程的逼近，基于物理的体渲染有几种常用的方式，分别是基于VoxelVolume与基于RayMarchingfootnote:5[体渲染探秘（二）基于VoxelVolume实现体积雾 https://zhuanlan.zhihu.com/p/366083234]，以及这篇文章footnote:6[Volume Rendering https://www.scratchapixel.com/lessons/3d-basic-rendering/volume-rendering-for-developers/intro-volume-rendering.html]提到的技术delta tracking.footnote:7[Light Transport II: Volume Rendering/Sampling Volume Scattering https://pbr-book.org/3ed-2018/Light_Transport_II_Volume_Rendering/Sampling_Volume_Scattering]
 
 image::/assets/images/2024-09-20-tracking-method.png[]
 
@@ -22,3 +22,50 @@ image::/assets/images/2024-09-20-tracking-method.png[]
 == Light Scattering
 
 // == 
+
+
+```
+@startuml
+
+skin rose
+
+FDeferredShadingSceneRenderer -> FSceneRenderer: FSceneRenderer::ComputeLightVisibility()
+
+FSceneRenderer -> FSceneRenderer: FSceneRenderer::InitFogConstants() 
+
+activate FSceneRenderer
+
+'FSceneRenderer -> FSceneRenderer: Set fog consts based on height fog components
+
+deactivate FSceneRenderer
+
+FSceneRenderer -> FSceneRenderer: FSceneRenderer::ComputeVolumetricFog()
+
+activate FSceneRenderer
+
+FSceneRenderer -> FSceneRenderer: GetVolumetricFogResourceGridSize(),\nGetVolumetricFogViewGridSize(),\nGetVolumetricFogGridZParams() 
+
+FSceneRenderer -> FSceneRenderer: FSceneRenderer::RenderLightFunctionForVolumetricFog()
+
+note left 
+If light uses light function
+end note
+
+FSceneRenderer -> FSceneRenderer: Prepare VbufferA and VbufferB
+
+FSceneRenderer -> FSceneRenderer: FRDGBuilder::AddPass()
+
+note left
+InitializeVolumeAttributes Pass
+end note
+
+
+
+deactivate FSceneRenderer
+
+'FSceneRenderer -> FSceneRenderer: InitFogConstants
+
+
+
+@enduml
+```
